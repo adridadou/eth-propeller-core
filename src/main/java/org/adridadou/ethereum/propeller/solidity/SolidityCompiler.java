@@ -112,7 +112,7 @@ public class SolidityCompiler {
         } else if (osName.contains("mac")) {
             return "mac";
         } else {
-            throw new RuntimeException("Can't find solc compiler: unrecognized OS: " + osName);
+            throw new EthereumApiException("Can't find solc compiler: unrecognized OS: " + osName);
         }
     }
 }
