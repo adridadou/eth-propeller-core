@@ -1,8 +1,6 @@
 package org.adridadou.ethereum.propeller.values;
 
 
-import com.sun.istack.internal.NotNull;
-
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Objects;
@@ -69,7 +67,7 @@ public class EthValue implements Comparable<EthValue> {
     }
 
     @Override
-    public int compareTo(@NotNull EthValue o) {
+    public int compareTo(EthValue o) {
         return value.compareTo(o.value);
     }
 
