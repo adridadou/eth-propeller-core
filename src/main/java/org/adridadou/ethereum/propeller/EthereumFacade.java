@@ -56,18 +56,6 @@ public class EthereumFacade {
         return proxy;
     }
 
-    public <T> Builder<T> createContractProxy(EthAddress address, Class<T> contractInterface) {
-        return new Builder<>(contractInterface, address, getDetails(address));
-    }
-
-    public <T> Builder<T> createContractProxy(EthAddress address, SolidityContractDetails details, Class<T> contractInterface) {
-        return new Builder<>(contractInterface, address, details);
-    }
-
-    public <T> Builder<T> createContractProxy(SolidityContractDetails contract, EthAddress address, Class<T> contractInterface) {
-        return new Builder<>(contractInterface, address, contract);
-    }
-
     public CompletableFuture<EthAddress> publishContract(SolidityContractDetails contract, EthAccount account, Object... constructorArgs) {
         return ethereumProxy.publish(contract, account, constructorArgs);
     }
@@ -143,23 +131,5 @@ public class EthereumFacade {
 
     public EthereumProxy getProxy() {
         return ethereumProxy;
-    }
-
-    public class Builder<T> {
-        private final Class<T> contractInterface;
-        private final EthAddress address;
-        private final SolidityContractDetails details;
-
-        public Builder(Class<T> contractInterface, EthAddress address, SolidityContractDetails details) {
-            this.contractInterface = contractInterface;
-            this.address = address;
-            this.details = details;
-        }
-
-        public T forAccount(final EthAccount account) {
-            T proxy = (T) newProxyInstance(contractInterface.getClassLoader(), new Class[]{contractInterface}, handler);
-            EthereumFacade.this.handler.register(proxy, contractInterface, details, address, account);
-            return proxy;
-        }
     }
 }
