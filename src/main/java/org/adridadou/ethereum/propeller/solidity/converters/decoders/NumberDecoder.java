@@ -21,15 +21,15 @@ public class NumberDecoder implements SolidityTypeDecoder {
         Class<?> resultCls = (Class) resultType;
 
         if (resultCls.getTypeName().equals("long")) {
-            return number.longValue();
+            return number.longValueExact();
         }
 
         if (resultCls.getTypeName().equals("int")) {
-            return number.intValue();
+            return number.intValueExact();
         }
 
         if (resultCls.equals(Long.class)) {
-            return number.longValue();
+            return number.longValueExact();
         }
 
         if (resultCls.equals(Integer.class)) {

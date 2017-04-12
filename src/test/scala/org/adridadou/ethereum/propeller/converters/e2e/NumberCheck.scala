@@ -1,6 +1,7 @@
-package org.adridadou.ethereum.propeller.converters.e2e.encoders
+package org.adridadou.ethereum.propeller.converters.e2e
 
 import java.io.File
+import java.math.BigInteger
 
 import org.adridadou.ethereum.propeller.CoreEthereumFacadeProvider
 import org.adridadou.ethereum.propeller.backend.{EthereumTest, TestConfig}
@@ -12,12 +13,11 @@ import org.scalacheck.Prop._
 import org.scalatest.Matchers
 import org.scalatest.check.Checkers
 
-
 /**
   * Created by davidroon on 26.03.17.
   * This code is released under Apache 2 license
   */
-class AddressCheck extends Checkers with Matchers {
+class NumberCheck extends Checkers with Matchers {
 
   @Test
   def checkEncode(): Unit = {
@@ -26,18 +26,24 @@ class AddressCheck extends Checkers with Matchers {
     val contract = facade.compile(SoliditySourceFile.from(new File("src/test/resources/conversionContract.sol"))).get().findContract("myContract").get()
     val contractAddress = facade.publishContract(contract, mainAccount).get()
 
-    val contractObject = facade.createContractProxy(contract, contractAddress, mainAccount, classOf[AddressContract])
+    val contractObject = facade.createContractProxy(contract, contractAddress, mainAccount, classOf[NumberContract])
     check(forAll(arbitrary[BigInt])(checkEncode(contractObject, _)))
   }
 
-  private def checkEncode(contractObject: AddressContract, seed: BigInt) = {
-    val account = new EthAccount(seed.bigInteger)
-    contractObject.addressFunc(account.getAddress) shouldEqual account.getAddress
+  private def checkEncode(contractObject: NumberContract, seed: BigInt) = {
+
+    contractObject.intFunc(seed.bigInteger.intValue()) shouldEqual seed.bigInteger.intValue()
+    contractObject.intFunc(seed.bigInteger.longValue()) shouldEqual seed.bigInteger.longValue()
+    contractObject.intFunc(seed.bigInteger) shouldEqual seed.bigInteger
     true
   }
 
 }
 
-trait AddressContract {
-  def addressFunc(account: EthAddress): EthAddress
+trait NumberContract {
+  def intFunc(intValue: BigInteger): BigInteger
+
+  def intFunc(intValue: Int): Integer
+
+  def intFunc(intValue: Long): Long
 }

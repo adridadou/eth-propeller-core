@@ -102,7 +102,7 @@ public class SmartContract {
                 .findFirst();
     }
 
-    Optional<SolidityFunction> getConstructor(Object[] args) {
+    public Optional<SolidityFunction> getConstructor(Object[] args) {
         return getFunctions().stream()
                 .filter(func -> func.matchParams(args)).findFirst();
     }

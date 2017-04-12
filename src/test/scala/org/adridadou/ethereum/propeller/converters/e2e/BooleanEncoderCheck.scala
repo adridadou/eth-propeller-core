@@ -1,4 +1,4 @@
-package org.adridadou.ethereum.propeller.converters.e2e.encoders
+package org.adridadou.ethereum.propeller.converters.e2e
 
 import org.adridadou.ethereum.propeller.solidity.converters.encoders.BooleanEncoder
 import org.adridadou.ethereum.propeller.values.EthData

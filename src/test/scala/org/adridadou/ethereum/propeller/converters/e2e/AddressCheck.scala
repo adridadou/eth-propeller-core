@@ -1,5 +1,4 @@
-package org.adridadou.ethereum.propeller.converters.e2e.encoders
-
+package org.adridadou.ethereum.propeller.converters.e2e
 
 import java.io.File
 
@@ -13,11 +12,12 @@ import org.scalacheck.Prop._
 import org.scalatest.Matchers
 import org.scalatest.check.Checkers
 
+
 /**
   * Created by davidroon on 26.03.17.
   * This code is released under Apache 2 license
   */
-class AccountCheck extends Checkers with Matchers {
+class AddressCheck extends Checkers with Matchers {
 
   @Test
   def checkEncode(): Unit = {
@@ -26,18 +26,18 @@ class AccountCheck extends Checkers with Matchers {
     val contract = facade.compile(SoliditySourceFile.from(new File("src/test/resources/conversionContract.sol"))).get().findContract("myContract").get()
     val contractAddress = facade.publishContract(contract, mainAccount).get()
 
-    val contractObject = facade.createContractProxy(contract, contractAddress, mainAccount, classOf[AccountContract])
+    val contractObject = facade.createContractProxy(contract, contractAddress, mainAccount, classOf[AddressContract])
     check(forAll(arbitrary[BigInt])(checkEncode(contractObject, _)))
   }
 
-  private def checkEncode(contractObject: AccountContract, seed: BigInt) = {
+  private def checkEncode(contractObject: AddressContract, seed: BigInt) = {
     val account = new EthAccount(seed.bigInteger)
-    contractObject.addressFunc(account) shouldEqual account.getAddress
+    contractObject.addressFunc(account.getAddress) shouldEqual account.getAddress
     true
   }
 
 }
 
-trait AccountContract {
-  def addressFunc(account: EthAccount): EthAddress
+trait AddressContract {
+  def addressFunc(account: EthAddress): EthAddress
 }
