@@ -11,7 +11,7 @@ import org.scalatest.{FlatSpec, Matchers}
   * Created by davidroon on 26.03.17.
   * This code is released under Apache 2 license
   */
-class DateEncoderTest extends FlatSpec with Matchers with Checkers with SolidityConversionHelper {
+class DateTest extends FlatSpec with Matchers with Checkers with SolidityConversionHelper {
 
   "Date type" should "be converted from and to date with the same value" in {
     check(forAll(arbitrary[Date])(checkEncode(contractObject[DateContract], _)))
