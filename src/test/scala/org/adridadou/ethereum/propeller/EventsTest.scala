@@ -8,20 +8,20 @@ import org.adridadou.ethereum.propeller.keystore.AccountProvider
 import org.adridadou.ethereum.propeller.values.EthValue.ether
 import org.adridadou.ethereum.propeller.values.SoliditySource
 import org.junit.Assert.assertEquals
-import org.junit.Test
+import org.scalatest.check.Checkers
+import org.scalatest.{FlatSpec, Matchers}
 
 /**
   * Created by davidroon on 11.04.17.
   * This code is released under Apache 2 license
   */
-class EventsTest {
+class EventsTest extends FlatSpec with Matchers with Checkers {
 
   private val mainAccount = AccountProvider.fromSeed("hello")
   private val ethereum = CoreEthereumFacadeProvider.create(new EthereumTest(TestConfig.builder.balance(mainAccount, ether(1000)).build))
   private val contractSource = SoliditySource.from(new File("src/test/resources/contractEvents.sol"))
 
-  @Test
-  def createTests(): Unit = {
+  "Events" should "be observable from the ethereum network" in {
     val address = publishAndMapContract(ethereum)
     val compiledContract = ethereum.compile(contractSource).get.findContract("contractEvents").get
     val myContract = ethereum.createContractProxy(compiledContract, address, mainAccount, classOf[ContractEvents])

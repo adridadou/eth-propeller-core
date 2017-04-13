@@ -13,4 +13,12 @@ contract myContract {
     function addressFunc(address addr) returns (address) {
         return addr;
     }
+
+    function dateFunc(uint dateValue) returns (uint) {
+        return dateValue;
+    }
+
+    function boolFunc(bool boolValue) returns (bool) {
+        return boolValue;
+    }
 }

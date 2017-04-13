@@ -12,7 +12,7 @@ import java.math.BigInteger;
 public class BooleanEncoder implements SolidityTypeEncoder {
     @Override
     public boolean canConvert(Class<?> type) {
-        return type.equals(Boolean.class);
+        return type.equals(Boolean.class) || type.getTypeName().equals("boolean");
     }
 
     @Override

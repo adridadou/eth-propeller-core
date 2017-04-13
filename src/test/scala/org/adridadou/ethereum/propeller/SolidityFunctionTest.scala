@@ -7,12 +7,11 @@ import org.adridadou.ethereum.propeller.keystore.AccountProvider
 import org.adridadou.ethereum.propeller.solidity.{SolidityContractDetails, SolidityFunction}
 import org.adridadou.ethereum.propeller.values.{EthAddress, EthData, SoliditySource}
 import org.ethereum.core.CallTransaction
-import org.junit.Test
 import org.mockito.Mockito
 import org.scalacheck.Arbitrary._
 import org.scalacheck.Prop._
-import org.scalatest.Matchers
 import org.scalatest.check.Checkers
+import org.scalatest.{FlatSpec, Matchers}
 
 import scala.collection.JavaConverters._
 
@@ -20,11 +19,10 @@ import scala.collection.JavaConverters._
   * Created by davidroon on 26.03.17.
   * This code is released under Apache 2 license
   */
-class SolidityFunctionCheck extends Checkers with Matchers {
+class SolidityFunctionTest extends FlatSpec with Matchers with Checkers {
   val contractSource: File = new File("src/test/resources/conversionContract.sol")
 
-  @Test
-  def checkGenerateSamePublicKeyAndAddress(): Unit = {
+  "Solidity function" should "generate the same public key and address as the ethereumJ version" in {
     val smartContract: SmartContract = getSmartContract
     val ethjSmartContract: CallTransaction.Contract = getEthjSmartContract
 

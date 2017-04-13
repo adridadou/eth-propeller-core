@@ -15,7 +15,7 @@ import org.scalatest.{FlatSpec, Matchers}
   * Created by davidroon on 26.03.17.
   * This code is released under Apache 2 license
   */
-class AccountCheck extends FlatSpec with Matchers with Checkers {
+class AccountTest extends FlatSpec with Matchers with Checkers {
 
   "The account type" should "be converted into an address and then encoded and the address should be decoded properly" in {
     val mainAccount = AccountProvider.fromSeed("test")
