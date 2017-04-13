@@ -4,12 +4,15 @@ import java.io.File
 import java.util.concurrent.CompletableFuture
 
 import org.adridadou.ethereum.propeller.backend.{EthereumTest, TestConfig}
+import org.adridadou.ethereum.propeller.exception.EthereumApiException
 import org.adridadou.ethereum.propeller.keystore.AccountProvider
 import org.adridadou.ethereum.propeller.values.EthValue.ether
 import org.adridadou.ethereum.propeller.values.SoliditySource
 import org.junit.Assert.assertEquals
 import org.scalatest.check.Checkers
 import org.scalatest.{FlatSpec, Matchers}
+
+import scala.compat.java8.OptionConverters._
 
 /**
   * Created by davidroon on 11.04.17.
@@ -23,12 +26,13 @@ class EventsTest extends FlatSpec with Matchers with Checkers {
 
   "Events" should "be observable from the ethereum network" in {
     val address = publishAndMapContract(ethereum)
-    val compiledContract = ethereum.compile(contractSource).get.findContract("contractEvents").get
-    val myContract = ethereum.createContractProxy(compiledContract, address, mainAccount, classOf[ContractEvents])
-    val solidityEvent = ethereum.findEventDefinition(compiledContract, "MyEvent", classOf[MyEvent]).get
-    val observeEvent = ethereum.observeEvents(solidityEvent, address, classOf[MyEvent])
-    myContract.createEvent("my event is here")
-    assertEquals("my event is here", observeEvent.toBlocking.first.value)
+    (for (compiledContract <- ethereum.compile(contractSource).get.findContract("contractEvents").asScala;
+          solidityEvent <- ethereum.findEventDefinition(compiledContract, "MyEvent", classOf[MyEvent]).asScala) yield {
+      val myContract = ethereum.createContractProxy(compiledContract, address, mainAccount, classOf[ContractEvents])
+      val observeEvent = ethereum.observeEvents(solidityEvent, address, classOf[MyEvent])
+      myContract.createEvent("my event is here")
+      assertEquals("my event is here", observeEvent.toBlocking.first.value)
+    }).getOrElse(() => throw new EthereumApiException("something went wrong!"))
   }
 
   private def publishAndMapContract(ethereum: EthereumFacade) = {

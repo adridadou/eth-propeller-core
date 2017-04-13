@@ -31,15 +31,14 @@ class SolidityFunctionTest extends FlatSpec with Matchers with Checkers {
   }
 
   private def testInt(smartContract: SmartContract, ethjSmartContract: CallTransaction.Contract, funcName: String, value: Integer): Boolean = {
-    val propellerFunc: SolidityFunction = smartContract.getFunctions.asScala.filter((func: SolidityFunction) => func.getName == funcName).head
-    val ethjStrFunc: CallTransaction.Function = ethjSmartContract.functions.filter((func: CallTransaction.Function) => func.name == funcName).head
-
-    val ethjResult = EthData.of(ethjStrFunc.encode(value))
-    val propellerResult = propellerFunc.encode(value)
-
-    ethjResult shouldEqual propellerResult
-
-    true
+    (for (
+      propellerFunc <- smartContract.getFunctions.asScala.find((func: SolidityFunction) => func.getName == funcName);
+      ethjStrFunc <- ethjSmartContract.functions.find((func: CallTransaction.Function) => func.name == funcName)) yield {
+      val ethjResult = EthData.of(ethjStrFunc.encode(value))
+      val propellerResult = propellerFunc.encode(value)
+      ethjResult shouldEqual propellerResult
+      true
+    }).getOrElse(false)
   }
 
   private def testStr(smartContract: SmartContract, ethjSmartContract: CallTransaction.Contract, funcName: String, value: String): Boolean = {
