@@ -1,6 +1,7 @@
 package org.adridadou.ethereum.propeller.solidity.converters.encoders;
 
 
+import org.adridadou.ethereum.propeller.solidity.SolidityType;
 import org.adridadou.ethereum.propeller.values.EthData;
 
 /**
@@ -10,6 +11,6 @@ import org.adridadou.ethereum.propeller.values.EthData;
 public interface SolidityTypeEncoder {
     boolean canConvert(Class<?> type);
 
-    EthData encode(Object arg);
+    EthData encode(Object arg, SolidityType solidityType);
 
 }

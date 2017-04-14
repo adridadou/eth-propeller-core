@@ -1,6 +1,7 @@
 package org.adridadou.ethereum.propeller.solidity.converters.encoders;
 
 import org.adridadou.ethereum.propeller.exception.EthereumApiException;
+import org.adridadou.ethereum.propeller.solidity.SolidityType;
 import org.adridadou.ethereum.propeller.values.EthData;
 
 import java.math.BigInteger;
@@ -10,13 +11,14 @@ import java.math.BigInteger;
  * This code is released under Apache 2 license
  */
 public class BooleanEncoder implements SolidityTypeEncoder {
+
     @Override
     public boolean canConvert(Class<?> type) {
         return type.equals(Boolean.class) || type.getTypeName().equals("boolean");
     }
 
     @Override
-    public EthData encode(Object arg) {
+    public EthData encode(Object arg, SolidityType solidityType) {
         if (arg instanceof Boolean) {
             return EthData.of((Boolean) arg ? BigInteger.ONE : BigInteger.ZERO);
         }

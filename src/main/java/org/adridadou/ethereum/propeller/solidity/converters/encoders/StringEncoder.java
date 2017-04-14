@@ -1,5 +1,6 @@
 package org.adridadou.ethereum.propeller.solidity.converters.encoders;
 
+import org.adridadou.ethereum.propeller.solidity.SolidityType;
 import org.adridadou.ethereum.propeller.values.EthData;
 
 import java.nio.charset.StandardCharsets;
@@ -14,7 +15,7 @@ public class StringEncoder implements SolidityTypeEncoder {
         return String.class.equals(type);
     }
 
-    public EthData encode(Object value) {
+    public EthData encode(Object value, SolidityType solidityType) {
         String str = (String) value;
         byte[] bytesValue = str.getBytes(StandardCharsets.UTF_8);
         byte[] resizedBytesValue = new byte[(((bytesValue.length - 1) / 32) + 1) * 32];

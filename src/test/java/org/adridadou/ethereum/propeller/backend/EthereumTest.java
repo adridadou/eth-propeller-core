@@ -3,7 +3,6 @@ package org.adridadou.ethereum.propeller.backend;
 import org.adridadou.ethereum.propeller.EthereumBackend;
 import org.adridadou.ethereum.propeller.event.EthereumEventHandler;
 import org.adridadou.ethereum.propeller.exception.EthereumApiException;
-import org.adridadou.ethereum.propeller.keystore.AccountProvider;
 import org.adridadou.ethereum.propeller.values.*;
 import org.ethereum.core.Transaction;
 import org.ethereum.crypto.ECKey;
@@ -48,10 +47,6 @@ public class EthereumTest implements EthereumBackend {
         });
 
         this.testConfig = testConfig;
-    }
-
-    public EthAccount defaultAccount() {
-        return AccountProvider.fromPrivateKey(this.blockchain.getSender().getPrivKey());
     }
 
     @Override
@@ -103,7 +98,7 @@ public class EthereumTest implements EthereumBackend {
     }
 
     @Override
-    public EthData constantCall(final EthAccount account, final EthAddress address, final EthValue value, final EthData data) {
+    public synchronized EthData constantCall(final EthAccount account, final EthAddress address, final EthValue value, final EthData data) {
         return localExecutionService.executeLocally(account, address, value, data);
     }
 
