@@ -13,7 +13,8 @@ import org.scalatest.{FlatSpec, Matchers}
 class AccountTest extends FlatSpec with Matchers with Checkers with SolidityConversionHelper {
 
   "The account type" should "be converted into an address and then encoded and the address should be decoded properly" in {
-    check(forAll(arbitrary[BigInt])(checkEncode(contractObject[AccountContract], _)))
+    val contract = contractObject[AccountContract]
+    check(forAll(arbitrary[BigInt])(checkEncode(contract, _)))
   }
 
   private def checkEncode(contractObject: AccountContract, seed: BigInt) = {

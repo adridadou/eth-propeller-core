@@ -12,7 +12,8 @@ import org.scalatest.{FlatSpec, Matchers}
 class StringTest extends FlatSpec with Matchers with Checkers with SolidityConversionHelper {
 
   "String type" should "be converted from and to the same value" in {
-    check(forAll(arbitrary[String])(checkEncode(contractObject[StringContract](), _)))
+    val contract = contractObject[StringContract]
+    check(forAll(arbitrary[String])(checkEncode(contract, _)))
   }
 
   private def checkEncode(contractObject: StringContract, str: String) = {
