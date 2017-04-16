@@ -25,4 +25,8 @@ contract myContract {
     function arrayFunc(int[10] value) returns (int[10]) {
         return value;
     }
+
+    function mixWithStringFunc(int test1, string test2, bool test3, string test4) returns (string) {
+        return test4;
+    }
 }

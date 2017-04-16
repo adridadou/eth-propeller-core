@@ -3,6 +3,8 @@ package org.adridadou.ethereum.propeller.converters.e2e
 import java.math.BigInteger
 import java.util
 
+import org.scalacheck.Arbitrary._
+import org.scalacheck.Prop._
 import org.scalatest.check.Checkers
 import org.scalatest.{FlatSpec, Matchers}
 
@@ -16,8 +18,7 @@ class CollectionTest extends FlatSpec with Matchers with Checkers with SolidityC
 
   "Collection type (array, list, set)" should "be converted from and to the same value" in {
     val contract = contractObject[CollectionContract]
-    //check(forAll(arbitrary[Array[BigInt]])(checkEncode(contract, _)))
-    checkEncode(contract, Array(BigInt(1)))
+    check(forAll(arbitrary[Array[BigInt]])(checkEncode(contract, _)))
   }
 
   private def checkEncode(contract: CollectionContract, s: Seq[BigInt]) = {
