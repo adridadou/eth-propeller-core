@@ -12,8 +12,8 @@ import java.lang.reflect.Type;
 public class AddressDecoder implements SolidityTypeDecoder {
 
     @Override
-    public EthAddress decode(EthData word, EthData data, Type resultType) {
-        return EthAddress.of(word.data);
+    public EthAddress decode(Integer index, EthData data, Type resultType) {
+        return EthAddress.of(data.word(index).data);
     }
 
     @Override

@@ -43,6 +43,10 @@ public class EthData {
         return EthData.of(new byte[0]);
     }
 
+    public static EthData emptyWord() {
+        return EthData.of(new byte[32]);
+    }
+
     public static EthData of(int length) {
         return EthData.of(BigInteger.valueOf(length));
     }

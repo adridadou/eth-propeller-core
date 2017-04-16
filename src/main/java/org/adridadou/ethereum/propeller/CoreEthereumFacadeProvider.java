@@ -4,9 +4,13 @@ import org.adridadou.ethereum.propeller.event.EthereumEventHandler;
 import org.adridadou.ethereum.propeller.solidity.SolidityCompiler;
 import org.adridadou.ethereum.propeller.solidity.converters.SolidityTypeGroup;
 import org.adridadou.ethereum.propeller.solidity.converters.decoders.*;
+import org.adridadou.ethereum.propeller.solidity.converters.decoders.list.ArrayDecoder;
 import org.adridadou.ethereum.propeller.solidity.converters.decoders.list.ListDecoder;
 import org.adridadou.ethereum.propeller.solidity.converters.decoders.list.SetDecoder;
 import org.adridadou.ethereum.propeller.solidity.converters.encoders.*;
+import org.adridadou.ethereum.propeller.solidity.converters.encoders.list.ArrayEncoder;
+import org.adridadou.ethereum.propeller.solidity.converters.encoders.list.ListEncoder;
+import org.adridadou.ethereum.propeller.solidity.converters.encoders.list.SetEncoder;
 import org.adridadou.ethereum.propeller.swarm.SwarmService;
 
 /**
@@ -26,6 +30,8 @@ public class CoreEthereumFacadeProvider {
         registerDefaultEncoders(proxy);
         registerDefaultDecoders(proxy);
         registerDefaultListDecoder(proxy);
+        registerDefaultListEncoder(proxy);
+
         return new EthereumFacade(proxy, swarm, new SolidityCompiler());
     }
 
@@ -49,9 +55,18 @@ public class CoreEthereumFacadeProvider {
                 .addEncoder(SolidityTypeGroup.Number, new DateEncoder());
     }
 
+
     private static void registerDefaultListDecoder(EthereumProxy proxy) {
         proxy
                 .addListDecoder(ListDecoder.class)
-                .addListDecoder(SetDecoder.class);
+                .addListDecoder(SetDecoder.class)
+                .addListDecoder(ArrayDecoder.class);
+    }
+
+    private static void registerDefaultListEncoder(EthereumProxy proxy) {
+        proxy
+                .addListEncoder(ListEncoder.class)
+                .addListEncoder(SetEncoder.class)
+                .addListEncoder(ArrayEncoder.class);
     }
 }

@@ -94,7 +94,7 @@ public class AbiEntry {
                     .findFirst();
 
             return optDecoder
-                    .map(decoder -> decoder.decode(data.word(0), data, resultType))
+                    .map(decoder -> decoder.decode(0, data, resultType))
                     .orElseGet(() -> decodeFromConstructor(data, decoders, resultCls));
 
         }
@@ -158,7 +158,7 @@ public class AbiEntry {
             final Type resultType = resultTypes[i];
             final Class<?> resultCls = resultClasses[i];
             SolidityTypeDecoder decoder = decoders.get(i).stream().filter(encoder -> encoder.canDecode(resultCls)).findFirst().orElseThrow(() -> new EthereumApiException("could not find decoder for " + resultType.getTypeName() + " serious bug detected!"));
-            decodeResult[i] = decoder.decode(data.word(i), data, resultType);
+            decodeResult[i] = decoder.decode(i, data, resultType);
         }
 
         return decodeResult;

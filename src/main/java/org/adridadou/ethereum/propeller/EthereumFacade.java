@@ -109,11 +109,11 @@ public class EthereumFacade {
                 .filter(entry -> entry.getType().equals("event"))
                 .filter(entry -> entry.getName().equals(eventName))
                 .filter(entry -> {
-                    List<List<SolidityTypeDecoder>> decoders = entry.getInputs().stream().map(ethereumProxy::getDecoder).collect(Collectors.toList());
+                    List<List<SolidityTypeDecoder>> decoders = entry.getInputs().stream().map(ethereumProxy::getDecoders).collect(Collectors.toList());
                     return entry.findConstructor(decoders, eventEntity).isPresent();
                 })
                 .map(entry -> {
-                    List<List<SolidityTypeDecoder>> decoders = entry.getInputs().stream().map(ethereumProxy::getDecoder).collect(Collectors.toList());
+                    List<List<SolidityTypeDecoder>> decoders = entry.getInputs().stream().map(ethereumProxy::getDecoders).collect(Collectors.toList());
                     return new SolidityEvent(entry, decoders);
                 })
                 .findFirst();

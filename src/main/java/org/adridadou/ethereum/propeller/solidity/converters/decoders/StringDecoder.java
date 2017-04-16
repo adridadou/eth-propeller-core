@@ -15,10 +15,10 @@ public class StringDecoder implements SolidityTypeDecoder {
     private final NumberDecoder numberDecoder = new NumberDecoder();
 
     @Override
-    public String decode(EthData word, EthData data, Type resultType) {
-        Integer strIndex = numberDecoder.decode(word, data, Integer.class).intValue();
-        Integer len = numberDecoder.decode(EthData.of(ArrayUtils.subarray(data.data, strIndex, strIndex + WORD_SIZE)), data, Integer.class).intValue();
-        return new String(ArrayUtils.subarray(data.data, strIndex + WORD_SIZE, strIndex + WORD_SIZE + len));
+    public String decode(Integer index, EthData data, Type resultType) {
+        Integer strIndex = numberDecoder.decode(index, data, Integer.class).intValue() / 32;
+        Integer len = numberDecoder.decode(strIndex, data, Integer.class).intValue();
+        return new String(ArrayUtils.subarray(data.data, (strIndex + 1) * WORD_SIZE, (strIndex + 1) * WORD_SIZE + len));
     }
 
     @Override

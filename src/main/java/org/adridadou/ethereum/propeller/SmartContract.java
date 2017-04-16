@@ -32,7 +32,7 @@ public class SmartContract {
     private final EthereumProxy proxy;
     private final EthAccount account;
 
-    public SmartContract(SolidityContractDetails contract, EthAccount account, EthAddress address, EthereumProxy proxy, EthereumBackend ethereum) {
+    SmartContract(SolidityContractDetails contract, EthAccount account, EthAddress address, EthereumProxy proxy, EthereumBackend ethereum) {
         this.contract = contract;
         this.account = account;
         this.proxy = proxy;
@@ -40,7 +40,7 @@ public class SmartContract {
         this.ethereum = ethereum;
     }
 
-    public List<SolidityFunction> getFunctions() {
+    List<SolidityFunction> getFunctions() {
         return contract.parseAbi().stream()
                 .filter(entry -> "function".equals(entry.getType()))
                 .map(this::buildFunction)
@@ -53,24 +53,24 @@ public class SmartContract {
 
     private List<List<SolidityTypeDecoder>> getDecoders(AbiEntry entry) {
         return entry.getOutputs().stream()
-                .map(proxy::getDecoder)
+                .map(proxy::getDecoders)
                 .collect(Collectors.toList());
     }
 
     private List<List<SolidityTypeEncoder>> getEncoders(AbiEntry entry) {
         return entry.getInputs().stream()
-                .map(proxy::getEncoder)
+                .map(proxy::getEncoders)
                 .collect(Collectors.toList());
     }
 
-    public Object callConstFunction(Method method, EthValue value, Object... args) {
+    Object callConstFunction(Method method, EthValue value, Object... args) {
         return getFunction(method).map(func -> {
             EthData data = func.encode(args);
             return func.decode(ethereum.constantCall(account, address, value, data), method.getGenericReturnType());
         }).orElseThrow(() -> new EthereumApiException("could not find the function " + method.getName() + " that maches the arguments"));
     }
 
-    public CompletableFuture<?> callFunction(Method method, Object... args) {
+    CompletableFuture<?> callFunction(Method method, Object... args) {
         return callFunction(wei(0), method, args);
     }
 
@@ -78,7 +78,7 @@ public class SmartContract {
         return callFunction(value, method, arguments);
     }
 
-    public CompletableFuture<?> callFunction(EthValue value, Method method, Object... args) {
+    CompletableFuture<?> callFunction(EthValue value, Method method, Object... args) {
         return getFunction(method).map(func -> {
             EthData functionCallBytes = func.encode(args);
             return proxy.sendTx(value, functionCallBytes, account, address)
@@ -102,7 +102,7 @@ public class SmartContract {
                 .findFirst();
     }
 
-    public Optional<SolidityFunction> getConstructor(Object[] args) {
+    Optional<SolidityFunction> getConstructor(Object[] args) {
         return getFunctions().stream()
                 .filter(func -> func.matchParams(args)).findFirst();
     }

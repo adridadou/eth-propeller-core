@@ -13,6 +13,7 @@ import org.adridadou.ethereum.propeller.solidity.converters.SolidityTypeGroup;
 import org.adridadou.ethereum.propeller.solidity.converters.decoders.SolidityTypeDecoder;
 import org.adridadou.ethereum.propeller.solidity.converters.decoders.list.CollectionDecoder;
 import org.adridadou.ethereum.propeller.solidity.converters.encoders.SolidityTypeEncoder;
+import org.adridadou.ethereum.propeller.solidity.converters.encoders.list.CollectionEncoder;
 import org.adridadou.ethereum.propeller.values.*;
 import org.apache.commons.lang.ArrayUtils;
 import rx.Observable;
@@ -29,7 +30,7 @@ import static org.adridadou.ethereum.propeller.values.EthValue.wei;
  * Created by davidroon on 20.04.16.
  * This code is released under Apache 2 license
  */
-public class EthereumProxy {
+class EthereumProxy {
     private static final int ADDITIONAL_GAS_FOR_CONTRACT_CREATION = 15_000;
     private static final int ADDITIONAL_GAS_DIRTY_FIX = 200_000;
     private static final long BLOCK_WAIT_LIMIT = 16;
@@ -41,46 +42,52 @@ public class EthereumProxy {
     private final Map<SolidityTypeGroup, List<SolidityTypeEncoder>> encoders = new HashMap<>();
     private final Map<SolidityTypeGroup, List<SolidityTypeDecoder>> decoders = new HashMap<>();
     private final List<Class<? extends CollectionDecoder>> listDecoders = new ArrayList<>();
+    private final List<Class<? extends CollectionEncoder>> listEncoders = new ArrayList<>();
 
-    public EthereumProxy(EthereumBackend ethereum, EthereumEventHandler eventHandler) {
+    EthereumProxy(EthereumBackend ethereum, EthereumEventHandler eventHandler) {
         this.ethereum = ethereum;
         this.eventHandler = eventHandler;
         updateNonce();
         ethereum.register(eventHandler);
     }
 
-    public EthereumProxy addEncoder(final SolidityTypeGroup typeGroup, final SolidityTypeEncoder encoder) {
+    EthereumProxy addEncoder(final SolidityTypeGroup typeGroup, final SolidityTypeEncoder encoder) {
         List<SolidityTypeEncoder> encoderList = encoders.computeIfAbsent(typeGroup, key -> new ArrayList<>());
         encoderList.add(encoder);
         return this;
     }
 
-    public EthereumProxy addListDecoder(final Class<? extends CollectionDecoder> decoder) {
+    EthereumProxy addListDecoder(final Class<? extends CollectionDecoder> decoder) {
         listDecoders.add(decoder);
         return this;
     }
 
-    public EthereumProxy addDecoder(final SolidityTypeGroup typeGroup, final SolidityTypeDecoder decoder) {
+    EthereumProxy addListEncoder(final Class<? extends CollectionEncoder> decoder) {
+        listEncoders.add(decoder);
+        return this;
+    }
+
+    EthereumProxy addDecoder(final SolidityTypeGroup typeGroup, final SolidityTypeDecoder decoder) {
         List<SolidityTypeDecoder> decoderList = decoders.computeIfAbsent(typeGroup, key -> new ArrayList<>());
         decoderList.add(decoder);
         return this;
     }
 
-    public CompletableFuture<EthAddress> publish(SolidityContractDetails contract, EthAccount account, Object... constructorArgs) {
+    CompletableFuture<EthAddress> publish(SolidityContractDetails contract, EthAccount account, Object... constructorArgs) {
         return createContract(contract, account, constructorArgs);
     }
 
-    public Nonce getNonce(final EthAddress address) {
+    Nonce getNonce(final EthAddress address) {
         nonces.computeIfAbsent(address, ethereum::getNonce);
         Integer offset = Optional.ofNullable(pendingTransactions.get(address)).map(Set::size).orElse(0);
         return nonces.get(address).add(offset);
     }
 
-    public SmartContractByteCode getCode(EthAddress address) {
+    SmartContractByteCode getCode(EthAddress address) {
         return ethereum.getCode(address);
     }
 
-    public <T> Observable<T> observeEvents(SolidityEvent eventDefinition, EthAddress contractAddress, Class<T> cls) {
+    <T> Observable<T> observeEvents(SolidityEvent eventDefinition, EthAddress contractAddress, Class<T> cls) {
         return eventHandler.observeTransactions()
                 .filter(params -> contractAddress.equals(params.receipt.receiveAddress))
                 .flatMap(params -> Observable.from(params.getLogs()))
@@ -88,17 +95,17 @@ public class EthereumProxy {
                 .map(data -> (T) eventDefinition.parseEvent(data, cls));
     }
 
-    public CompletableFuture<EthAddress> publishContract(EthValue ethValue, EthData data, EthAccount account) {
+    private CompletableFuture<EthAddress> publishContract(EthValue ethValue, EthData data, EthAccount account) {
         return this.sendTxInternal(ethValue, data, account, EthAddress.empty())
                 .thenApply(receipt -> receipt.contractAddress);
     }
 
-    public CompletableFuture<EthExecutionResult> sendTx(EthValue value, EthData data, EthAccount account, EthAddress address) {
+    CompletableFuture<EthExecutionResult> sendTx(EthValue value, EthData data, EthAccount account, EthAddress address) {
         return this.sendTxInternal(value, data, account, address)
                 .thenApply(receipt -> new EthExecutionResult(receipt.executionResult));
     }
 
-    public SmartContract getSmartContract(SolidityContractDetails details, EthAddress address, EthAccount account) {
+    SmartContract getSmartContract(SolidityContractDetails details, EthAddress address, EthAccount account) {
         return new SmartContract(details, account, address, this, ethereum);
     }
 
@@ -192,15 +199,15 @@ public class EthereumProxy {
                                 })));
     }
 
-    public EthereumEventHandler events() {
+    EthereumEventHandler events() {
         return eventHandler;
     }
 
-    public boolean addressExists(final EthAddress address) {
+    boolean addressExists(final EthAddress address) {
         return ethereum.addressExists(address);
     }
 
-    public EthValue getBalance(final EthAddress address) {
+    EthValue getBalance(final EthAddress address) {
         return ethereum.getBalance(address);
     }
 
@@ -210,12 +217,26 @@ public class EthereumProxy {
         pendingTransactions.put(address, hashes);
     }
 
-    public List<SolidityTypeEncoder> getEncoder(AbiParam abiParam) {
-        SolidityType type = SolidityType.find(abiParam.getType()).orElseThrow(() -> new EthereumApiException("unknown type " + abiParam.getType()));
+    List<SolidityTypeEncoder> getEncoders(AbiParam abiParam) {
+        SolidityType type = SolidityType.find(abiParam.getType())
+                .orElseThrow(() -> new EthereumApiException("unknown type " + abiParam.getType()));
+        if (abiParam.isArray()) {
+            return listEncoders.stream().map(cls -> {
+                try {
+                    return cls.getConstructor(List.class, Integer.class).newInstance(getEncoders(type, abiParam), abiParam.getArraySize());
+                } catch (InstantiationException | NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
+                    throw new EthereumApiException("error while preparing list encoders", e);
+                }
+            }).collect(Collectors.toList());
+        }
+        return getEncoders(type, abiParam);
+    }
+
+    private List<SolidityTypeEncoder> getEncoders(final SolidityType type, AbiParam abiParam) {
         return Optional.ofNullable(encoders.get(SolidityTypeGroup.resolveGroup(type))).orElseThrow(() -> new EthereumApiException("no encoder found for solidity type " + abiParam.getType()));
     }
 
-    public List<SolidityTypeDecoder> getDecoder(AbiParam abiParam) {
+    List<SolidityTypeDecoder> getDecoders(AbiParam abiParam) {
         SolidityType type = SolidityType.find(abiParam.getType())
                 .orElseThrow(() -> new EthereumApiException("unknown type " + abiParam.getType()));
 

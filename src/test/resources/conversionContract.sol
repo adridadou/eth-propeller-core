@@ -22,7 +22,7 @@ contract myContract {
         return boolValue;
     }
 
-    function arrayFunc(uint[10] value) returns (uint[10]) {
+    function arrayFunc(int[10] value) returns (int[10]) {
         return value;
     }
 }

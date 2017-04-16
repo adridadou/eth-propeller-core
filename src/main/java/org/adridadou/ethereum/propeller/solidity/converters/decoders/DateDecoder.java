@@ -14,8 +14,8 @@ public class DateDecoder implements SolidityTypeDecoder {
     private final NumberDecoder numberDecoder = new NumberDecoder();
 
     @Override
-    public Date decode(EthData word, EthData data, Type resultType) {
-        return new Date(numberDecoder.decode(word, data, Long.class).longValue());
+    public Date decode(Integer index, EthData data, Type resultType) {
+        return new Date(numberDecoder.decode(index, data, Long.class).longValue());
     }
 
     @Override
