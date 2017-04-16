@@ -22,8 +22,9 @@ public abstract class CollectionEncoder implements SolidityTypeEncoder {
 
     public EthData encode(List<?> lst, SolidityType solidityType) {
         int diff = size - lst.size();
-        if (diff < 0)
-            throw new RuntimeException("List size (" + lst.size() + ") != " + size + " for type " + solidityType.name() + "[" + size + "]");
+        if (diff < 0) {
+            throw new EthereumApiException("List size (" + lst.size() + ") != " + size + " for type " + solidityType.name() + "[" + size + "]");
+        }
         EthData result = lst.stream()
                 .map(entry -> {
                     SolidityTypeEncoder encoder = encoders.stream()
