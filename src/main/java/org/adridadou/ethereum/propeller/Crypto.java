@@ -1,5 +1,6 @@
 package org.adridadou.ethereum.propeller;
 
+import org.adridadou.ethereum.propeller.values.EthData;
 import org.spongycastle.crypto.generators.SCrypt;
 import org.spongycastle.jcajce.provider.digest.Keccak;
 
@@ -50,5 +51,9 @@ public final class Crypto {
         KECCAK.reset();
         KECCAK.update(h);
         return KECCAK.digest();
+    }
+
+    public static EthData sha3(EthData h) {
+        return EthData.of(sha3(h.data));
     }
 }

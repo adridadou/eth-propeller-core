@@ -48,6 +48,7 @@ public final class CoreEthereumFacadeProvider {
     private static void registerDefaultEncoders(EthereumProxy proxy) {
         proxy
                 .addEncoder(SolidityTypeGroup.Number, new NumberEncoder())
+                .addEncoder(SolidityTypeGroup.Number, new EnumEncoder())
                 .addEncoder(SolidityTypeGroup.Bool, new BooleanEncoder())
                 .addEncoder(SolidityTypeGroup.String, new StringEncoder())
                 .addEncoder(SolidityTypeGroup.Address, new AddressEncoder())

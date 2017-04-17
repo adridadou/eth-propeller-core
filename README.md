@@ -12,3 +12,8 @@ You still need to decide which backend you want to use. There are two possibilit
 * If you want to use Ethereumj with a embedded full node, go to eth-propeller-ethj
 * If you want to use web3j to connect to a remote RPC API, go to eth-propeller-web3j
 
+#Testing
+In order to run unit tests on a mocked Ethereum network, please use eth-propeller-ethj
+
+
+**Note**: Ethereumj's license is LPGL3. So make sure that your license is compatible with LPGL3 if you want to use ethereumJ for something else than testing
