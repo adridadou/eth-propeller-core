@@ -157,7 +157,9 @@ public class AbiEntry {
         for (int i = 0; i < decoders.size(); i++) {
             final Type resultType = resultTypes[i];
             final Class<?> resultCls = resultClasses[i];
-            SolidityTypeDecoder decoder = decoders.get(i).stream().filter(encoder -> encoder.canDecode(resultCls)).findFirst().orElseThrow(() -> new EthereumApiException("could not find decoder for " + resultType.getTypeName() + " serious bug detected!"));
+            SolidityTypeDecoder decoder = decoders.get(i).stream()
+                    .filter(encoder -> encoder.canDecode(resultCls))
+                    .findFirst().orElseThrow(() -> new EthereumApiException("could not find decoder for " + resultType.getTypeName() + " serious bug detected!"));
             decodeResult[i] = decoder.decode(i, data, resultType);
         }
 
