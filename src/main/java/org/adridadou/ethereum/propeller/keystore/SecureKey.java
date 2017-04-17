@@ -7,7 +7,7 @@ import org.adridadou.ethereum.propeller.values.EthAccount;
  * This code is released under Apache 2 license
  */
 public interface SecureKey {
-    EthAccount decode(final String password) throws Exception;
+    EthAccount decode(String password) throws Exception;
 
     String getName();
 }

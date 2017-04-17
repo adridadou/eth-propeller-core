@@ -5,7 +5,7 @@ package org.adridadou.ethereum.propeller.solidity;
  * This code is released under Apache 2 license
  */
 public class SolidityVersion {
-    private final static String ANCHOR = "Version: ";
+    private static final String ANCHOR = "Version: ";
     private final String version;
 
     public SolidityVersion(String version) {

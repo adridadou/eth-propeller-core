@@ -16,7 +16,7 @@ import java.security.NoSuchAlgorithmException;
  * Created by davidroon on 23.03.17.
  * This code is released under Apache 2 license
  */
-public class Crypto {
+public final class Crypto {
     private static final int KEY_LENGTH = 256;
 
     private Crypto() {
