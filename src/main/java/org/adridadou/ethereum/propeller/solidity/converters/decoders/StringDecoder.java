@@ -16,7 +16,7 @@ public class StringDecoder implements SolidityTypeDecoder {
 
     @Override
     public String decode(Integer index, EthData data, Type resultType) {
-        Integer strIndex = numberDecoder.decode(index, data, Integer.class).intValue() / 32;
+        Integer strIndex = numberDecoder.decode(index, data, Integer.class).intValue() / WORD_SIZE;
         Integer len = numberDecoder.decode(strIndex, data, Integer.class).intValue();
         return new String(ArrayUtils.subarray(data.data, (strIndex + 1) * WORD_SIZE, (strIndex + 1) * WORD_SIZE + len));
     }

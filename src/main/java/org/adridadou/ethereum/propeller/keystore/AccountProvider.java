@@ -14,9 +14,9 @@ import java.security.spec.InvalidKeySpecException;
  * Created by davidroon on 26.12.16.
  * This code is released under Apache 2 license
  */
-public class AccountProvider {
+public final class AccountProvider {
 
-    public static final int BIT_LENGTH = 256;
+    private static final int BIT_LENGTH = 256;
 
     private AccountProvider() {
     }

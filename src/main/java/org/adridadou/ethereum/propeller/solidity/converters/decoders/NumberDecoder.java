@@ -17,7 +17,9 @@ public class NumberDecoder implements SolidityTypeDecoder {
     @Override
     public Number decode(Integer index, EthData data, Type resultType) {
         EthData word = data.word(index);
-        if (word.length() > WORD_SIZE) throw new EthereumApiException("a word should be of size 32:" + word.length());
+        if (word.length() > WORD_SIZE) {
+            throw new EthereumApiException("a word should be of size 32:" + word.length());
+        }
         BigInteger number = (word.isEmpty() ? BigInteger.ZERO : new BigInteger(word.data));
         Class<?> resultCls = (Class) resultType;
 

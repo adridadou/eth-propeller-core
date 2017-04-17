@@ -17,7 +17,10 @@ import java.security.NoSuchAlgorithmException;
  * This code is released under Apache 2 license
  */
 public class Crypto {
-    public static final int KEY_LENGTH = 256;
+    private static final int KEY_LENGTH = 256;
+
+    private Crypto() {
+    }
 
     public static byte[] decryptAes(byte[] iv, byte[] keyBytes, byte[] cipherText) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
         //Initialisation

@@ -15,7 +15,7 @@ public class SolidityContractDetails {
     private final String abi;
     private final String bin;
     private final String metadata;
-    private List<AbiEntry> entries = null;
+    private List<AbiEntry> entries;
 
     public SolidityContractDetails() {
         this(null, null, null);

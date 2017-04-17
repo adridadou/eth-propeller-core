@@ -9,7 +9,7 @@ import java.util.Arrays;
  * Created by davidroon on 19.04.16.
  * This code is released under Apache 2 license
  */
-public class EthAddress {
+public final class EthAddress {
     private static final int MAX_ADDRESS_SIZE = 20;
     private static final byte[] EMPTY_ARRAY = new byte[0];
     public final byte[] address;

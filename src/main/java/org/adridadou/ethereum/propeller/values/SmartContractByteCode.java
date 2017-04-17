@@ -11,7 +11,7 @@ import java.util.Optional;
  * Created by davidroon on 17.12.16.
  * This code is released under Apache 2 license
  */
-public class SmartContractByteCode {
+public final class SmartContractByteCode {
     private static final int DATA_SIZE = 256;
     private static final int HASH_SIZE = 32;
     private static final int START_OF_LINK_INDEX = 7;

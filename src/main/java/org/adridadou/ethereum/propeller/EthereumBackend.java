@@ -14,9 +14,9 @@ public interface EthereumBackend {
 
     boolean addressExists(EthAddress address);
 
-    EthHash submit(final EthAccount account, final EthAddress address, final EthValue value, final EthData data, final Nonce nonce, final GasUsage gasLimit);
+    EthHash submit(EthAccount account, EthAddress address, EthValue value, EthData data, Nonce nonce, GasUsage gasLimit);
 
-    GasUsage estimateGas(final EthAccount account, final EthAddress address, final EthValue value, final EthData data);
+    GasUsage estimateGas(EthAccount account, EthAddress address, EthValue value, EthData data);
 
     Nonce getNonce(EthAddress currentAddress);
 
@@ -24,7 +24,7 @@ public interface EthereumBackend {
 
     SmartContractByteCode getCode(EthAddress address);
 
-    EthData constantCall(final EthAccount account, final EthAddress address, final EthValue value, final EthData data);
+    EthData constantCall(EthAccount account, EthAddress address, EthValue value, EthData data);
 
     void register(EthereumEventHandler eventHandler);
 }

@@ -17,7 +17,7 @@ import org.adridadou.ethereum.propeller.swarm.SwarmService;
  * Created by davidroon on 27.04.16.
  * This code is released under Apache 2 license
  */
-public class CoreEthereumFacadeProvider {
+public final class CoreEthereumFacadeProvider {
 
     private CoreEthereumFacadeProvider() {
     }
