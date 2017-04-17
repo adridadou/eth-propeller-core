@@ -71,9 +71,9 @@ public class SolidityFunction {
                 SolidityTypeEncoder encoder = encoders.get(i).stream()
                         .filter(enc -> enc.canConvert(arg.getClass()))
                         .findFirst().orElseThrow(() -> new EthereumApiException("encoder could not be found. Serious bug detected!!"));
-
-                SolidityType solidityType = SolidityType.find(description.getInputs().get(i).getType()).orElseThrow(() -> new EthereumApiException("unknown solidity type " + description.getType()));
-                if (solidityType.isDynamic) {
+                AbiParam param = description.getInputs().get(i);
+                SolidityType solidityType = SolidityType.find(param.getType()).orElseThrow(() -> new EthereumApiException("unknown solidity type " + description.getType()));
+                if (solidityType.isDynamic || param.isDynamic()) {
                     result = result.merge(numberEncoder.encode(dynamicIndex, SolidityType.UINT));
                     EthData dynamicEncode = encoder.encode(arg, solidityType);
                     dynamicIndex += dynamicEncode.length();

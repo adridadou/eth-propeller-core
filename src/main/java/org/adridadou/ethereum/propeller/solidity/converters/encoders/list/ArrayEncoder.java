@@ -13,6 +13,10 @@ import java.util.List;
  */
 public class ArrayEncoder extends CollectionEncoder {
 
+    public ArrayEncoder(List<SolidityTypeEncoder> encoders) {
+        super(encoders);
+    }
+
     public ArrayEncoder(List<SolidityTypeEncoder> encoders, Integer size) {
         super(encoders, size);
     }

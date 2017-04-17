@@ -40,7 +40,7 @@ public class SmartContract {
         this.ethereum = ethereum;
     }
 
-    List<SolidityFunction> getFunctions() {
+    public List<SolidityFunction> getFunctions() {
         return contract.parseAbi().stream()
                 .filter(entry -> "function".equals(entry.getType()))
                 .map(this::buildFunction)

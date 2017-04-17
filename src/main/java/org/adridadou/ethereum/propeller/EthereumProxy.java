@@ -30,7 +30,7 @@ import static org.adridadou.ethereum.propeller.values.EthValue.wei;
  * Created by davidroon on 20.04.16.
  * This code is released under Apache 2 license
  */
-class EthereumProxy {
+public class EthereumProxy {
     private static final int ADDITIONAL_GAS_FOR_CONTRACT_CREATION = 15_000;
     private static final int ADDITIONAL_GAS_DIRTY_FIX = 200_000;
     private static final long BLOCK_WAIT_LIMIT = 16;
@@ -105,7 +105,7 @@ class EthereumProxy {
                 .thenApply(receipt -> new EthExecutionResult(receipt.executionResult));
     }
 
-    SmartContract getSmartContract(SolidityContractDetails details, EthAddress address, EthAccount account) {
+    public SmartContract getSmartContract(SolidityContractDetails details, EthAddress address, EthAccount account) {
         return new SmartContract(details, account, address, this, ethereum);
     }
 
@@ -217,12 +217,15 @@ class EthereumProxy {
         pendingTransactions.put(address, hashes);
     }
 
-    List<SolidityTypeEncoder> getEncoders(AbiParam abiParam) {
+    public List<SolidityTypeEncoder> getEncoders(AbiParam abiParam) {
         SolidityType type = SolidityType.find(abiParam.getType())
                 .orElseThrow(() -> new EthereumApiException("unknown type " + abiParam.getType()));
         if (abiParam.isArray()) {
             return listEncoders.stream().map(cls -> {
                 try {
+                    if (abiParam.isDynamic()) {
+                        return cls.getConstructor(List.class).newInstance(getEncoders(type, abiParam));
+                    }
                     return cls.getConstructor(List.class, Integer.class).newInstance(getEncoders(type, abiParam), abiParam.getArraySize());
                 } catch (InstantiationException | NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
                     throw new EthereumApiException("error while preparing list encoders", e);

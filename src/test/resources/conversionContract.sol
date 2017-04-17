@@ -26,6 +26,11 @@ contract myContract {
         return value;
     }
 
+    function dynArrayFunc(int[] value) returns (int) {
+        if (value.length > 3) return value[3];
+        return 0;
+    }
+
     function mixWithStringFunc(int test1, string test2, bool test3, string test4) returns (string) {
         return test4;
     }

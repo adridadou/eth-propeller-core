@@ -14,6 +14,10 @@ import java.util.Set;
  */
 public class SetEncoder extends CollectionEncoder {
 
+    public SetEncoder(List<SolidityTypeEncoder> encoders) {
+        super(encoders);
+    }
+
     public SetEncoder(List<SolidityTypeEncoder> encoders, Integer size) {
         super(encoders, size);
     }
