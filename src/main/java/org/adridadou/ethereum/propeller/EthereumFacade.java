@@ -3,11 +3,10 @@ package org.adridadou.ethereum.propeller;
 import org.adridadou.ethereum.propeller.converters.future.FutureConverter;
 import org.adridadou.ethereum.propeller.event.EthereumEventHandler;
 import org.adridadou.ethereum.propeller.exception.EthereumApiException;
-import org.adridadou.ethereum.propeller.solidity.CompilationResult;
-import org.adridadou.ethereum.propeller.solidity.SolidityCompiler;
-import org.adridadou.ethereum.propeller.solidity.SolidityContractDetails;
-import org.adridadou.ethereum.propeller.solidity.SolidityEvent;
+import org.adridadou.ethereum.propeller.solidity.*;
+import org.adridadou.ethereum.propeller.solidity.abi.AbiParam;
 import org.adridadou.ethereum.propeller.solidity.converters.decoders.SolidityTypeDecoder;
+import org.adridadou.ethereum.propeller.solidity.converters.encoders.SolidityTypeEncoder;
 import org.adridadou.ethereum.propeller.swarm.SwarmHash;
 import org.adridadou.ethereum.propeller.swarm.SwarmService;
 import org.adridadou.ethereum.propeller.values.*;
@@ -121,6 +120,25 @@ public class EthereumFacade {
 
     public <T> Observable<T> observeEvents(SolidityEvent eventDefiniton, EthAddress address, Class<T> cls) {
         return ethereumProxy.observeEvents(eventDefiniton, address, cls);
+    }
+
+    public EthData encode(Object arg, SolidityType solidityType) {
+        return Optional.of(arg).map(argument -> {
+            SolidityTypeEncoder encoder = ethereumProxy.getEncoders(new AbiParam(false, "", solidityType.name()))
+                    .stream().filter(enc -> enc.canConvert(arg.getClass()))
+                    .findFirst().orElseThrow(() -> new EthereumApiException("cannot convert the type " + argument.getClass() + " to the solidty type " + solidityType));
+
+            return encoder.encode(arg, solidityType);
+        }).orElseGet(EthData::empty);
+    }
+
+    public <T> T decode(Integer index, EthData data, SolidityType solidityType, Class<T> cls) {
+        SolidityTypeDecoder decoder = ethereumProxy.getDecoders(new AbiParam(false, "", solidityType.name()))
+                .stream()
+                .filter(dec -> dec.canDecode(cls))
+                .findFirst().orElseThrow(() -> new EthereumApiException("cannot decode " + solidityType.name() + " to " + cls.getTypeName()));
+
+        return (T) decoder.decode(index, data, cls);
     }
 
     private SolidityContractDetails getDetails(final EthAddress address) {
