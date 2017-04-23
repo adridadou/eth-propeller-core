@@ -11,7 +11,7 @@ import java.util.function.Supplier;
  * Created by davidroon on 21.04.17.
  * This code is released under Apache 2 license
  */
-public class CastUtil<T> {
+public final class CastUtil<T> {
     private final Map<Class<?>, Supplier<T>> classes = new HashMap<>();
     private final Map<String, Supplier<T>> classNames = new HashMap<>();
     private String errorMessage = "casting error ...";
