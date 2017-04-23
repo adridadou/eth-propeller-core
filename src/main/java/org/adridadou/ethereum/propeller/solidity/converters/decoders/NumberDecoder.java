@@ -1,6 +1,7 @@
 package org.adridadou.ethereum.propeller.solidity.converters.decoders;
 
 import org.adridadou.ethereum.propeller.exception.EthereumApiException;
+import org.adridadou.ethereum.propeller.util.CastUtil;
 import org.adridadou.ethereum.propeller.values.EthData;
 
 import java.lang.reflect.Type;
@@ -21,37 +22,19 @@ public class NumberDecoder implements SolidityTypeDecoder {
             throw new EthereumApiException("a word should be of size 32:" + word.length());
         }
         BigInteger number = word.isEmpty() ? BigInteger.ZERO : new BigInteger(word.data);
-        Class<?> resultCls = (Class) resultType;
 
-        if (resultCls.getTypeName().equals("long")) {
-            return number.longValueExact();
-        }
-
-        if (resultCls.getTypeName().equals("int")) {
-            return number.intValueExact();
-        }
-
-        if (resultCls.equals(Long.class)) {
-            return number.longValueExact();
-        }
-
-        if (resultCls.equals(Integer.class)) {
-            return number.intValueExact();
-        }
-
-        if (resultCls.equals(Short.class)) {
-            return number.shortValueExact();
-        }
-
-        if (resultCls.equals(Byte.class)) {
-            return number.byteValueExact();
-        }
-
-        if (resultCls.equals(BigInteger.class)) {
-            return number;
-        }
-
-        throw new EthereumApiException("cannot convert to " + resultCls.getName());
+        return CastUtil.<Number>matcher()
+                .typeNameEquals("long", number::longValueExact)
+                .typeNameEquals("int", number::intValueExact)
+                .typeNameEquals("short", number::shortValueExact)
+                .typeNameEquals("byte", number::byteValueExact)
+                .typeEquals(Long.class, number::longValueExact)
+                .typeEquals(Integer.class, number::intValueExact)
+                .typeEquals(Short.class, number::shortValueExact)
+                .typeEquals(Byte.class, number::byteValueExact)
+                .typeEquals(BigInteger.class, () -> number)
+                .orElseThrowWithErrorMessage("cannot convert to " + resultType.getTypeName())
+                .matches((Class<? extends Number>) resultType);
     }
 
     @Override

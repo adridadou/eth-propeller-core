@@ -11,7 +11,7 @@ import org.scalatest.{FlatSpec, Matchers}
   */
 class EnumTest extends FlatSpec with Matchers with Checkers with SolidityConversionHelper {
 
-  val contract = contractObject[EnumContract]
+  private val contract = contractObject[EnumContract]
 
   "Enum type" should "convert from and to the same value" in {
     MyEnum.values().foreach(checkEncode(contract, _))

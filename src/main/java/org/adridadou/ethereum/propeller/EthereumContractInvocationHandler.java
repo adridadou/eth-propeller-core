@@ -26,7 +26,7 @@ public class EthereumContractInvocationHandler implements InvocationHandler {
 
     private final Map<EthAddress, Map<EthAccount, SmartContract>> contracts = new HashMap<>();
     private final EthereumProxy ethereumProxy;
-    private final Map<ProxyWrapper, SmartContractInfo> info = new HashMap<>();
+    private final Map<Object, SmartContractInfo> info = new HashMap<>();
     private final List<FutureConverter> futureConverters = new ArrayList<>();
 
 
@@ -37,7 +37,11 @@ public class EthereumContractInvocationHandler implements InvocationHandler {
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-        SmartContractInfo contractInfo = info.get(new ProxyWrapper(proxy));
+        if (isDefaultObjectClassMethod(method)) {
+            return handleDefaultObjectClassMethod(proxy, method, args);
+        }
+
+        SmartContractInfo contractInfo = info.get(proxy);
         SmartContract contract = contracts.get(contractInfo.getAddress()).get(contractInfo.getAccount());
         Object[] arguments = Optional.ofNullable(args).orElse(new Object[0]);
 
@@ -59,6 +63,24 @@ public class EthereumContractInvocationHandler implements InvocationHandler {
         }
     }
 
+    private Object handleDefaultObjectClassMethod(Object proxy, Method method, Object[] args) {
+        switch (method.getName()) {
+            case "toString":
+                SmartContractInfo contractInfo = info.get(proxy);
+                return "Smart contract proxy \naccount:" + contractInfo.getAccount().getAddress().withLeading0x() + "\ncontract address:" + contractInfo.getAddress().withLeading0x();
+            case "equals":
+                return proxy == args[0];
+            case "hashCode":
+                return 0;
+            default:
+                throw new EthereumApiException("unhandled default Object method " + method.getName() + ". please fill an issue if you need this method");
+        }
+    }
+
+    private boolean isDefaultObjectClassMethod(Method method) {
+        return method.getDeclaringClass().equals(Object.class);
+    }
+
     private Optional<FutureConverter> findConverter(Class type) {
         return futureConverters.stream().filter(converter -> converter.isFutureType(type) || converter.isPayableType(type)).findFirst();
     }
@@ -70,7 +92,7 @@ public class EthereumContractInvocationHandler implements InvocationHandler {
         SmartContract smartContract = ethereumProxy.getSmartContract(contract, address, account);
         verifyContract(smartContract, contractInterface);
 
-        info.put(new ProxyWrapper(proxy), new SmartContractInfo(address, account));
+        info.put(proxy, new SmartContractInfo(address, account));
         Map<EthAccount, SmartContract> proxies = contracts.getOrDefault(address, new HashMap<>());
         proxies.put(account, smartContract);
         contracts.put(address, proxies);
