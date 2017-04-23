@@ -19,8 +19,8 @@ public enum SolidityType {
     }
 
 
-    SolidityType(boolean isFixed) {
-        this.isDynamic = isFixed;
+    SolidityType(boolean isDynamic) {
+        this.isDynamic = isDynamic;
 
     }
 

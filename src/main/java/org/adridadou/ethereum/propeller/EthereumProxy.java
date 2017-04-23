@@ -30,7 +30,7 @@ import static org.adridadou.ethereum.propeller.values.EthValue.wei;
  * Created by davidroon on 20.04.16.
  * This code is released under Apache 2 license
  */
-public class EthereumProxy {
+class EthereumProxy {
     private static final int ADDITIONAL_GAS_FOR_CONTRACT_CREATION = 15_000;
     private static final int ADDITIONAL_GAS_DIRTY_FIX = 200_000;
     private static final long BLOCK_WAIT_LIMIT = 16;
@@ -217,7 +217,7 @@ public class EthereumProxy {
         pendingTransactions.put(address, hashes);
     }
 
-    public List<SolidityTypeEncoder> getEncoders(AbiParam abiParam) {
+    List<SolidityTypeEncoder> getEncoders(AbiParam abiParam) {
         SolidityType type = SolidityType.find(abiParam.getType())
                 .orElseThrow(() -> new EthereumApiException("unknown type " + abiParam.getType()));
         if (abiParam.isArray()) {
@@ -245,7 +245,7 @@ public class EthereumProxy {
 
         SolidityTypeGroup typeGroup = SolidityTypeGroup.resolveGroup(type);
 
-        if (abiParam.isArray()) {
+        if (abiParam.isArray() || type.equals(SolidityType.BYTES)) {
             return listDecoders.stream().map(cls -> {
                 try {
                     return cls.getConstructor(List.class, Integer.class).newInstance(decoders.get(typeGroup), abiParam.getArraySize());

@@ -83,7 +83,11 @@ public final class EthData {
     }
 
     public EthData word(int index) {
-        return EthData.of(ArrayUtils.subarray(data, WORD_SIZE * index, WORD_SIZE * (index + 1)));
+        byte[] word = ArrayUtils.subarray(data, WORD_SIZE * index, WORD_SIZE * (index + 1));
+        if (word.length < WORD_SIZE) {
+            word = ArrayUtils.addAll(word, new byte[WORD_SIZE - word.length]);
+        }
+        return EthData.of(word);
     }
 
     @Override

@@ -34,7 +34,7 @@ public class EthereumFacade {
     private final SwarmService swarmService;
     private final SolidityCompiler solidityCompiler;
 
-    public EthereumFacade(EthereumProxy ethereumProxy, SwarmService swarmService, SolidityCompiler solidityCompiler) {
+    EthereumFacade(EthereumProxy ethereumProxy, SwarmService swarmService, SolidityCompiler solidityCompiler) {
         this.swarmService = swarmService;
         this.solidityCompiler = solidityCompiler;
         this.handler = new EthereumContractInvocationHandler(ethereumProxy);
@@ -127,9 +127,5 @@ public class EthereumFacade {
         SmartContractByteCode code = ethereumProxy.getCode(address);
         SmartContractMetadata metadata = getMetadata(code.getMetadaLink().orElseThrow(() -> new EthereumApiException("no metadata link found for smart contract on address " + address.toString())));
         return new SolidityContractDetails(metadata.getAbi(), "", "");
-    }
-
-    public EthereumProxy getProxy() {
-        return ethereumProxy;
     }
 }

@@ -34,4 +34,12 @@ contract myContract {
     function mixWithStringFunc(int test1, string test2, bool test3, string test4) returns (string) {
         return test4;
     }
+
+    function bytes32Func(bytes32 value) returns (bytes32) {
+        return value;
+    }
+
+    function bytesFunc(bytes value) returns (bytes) {
+        return value;
+    }
 }

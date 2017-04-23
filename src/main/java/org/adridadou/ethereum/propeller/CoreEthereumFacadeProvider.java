@@ -5,6 +5,7 @@ import org.adridadou.ethereum.propeller.solidity.SolidityCompiler;
 import org.adridadou.ethereum.propeller.solidity.converters.SolidityTypeGroup;
 import org.adridadou.ethereum.propeller.solidity.converters.decoders.*;
 import org.adridadou.ethereum.propeller.solidity.converters.decoders.list.ArrayDecoder;
+import org.adridadou.ethereum.propeller.solidity.converters.decoders.list.EthDataListDecoder;
 import org.adridadou.ethereum.propeller.solidity.converters.decoders.list.ListDecoder;
 import org.adridadou.ethereum.propeller.solidity.converters.decoders.list.SetDecoder;
 import org.adridadou.ethereum.propeller.solidity.converters.encoders.*;
@@ -42,7 +43,8 @@ public final class CoreEthereumFacadeProvider {
                 .addDecoder(SolidityTypeGroup.String, new StringDecoder())
                 .addDecoder(SolidityTypeGroup.Address, new AddressDecoder())
                 .addDecoder(SolidityTypeGroup.Number, new DateDecoder())
-                .addDecoder(SolidityTypeGroup.Number, new EnumDecoder());
+                .addDecoder(SolidityTypeGroup.Number, new EnumDecoder())
+                .addDecoder(SolidityTypeGroup.Raw, new EthDataDecoder());
     }
 
     private static void registerDefaultEncoders(EthereumProxy proxy) {
@@ -53,7 +55,8 @@ public final class CoreEthereumFacadeProvider {
                 .addEncoder(SolidityTypeGroup.String, new StringEncoder())
                 .addEncoder(SolidityTypeGroup.Address, new AddressEncoder())
                 .addEncoder(SolidityTypeGroup.Address, new AccountEncoder())
-                .addEncoder(SolidityTypeGroup.Number, new DateEncoder());
+                .addEncoder(SolidityTypeGroup.Number, new DateEncoder())
+                .addEncoder(SolidityTypeGroup.Raw, new EthDataEncoder());
     }
 
 
@@ -61,7 +64,8 @@ public final class CoreEthereumFacadeProvider {
         proxy
                 .addListDecoder(ListDecoder.class)
                 .addListDecoder(SetDecoder.class)
-                .addListDecoder(ArrayDecoder.class);
+                .addListDecoder(ArrayDecoder.class)
+                .addListDecoder(EthDataListDecoder.class);
     }
 
     private static void registerDefaultListEncoder(EthereumProxy proxy) {
