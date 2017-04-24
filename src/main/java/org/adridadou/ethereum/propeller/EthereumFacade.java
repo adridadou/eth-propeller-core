@@ -99,8 +99,8 @@ public class EthereumFacade {
         }
     }
 
-    public CompletableFuture<CompilationResult> compile(SoliditySourceFile src) {
-        return CompletableFuture.supplyAsync(() -> solidityCompiler.compileSrc(src));
+    public CompilationResult compile(SoliditySourceFile src) {
+        return solidityCompiler.compileSrc(src);
     }
 
     public Optional<SolidityEvent> findEventDefinition(SolidityContractDetails contract, String eventName, Class<?> eventEntity) {

@@ -24,7 +24,10 @@ public final class CoreEthereumFacadeProvider {
     }
 
     public static EthereumFacade create(EthereumBackend backend) {
-        EthereumEventHandler eventHandler = new EthereumEventHandler();
+        return create(backend, new EthereumEventHandler());
+    }
+
+    public static EthereumFacade create(EthereumBackend backend, EthereumEventHandler eventHandler) {
         SwarmService swarm = new SwarmService(SwarmService.PUBLIC_HOST);
         EthereumProxy proxy = new EthereumProxy(backend, eventHandler);
 
@@ -33,7 +36,7 @@ public final class CoreEthereumFacadeProvider {
         registerDefaultListDecoder(proxy);
         registerDefaultListEncoder(proxy);
 
-        return new EthereumFacade(proxy, swarm, new SolidityCompiler());
+        return new EthereumFacade(proxy, swarm, SolidityCompiler.getInstance());
     }
 
     private static void registerDefaultDecoders(EthereumProxy proxy) {

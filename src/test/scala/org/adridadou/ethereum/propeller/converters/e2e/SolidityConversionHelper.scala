@@ -15,15 +15,17 @@ import scala.reflect.ClassTag
   */
 
 object SolidityConversionHelper {
-  lazy val mainAccount = AccountProvider.fromSeed("test")
-  lazy val facade = CoreEthereumFacadeProvider.create(new EthereumTest(TestConfig.builder().balance(mainAccount, EthValue.ether(10000000)).build()))
-  lazy val contract = facade.compile(SoliditySourceFile.from(new File("src/test/resources/conversionContract.sol"))).get().findContract("myContract").get()
+  val mainAccount = AccountProvider.fromSeed("test")
+  val facade = CoreEthereumFacadeProvider.create(new EthereumTest(TestConfig.builder().balance(mainAccount, EthValue.ether(10000000)).build()))
 }
 
 trait SolidityConversionHelper {
-  def contractObject[T]()(implicit tag: ClassTag[T]): T = {
-    val contractAddress = SolidityConversionHelper.facade.publishContract(SolidityConversionHelper.contract, SolidityConversionHelper.mainAccount).get()
-    SolidityConversionHelper.facade.createContractProxy(SolidityConversionHelper.contract, contractAddress, SolidityConversionHelper.mainAccount, tag.runtimeClass).asInstanceOf[T]
-  }
 
+  def contractObject[T]()(implicit tag: ClassTag[T]): T = {
+    val contract = SolidityConversionHelper.facade.compile(SoliditySourceFile.from(new File("src/test/resources/conversionContract.sol")))
+      .findContract("myContract").get()
+
+    val contractAddress = SolidityConversionHelper.facade.publishContract(contract, SolidityConversionHelper.mainAccount).get()
+    SolidityConversionHelper.facade.createContractProxy(contract, contractAddress, SolidityConversionHelper.mainAccount, tag.runtimeClass).asInstanceOf[T]
+  }
 }

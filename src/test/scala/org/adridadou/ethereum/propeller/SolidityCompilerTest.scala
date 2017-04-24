@@ -14,7 +14,7 @@ import org.scalatest.{FlatSpec, Matchers}
   * This code is released under Apache 2 license
   */
 class SolidityCompilerTest extends FlatSpec with Matchers with Checkers {
-  private val solidityCompiler = new SolidityCompiler
+  private val solidityCompiler = SolidityCompiler.getInstance()
 
   "Solidity compiler" should "get the compiler version" in {
     val solidityVersion = solidityCompiler.getVersion.getVersion

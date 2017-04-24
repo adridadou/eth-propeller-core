@@ -71,9 +71,7 @@ public final class EthAddress {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-
         EthAddress that = (EthAddress) o;
-
         return Arrays.equals(address, that.address);
 
     }
@@ -85,9 +83,5 @@ public final class EthAddress {
 
     public boolean isEmpty() {
         return Arrays.equals(this.address, EMPTY_ARRAY);
-    }
-
-    public EthData toData() {
-        return EthData.of(address);
     }
 }
