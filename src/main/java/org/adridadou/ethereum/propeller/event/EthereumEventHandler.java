@@ -21,7 +21,7 @@ public class EthereumEventHandler {
     }
 
     public void onBlock(OnBlockParameters block) {
-        onBlockHandler.newBlock(block);
+        onBlockHandler.newElement(block);
         currentBlockNumber = block.blockNumber;
     }
 

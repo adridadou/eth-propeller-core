@@ -2,10 +2,10 @@ package org.adridadou.ethereum.propeller.converters.e2e
 
 import java.io.File
 
-import org.adridadou.ethereum.propeller.CoreEthereumFacadeProvider
 import org.adridadou.ethereum.propeller.backend.{EthereumTest, TestConfig}
 import org.adridadou.ethereum.propeller.keystore.AccountProvider
 import org.adridadou.ethereum.propeller.values.{EthValue, SoliditySourceFile}
+import org.adridadou.ethereum.propeller.{CoreEthereumFacadeProvider, EthereumConfig}
 
 import scala.reflect.ClassTag
 
@@ -16,7 +16,7 @@ import scala.reflect.ClassTag
 
 object SolidityConversionHelper {
   val mainAccount = AccountProvider.fromSeed("test")
-  val facade = CoreEthereumFacadeProvider.create(new EthereumTest(TestConfig.builder().balance(mainAccount, EthValue.ether(10000000)).build()))
+  val facade = CoreEthereumFacadeProvider.create(new EthereumTest(TestConfig.builder().balance(mainAccount, EthValue.ether(10000000)).build()), new EthereumConfig())
 }
 
 trait SolidityConversionHelper {
