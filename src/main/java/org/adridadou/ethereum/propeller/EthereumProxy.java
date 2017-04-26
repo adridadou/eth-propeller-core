@@ -1,9 +1,6 @@
 package org.adridadou.ethereum.propeller;
 
-import org.adridadou.ethereum.propeller.event.EthereumEventHandler;
-import org.adridadou.ethereum.propeller.event.TransactionInfo;
-import org.adridadou.ethereum.propeller.event.TransactionReceipt;
-import org.adridadou.ethereum.propeller.event.TransactionStatus;
+import org.adridadou.ethereum.propeller.event.*;
 import org.adridadou.ethereum.propeller.exception.EthereumApiException;
 import org.adridadou.ethereum.propeller.solidity.SolidityContractDetails;
 import org.adridadou.ethereum.propeller.solidity.SolidityEvent;
@@ -269,4 +266,19 @@ class EthereumProxy {
         return voidClasses.contains(cls);
     }
 
+    public <T> List<T> getEvents(SolidityEvent eventDefinition, EthAddress address, Class<T> cls, Long blockNumber) {
+        return getEvents(eventDefinition, address, cls, ethereum.getBlock(blockNumber));
+    }
+
+    public <T> List<T> getEvents(SolidityEvent eventDefinition, EthAddress address, Class<T> cls, EthHash blockHash) {
+        return getEvents(eventDefinition, address, cls, ethereum.getBlock(blockHash));
+    }
+
+    private <T> List<T> getEvents(SolidityEvent eventDefinition, EthAddress address, Class<T> cls, BlockInfo blockInfo) {
+        return blockInfo.receipts.stream()
+                .filter(params -> address.equals(params.receiveAddress))
+                .flatMap(params -> params.events.stream())
+                .filter(eventDefinition::match)
+                .map(data -> (T) eventDefinition.parseEvent(data, cls)).collect(Collectors.toList());
+    }
 }

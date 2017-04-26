@@ -133,6 +133,14 @@ public class EthereumFacade {
         return ethereumProxy.observeEvents(eventDefiniton, address, cls);
     }
 
+    public <T> List<T> getEventsAt(Long blockNumber, SolidityEvent eventDefinition, EthAddress address, Class<T> cls) {
+        return ethereumProxy.getEvents(eventDefinition, address,cls, blockNumber);
+    }
+
+    public <T> List<T> getEventsAt(EthHash blockHash, SolidityEvent eventDefinition, EthAddress address, Class<T> cls) {
+        return ethereumProxy.getEvents(eventDefinition, address,cls, blockHash);
+    }
+
     public EthData encode(Object arg, SolidityType solidityType) {
         return Optional.of(arg).map(argument -> {
             SolidityTypeEncoder encoder = ethereumProxy.getEncoders(new AbiParam(false, "", solidityType.name()))
