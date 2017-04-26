@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
  * This code is released under Apache 2 license
  */
 public class AbstractHandler<T> implements Observable.OnSubscribe<T> {
-    final Observable<T> observable;
+    public final Observable<T> observable;
     private final Set<Subscriber<? super T>> subscribers = ConcurrentHashMap.newKeySet();
 
     public AbstractHandler() {
