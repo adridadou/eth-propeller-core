@@ -1,7 +1,7 @@
 package org.adridadou.ethereum.propeller;
 
 import org.adridadou.ethereum.propeller.event.EthereumEventHandler;
-import org.adridadou.ethereum.propeller.event.OnTransactionParameters;
+import org.adridadou.ethereum.propeller.event.TransactionInfo;
 import org.adridadou.ethereum.propeller.event.TransactionReceipt;
 import org.adridadou.ethereum.propeller.event.TransactionStatus;
 import org.adridadou.ethereum.propeller.exception.EthereumApiException;
@@ -43,12 +43,18 @@ class EthereumProxy {
     private final Map<SolidityTypeGroup, List<SolidityTypeDecoder>> decoders = new HashMap<>();
     private final List<Class<? extends CollectionDecoder>> listDecoders = new ArrayList<>();
     private final List<Class<? extends CollectionEncoder>> listEncoders = new ArrayList<>();
+    private final Set<Class<?>> voidClasses = new HashSet<>();
 
     EthereumProxy(EthereumBackend ethereum, EthereumEventHandler eventHandler) {
         this.ethereum = ethereum;
         this.eventHandler = eventHandler;
         updateNonce();
         ethereum.register(eventHandler);
+    }
+
+    EthereumProxy addVoidClass(Class<?> cls) {
+        voidClasses.add(cls);
+        return this;
     }
 
     EthereumProxy addEncoder(final SolidityTypeGroup typeGroup, final SolidityTypeEncoder encoder) {
@@ -90,7 +96,7 @@ class EthereumProxy {
     <T> Observable<T> observeEvents(SolidityEvent eventDefinition, EthAddress contractAddress, Class<T> cls) {
         return eventHandler.observeTransactions()
                 .filter(params -> contractAddress.equals(params.receipt.receiveAddress))
-                .flatMap(params -> Observable.from(params.getLogs()))
+                .flatMap(params -> Observable.from(params.getReceipt().events))
                 .filter(eventDefinition::match)
                 .map(data -> (T) eventDefinition.parseEvent(data, cls));
     }
@@ -130,12 +136,12 @@ class EthereumProxy {
             long currentBlock = eventHandler.getCurrentBlockNumber();
 
             CompletableFuture<TransactionReceipt> result = CompletableFuture.supplyAsync(() -> {
-                Observable<OnTransactionParameters> droppedTxs = eventHandler.observeTransactions()
+                Observable<TransactionInfo> droppedTxs = eventHandler.observeTransactions()
                         .filter(params -> params.receipt != null && Objects.equals(params.receipt.hash, txHash) && params.status == TransactionStatus.Dropped);
-                Observable<OnTransactionParameters> timeoutBlock = eventHandler.observeBlocks()
+                Observable<TransactionInfo> timeoutBlock = eventHandler.observeBlocks()
                         .filter(blockParams -> blockParams.blockNumber > currentBlock + BLOCK_WAIT_LIMIT)
                         .map(params -> null);
-                Observable<OnTransactionParameters> blockTxs = eventHandler.observeBlocks()
+                Observable<TransactionInfo> blockTxs = eventHandler.observeBlocks()
                         .flatMap(params -> Observable.from(params.receipts))
                         .filter(receipt -> Objects.equals(receipt.hash, txHash))
                         .map(this::createTransactionParameters);
@@ -167,8 +173,8 @@ class EthereumProxy {
         return gasLimit.add(ADDITIONAL_GAS_DIRTY_FIX);
     }
 
-    private OnTransactionParameters createTransactionParameters(TransactionReceipt receipt) {
-        return new OnTransactionParameters(receipt, TransactionStatus.Executed, new ArrayList<>());
+    private TransactionInfo createTransactionParameters(TransactionReceipt receipt) {
+        return new TransactionInfo(receipt, TransactionStatus.Executed);
     }
 
     private TransactionReceipt checkForErrors(final TransactionReceipt receipt) {
@@ -258,4 +264,9 @@ class EthereumProxy {
         return Optional.ofNullable(decoders.get(typeGroup))
                 .orElseThrow(() -> new EthereumApiException("no decoder found for solidity type " + abiParam.getType()));
     }
+
+    public <T> boolean isVoidType(Class<T> cls) {
+        return voidClasses.contains(cls);
+    }
+
 }

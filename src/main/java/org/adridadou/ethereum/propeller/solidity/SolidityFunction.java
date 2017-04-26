@@ -106,4 +106,12 @@ public class SolidityFunction {
     public Object decode(EthData ethData, Type genericReturnType) {
         return description.decode(ethData, decoders, genericReturnType);
     }
+
+    public List<List<SolidityTypeEncoder>> getEncoders() {
+        return encoders;
+    }
+
+    public List<List<SolidityTypeDecoder>> getDecoders() {
+        return decoders;
+    }
 }

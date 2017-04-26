@@ -66,6 +66,9 @@ public class SmartContract {
     Object callConstFunction(Method method, EthValue value, Object... args) {
         return getFunction(method).map(func -> {
             EthData data = func.encode(args);
+            if (method.getGenericReturnType() instanceof Class && proxy.isVoidType((Class<?>) method.getGenericReturnType())) {
+                return null;
+            }
             return func.decode(ethereum.constantCall(account, address, value, data), method.getGenericReturnType());
         }).orElseThrow(() -> new EthereumApiException("could not find the function " + method.getName() + " that maches the arguments"));
     }
@@ -82,7 +85,13 @@ public class SmartContract {
         return getFunction(method).map(func -> {
             EthData functionCallBytes = func.encode(args);
             return proxy.sendTx(value, functionCallBytes, account, address)
-                    .thenApply(receipt -> func.decode(receipt.getResult(), getGenericType(method.getGenericReturnType())));
+                    .thenApply(receipt -> {
+                        Class<?> returnType = getGenericType(method.getGenericReturnType());
+                        if (proxy.isVoidType(returnType)) {
+                            return null;
+                        }
+                        return func.decode(receipt.getResult(), returnType);
+                    });
         }).orElseThrow(() -> new EthereumApiException("function " + method.getName() + " cannot be found. available:" + getAvailableFunctions()));
     }
 

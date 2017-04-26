@@ -42,4 +42,8 @@ contract myContract {
     function bytesFunc(bytes value) returns (bytes) {
         return value;
     }
+
+    function mixStringAddressFunc(string str, address addr) returns (string) {
+        return str;
+    }
 }

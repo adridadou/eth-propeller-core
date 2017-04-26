@@ -40,7 +40,12 @@ public class EthereumFacade {
         this.ethereumProxy = ethereumProxy;
     }
 
-    public EthereumFacade addFutureConverter(final FutureConverter futureConverter) {
+    public EthereumFacade addVoidType(Class<?> cls) {
+        ethereumProxy.addVoidClass(cls);
+        return this;
+    }
+
+    public EthereumFacade addFutureConverter(FutureConverter futureConverter) {
         handler.addFutureConverter(futureConverter);
         return this;
     }
@@ -69,15 +74,15 @@ public class EthereumFacade {
         return swarmService.publish(contract.getMetadata());
     }
 
-    public boolean addressExists(final EthAddress address) {
+    public boolean addressExists(EthAddress address) {
         return ethereumProxy.addressExists(address);
     }
 
-    public EthValue getBalance(final EthAddress addr) {
+    public EthValue getBalance(EthAddress addr) {
         return ethereumProxy.getBalance(addr);
     }
 
-    public EthValue getBalance(final EthAccount account) {
+    public EthValue getBalance(EthAccount account) {
         return ethereumProxy.getBalance(account.getAddress());
     }
 
@@ -139,6 +144,9 @@ public class EthereumFacade {
     }
 
     public <T> T decode(Integer index, EthData data, SolidityType solidityType, Class<T> cls) {
+        if (ethereumProxy.isVoidType(cls)) {
+            return null;
+        }
         SolidityTypeDecoder decoder = ethereumProxy.getDecoders(new AbiParam(false, "", solidityType.name()))
                 .stream()
                 .filter(dec -> dec.canDecode(cls))

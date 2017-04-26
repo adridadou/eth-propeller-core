@@ -3,6 +3,9 @@ package org.adridadou.ethereum.propeller.event;
 import org.adridadou.ethereum.propeller.values.EthAddress;
 import org.adridadou.ethereum.propeller.values.EthData;
 import org.adridadou.ethereum.propeller.values.EthHash;
+import org.adridadou.ethereum.propeller.values.EventInfo;
+
+import java.util.List;
 
 /**
  * Created by davidroon on 03.02.17.
@@ -16,8 +19,9 @@ public class TransactionReceipt {
     public final String error;
     public final EthData executionResult;
     public final boolean isSuccessful;
+    public final List<EventInfo> events;
 
-    public TransactionReceipt(EthHash hash, EthAddress sender, EthAddress receiveAddress, EthAddress contractAddress, String error, EthData executionResult, boolean isSuccessful) {
+    public TransactionReceipt(EthHash hash, EthAddress sender, EthAddress receiveAddress, EthAddress contractAddress, String error, EthData executionResult, boolean isSuccessful, List<EventInfo> events) {
         this.hash = hash;
         this.sender = sender;
         this.receiveAddress = receiveAddress;
@@ -25,6 +29,7 @@ public class TransactionReceipt {
         this.error = error;
         this.executionResult = executionResult;
         this.isSuccessful = isSuccessful;
+        this.events = events;
     }
 
     @Override

@@ -1,5 +1,6 @@
 package org.adridadou.ethereum.propeller;
 
+import org.adridadou.ethereum.propeller.event.BlockInfo;
 import org.adridadou.ethereum.propeller.event.EthereumEventHandler;
 import org.adridadou.ethereum.propeller.values.*;
 
@@ -22,9 +23,15 @@ public interface EthereumBackend {
 
     long getCurrentBlockNumber();
 
+    BlockInfo getBlock(long blockNumber);
+
+    BlockInfo getBlock(EthHash blockNumber);
+
     SmartContractByteCode getCode(EthAddress address);
 
     EthData constantCall(EthAccount account, EthAddress address, EthValue value, EthData data);
 
     void register(EthereumEventHandler eventHandler);
+
+
 }

@@ -31,6 +31,8 @@ public final class CoreEthereumFacadeProvider {
         SwarmService swarm = new SwarmService(SwarmService.PUBLIC_HOST);
         EthereumProxy proxy = new EthereumProxy(backend, eventHandler);
 
+        proxy.addVoidClass(Void.class);
+
         registerDefaultEncoders(proxy);
         registerDefaultDecoders(proxy);
         registerDefaultListDecoder(proxy);

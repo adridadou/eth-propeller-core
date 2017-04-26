@@ -22,7 +22,7 @@ import static org.adridadou.ethereum.propeller.values.EthValue.wei;
  * Created by davidroon on 31.03.16.
  * This code is released under Apache 2 license
  */
-public class EthereumContractInvocationHandler implements InvocationHandler {
+class EthereumContractInvocationHandler implements InvocationHandler {
 
     private final Map<EthAddress, Map<EthAccount, SmartContract>> contracts = new HashMap<>();
     private final EthereumProxy ethereumProxy;
@@ -85,7 +85,7 @@ public class EthereumContractInvocationHandler implements InvocationHandler {
         return futureConverters.stream().filter(converter -> converter.isFutureType(type) || converter.isPayableType(type)).findFirst();
     }
 
-    protected <T> void register(T proxy, Class<T> contractInterface, SolidityContractDetails contract, EthAddress address, EthAccount account) {
+    <T> void register(T proxy, Class<T> contractInterface, SolidityContractDetails contract, EthAddress address, EthAccount account) {
         if (address.isEmpty()) {
             throw new EthereumApiException("the contract address cannot be empty");
         }
@@ -100,18 +100,18 @@ public class EthereumContractInvocationHandler implements InvocationHandler {
 
     private void verifyContract(SmartContract smartContract, Class<?> contractInterface) {
         Set<Method> interfaceMethods = new HashSet<>(Arrays.asList(contractInterface.getMethods()));
-        Set<SolidityFunction> solidityMethods = new HashSet<>(smartContract.getFunctions());
+        Set<SolidityFunction> solidityFunctions = new HashSet<>(smartContract.getFunctions());
 
-        List<Method> unmatched = interfaceMethods.stream().filter(method -> solidityMethods.stream()
+        List<Method> unmatched = interfaceMethods.stream().filter(method -> solidityFunctions.stream()
                 .noneMatch(solidityMethod -> solidityMethod.matchParams(method.getParameterTypes())))
                 .collect(Collectors.toList());
 
-        String unmatchedSolidityMethods = solidityMethods.stream().filter(solidityMethod -> interfaceMethods.stream()
-                .noneMatch(method -> solidityMethod.matchParams(method.getParameterTypes())))
-                .map(func -> "- " + func.toString())
-                .collect(Collectors.joining("\n"));
-
         if (!unmatched.isEmpty()) {
+            String unmatchedSolidityMethods = solidityFunctions.stream().filter(solidityMethod -> interfaceMethods.stream()
+                    .noneMatch(method -> solidityMethod.matchParams(method.getParameterTypes())))
+                    .map(func -> "- " + func.toString())
+                    .collect(Collectors.joining("\n"));
+
             String functions = unmatched.stream()
                     .map(method -> "- " + method.getName() + "(" + Arrays.stream(method.getParameterTypes()).map(Class::getSimpleName).collect(Collectors.joining(", ")) + ")")
                     .collect(Collectors.joining("\n"));
@@ -121,9 +121,10 @@ public class EthereumContractInvocationHandler implements InvocationHandler {
 
             throw new EthereumApiException(message);
         }
+
     }
 
-    public void addFutureConverter(final FutureConverter futureConverter) {
+    void addFutureConverter(final FutureConverter futureConverter) {
         futureConverters.add(futureConverter);
     }
 }
