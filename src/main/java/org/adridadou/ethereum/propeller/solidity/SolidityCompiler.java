@@ -72,17 +72,4 @@ public class SolidityCompiler {
 
         return commandParts;
     }
-
-    private String getOS() {
-        String osName = System.getProperty("os.name").toLowerCase();
-        if (osName.contains("win")) {
-            return "win";
-        } else if (osName.contains("linux")) {
-            return "linux";
-        } else if (osName.contains("mac")) {
-            return "mac";
-        } else {
-            throw new EthereumApiException("Can't find solc compiler: unrecognized OS: " + osName);
-        }
-    }
 }

@@ -11,7 +11,7 @@ public enum SolidityCompilerOptions {
     ABI("abi"),
     METADATA("metadata");
 
-    private String name;
+    private final String name;
 
     SolidityCompilerOptions(String name) {
         this.name = name;
