@@ -114,7 +114,7 @@ public class EthereumFacade {
         return solidityCompiler.compileSrc(src);
     }
 
-    public Optional<SolidityEvent> findEventDefinition(SolidityContractDetails contract, String eventName, Class<?> eventEntity) {
+    public <T> Optional<SolidityEvent<T>> findEventDefinition(SolidityContractDetails contract, String eventName, Class<T> eventEntity) {
         return contract.parseAbi().stream()
                 .filter(entry -> entry.getType().equals("event"))
                 .filter(entry -> entry.getName().equals(eventName))
@@ -124,13 +124,13 @@ public class EthereumFacade {
                 })
                 .map(entry -> {
                     List<List<SolidityTypeDecoder>> decoders = entry.getInputs().stream().map(ethereumProxy::getDecoders).collect(Collectors.toList());
-                    return new SolidityEvent(entry, decoders);
+                    return new SolidityEvent<>(entry, decoders, eventEntity);
                 })
                 .findFirst();
     }
 
-    public <T> Observable<T> observeEvents(SolidityEvent eventDefiniton, EthAddress address, Class<T> cls) {
-        return ethereumProxy.observeEvents(eventDefiniton, address, cls);
+    public <T> Observable<T> observeEvents(SolidityEvent<T> eventDefiniton, EthAddress address) {
+        return ethereumProxy.observeEvents(eventDefiniton, address);
     }
 
     public <T> List<T> getEventsAt(Long blockNumber, SolidityEvent eventDefinition, EthAddress address, Class<T> cls) {

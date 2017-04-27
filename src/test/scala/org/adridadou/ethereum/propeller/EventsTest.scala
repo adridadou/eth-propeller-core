@@ -29,7 +29,7 @@ class EventsTest extends FlatSpec with Matchers with Checkers {
     (for (compiledContract <- ethereum.compile(contractSource).findContract("contractEvents").asScala;
           solidityEvent <- ethereum.findEventDefinition(compiledContract, "MyEvent", classOf[MyEvent]).asScala) yield {
       val myContract = ethereum.createContractProxy(compiledContract, address, mainAccount, classOf[ContractEvents])
-      val observeEvent = ethereum.observeEvents(solidityEvent, address, classOf[MyEvent])
+      val observeEvent = ethereum.observeEvents(solidityEvent, address)
       ethereum.events().observeTransactions().forEach(tx => println(tx.receipt.events))
       myContract.createEvent("my event is here")
       assertEquals("my event is here", observeEvent.toBlocking.first.value)

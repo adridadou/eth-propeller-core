@@ -90,12 +90,12 @@ class EthereumProxy {
         return ethereum.getCode(address);
     }
 
-    <T> Observable<T> observeEvents(SolidityEvent eventDefinition, EthAddress contractAddress, Class<T> cls) {
+    <T> Observable<T> observeEvents(SolidityEvent eventDefinition, EthAddress contractAddress) {
         return eventHandler.observeTransactions()
                 .filter(params -> contractAddress.equals(params.receipt.receiveAddress))
                 .flatMap(params -> Observable.from(params.getReceipt().events))
                 .filter(eventDefinition::match)
-                .map(data -> (T) eventDefinition.parseEvent(data, cls));
+                .map(data -> (T) eventDefinition.parseEvent(data, eventDefinition.getEntityClass()));
     }
 
     private CompletableFuture<EthAddress> publishContract(EthValue ethValue, EthData data, EthAccount account) {
