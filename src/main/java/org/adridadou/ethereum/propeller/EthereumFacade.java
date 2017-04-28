@@ -70,6 +70,10 @@ public class EthereumFacade {
         return ethereumProxy.publish(contract, account, constructorArgs);
     }
 
+    public CompletableFuture<EthAddress> publishContractWithValue(SolidityContractDetails contract, EthAccount account, EthValue value, Object... constructorArgs) {
+        return ethereumProxy.publishWithValue(contract, account, value, constructorArgs);
+    }
+
     public SwarmHash publishMetadataToSwarm(SolidityContractDetails contract) {
         return swarmService.publish(contract.getMetadata());
     }

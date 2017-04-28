@@ -76,6 +76,10 @@ class EthereumProxy {
         return this;
     }
 
+    CompletableFuture<EthAddress> publishWithValue(SolidityContractDetails contract, EthAccount account, EthValue value, Object... constructorArgs) {
+        return createContractWithValue(contract, account, value, constructorArgs);
+    }
+
     CompletableFuture<EthAddress> publish(SolidityContractDetails contract, EthAccount account, Object... constructorArgs) {
         return createContract(contract, account, constructorArgs);
     }
@@ -113,6 +117,10 @@ class EthereumProxy {
     }
 
     private CompletableFuture<EthAddress> createContract(SolidityContractDetails contract, EthAccount account, Object... constructorArgs) {
+        return createContractWithValue(contract, account, wei(0), constructorArgs);
+    }
+
+    private CompletableFuture<EthAddress> createContractWithValue(SolidityContractDetails contract, EthAccount account, EthValue value, Object... constructorArgs) {
         EthData argsEncoded = new SmartContract(contract, account, EthAddress.empty(), this, ethereum).getConstructor(constructorArgs)
                 .map(constructor -> constructor.encode(constructorArgs))
                 .orElseGet(() -> {
@@ -121,7 +129,7 @@ class EthereumProxy {
                     }
                     return EthData.empty();
                 });
-        return publishContract(wei(0), EthData.of(ArrayUtils.addAll(contract.getBinary().data, argsEncoded.data)), account);
+        return publishContract(value, EthData.of(ArrayUtils.addAll(contract.getBinary().data, argsEncoded.data)), account);
 
     }
 

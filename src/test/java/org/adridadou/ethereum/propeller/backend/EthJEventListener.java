@@ -10,12 +10,10 @@ import org.adridadou.ethereum.propeller.values.EthHash;
 import org.adridadou.ethereum.propeller.values.EventInfo;
 import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
-import org.ethereum.core.TransactionExecutionSummary;
 import org.ethereum.core.TransactionReceipt;
 import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.vm.LogInfo;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -33,36 +31,7 @@ public class EthJEventListener extends EthereumListenerAdapter {
     @Override
     public void onBlock(Block block, List<TransactionReceipt> receipts) {
         eventHandler.onBlock(new BlockInfo(block.getNumber(), receipts.stream().map(this::toReceipt).collect(Collectors.toList())));
-    }
-
-    @Override
-    public void onPendingTransactionUpdate(TransactionReceipt txReceipt, PendingTransactionState state, Block block) {
-        TransactionStatus transactionStatus;
-        switch (state) {
-            case PENDING:
-            case NEW_PENDING:
-                transactionStatus = TransactionStatus.Pending;
-                break;
-            case DROPPED:
-                transactionStatus = TransactionStatus.Dropped;
-                break;
-            case INCLUDED:
-                transactionStatus = TransactionStatus.Included;
-                break;
-            default:
-                transactionStatus = TransactionStatus.Unknown;
-                break;
-        }
-        eventHandler.onPendingTransactionUpdate(new TransactionInfo(toReceipt(txReceipt), transactionStatus));
-    }
-
-    @Override
-    public void onTransactionExecuted(TransactionExecutionSummary summary) {
-        TransactionInfo mainTransaction = new TransactionInfo(toReceipt(summary), TransactionStatus.Executed);
-        List<TransactionInfo> internalTransactions = summary.getInternalTransactions().stream()
-                .map(internalTransaction -> new TransactionInfo(toReceipt(internalTransaction), TransactionStatus.Executed)).collect(Collectors.toList());
-
-        eventHandler.onTransactionExecuted(mainTransaction, internalTransactions);
+        receipts.forEach(tx -> eventHandler.onTransactionExecuted(new TransactionInfo(toReceipt(tx), TransactionStatus.Executed)));
     }
 
     private List<EventInfo> createEventInfoList(List<LogInfo> logs) {
@@ -76,15 +45,6 @@ public class EthJEventListener extends EthereumListenerAdapter {
     @Override
     public void onSyncDone(final SyncState syncState) {
         eventHandler.onReady();
-    }
-
-    private org.adridadou.ethereum.propeller.event.TransactionReceipt toReceipt(TransactionExecutionSummary summary) {
-        Transaction tx = summary.getTransaction();
-        return new org.adridadou.ethereum.propeller.event.TransactionReceipt(EthHash.of(summary.getTransactionHash()), EthAddress.of(tx.getSender()), EthAddress.of(tx.getReceiveAddress()), EthAddress.empty(), "", EthData.empty(), true, createEventInfoList(summary.getLogs()));
-    }
-
-    private org.adridadou.ethereum.propeller.event.TransactionReceipt toReceipt(Transaction tx) {
-        return new org.adridadou.ethereum.propeller.event.TransactionReceipt(EthHash.of(tx.getHash()), EthAddress.of(tx.getSender()), EthAddress.of(tx.getReceiveAddress()), EthAddress.empty(), "", EthData.empty(), true, Collections.emptyList());
     }
 
     private org.adridadou.ethereum.propeller.event.TransactionReceipt toReceipt(TransactionReceipt transactionReceipt) {

@@ -32,7 +32,7 @@ class EventsTest extends FlatSpec with Matchers with Checkers {
       val observeEvent = ethereum.observeEvents(solidityEvent, address)
       ethereum.events().observeTransactions().forEach(tx => println(tx.receipt.events))
       myContract.createEvent("my event is here")
-      assertEquals("my event is here", observeEvent.toBlocking.first.value)
+      assertEquals("my event is here", observeEvent.toBlocking.first().value)
     }).getOrElse(() => throw new EthereumApiException("something went wrong!"))
   }
 
