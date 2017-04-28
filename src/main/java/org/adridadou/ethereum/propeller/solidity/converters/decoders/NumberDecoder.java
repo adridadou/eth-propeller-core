@@ -1,6 +1,7 @@
 package org.adridadou.ethereum.propeller.solidity.converters.decoders;
 
 import org.adridadou.ethereum.propeller.exception.EthereumApiException;
+import org.adridadou.ethereum.propeller.util.CastUtil;
 import org.adridadou.ethereum.propeller.values.EthData;
 
 import java.lang.reflect.Type;
@@ -15,40 +16,25 @@ import static org.adridadou.ethereum.propeller.values.EthData.WORD_SIZE;
 public class NumberDecoder implements SolidityTypeDecoder {
 
     @Override
-    public Number decode(EthData word, EthData data, Type resultType) {
-        if (word.length() > WORD_SIZE) throw new EthereumApiException("a word should be of size 32:" + word.length());
-        BigInteger number = (word.isEmpty() ? BigInteger.ZERO : new BigInteger(word.data));
-        Class<?> resultCls = (Class) resultType;
-
-        if (resultCls.getTypeName().equals("long")) {
-            return number.longValue();
+    public Number decode(Integer index, EthData data, Type resultType) {
+        EthData word = data.word(index);
+        if (word.length() > WORD_SIZE) {
+            throw new EthereumApiException("a word should be of size 32:" + word.length());
         }
+        BigInteger number = word.isEmpty() ? BigInteger.ZERO : new BigInteger(word.data);
 
-        if (resultCls.getTypeName().equals("int")) {
-            return number.intValue();
-        }
-
-        if (resultCls.equals(Long.class)) {
-            return number.longValue();
-        }
-
-        if (resultCls.equals(Integer.class)) {
-            return number.intValueExact();
-        }
-
-        if (resultCls.equals(Short.class)) {
-            return number.shortValueExact();
-        }
-
-        if (resultCls.equals(Byte.class)) {
-            return number.byteValueExact();
-        }
-
-        if (resultCls.equals(BigInteger.class)) {
-            return number;
-        }
-
-        throw new EthereumApiException("cannot convert to " + resultCls.getName());
+        return CastUtil.<Number>matcher()
+                .typeNameEquals("long", number::longValueExact)
+                .typeNameEquals("int", number::intValueExact)
+                .typeNameEquals("short", number::shortValueExact)
+                .typeNameEquals("byte", number::byteValueExact)
+                .typeEquals(Long.class, number::longValueExact)
+                .typeEquals(Integer.class, number::intValueExact)
+                .typeEquals(Short.class, number::shortValueExact)
+                .typeEquals(Byte.class, number::byteValueExact)
+                .typeEquals(BigInteger.class, () -> number)
+                .orElseThrowWithErrorMessage("cannot convert to " + resultType.getTypeName())
+                .matches((Class<? extends Number>) resultType);
     }
 
     @Override

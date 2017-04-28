@@ -1,5 +1,6 @@
 package org.adridadou.ethereum.propeller.solidity.converters.encoders;
 
+import org.adridadou.ethereum.propeller.solidity.SolidityType;
 import org.adridadou.ethereum.propeller.values.EthAddress;
 import org.adridadou.ethereum.propeller.values.EthData;
 
@@ -10,7 +11,7 @@ import java.math.BigInteger;
  * This code is released under Apache 2 license
  */
 public class AddressEncoder implements SolidityTypeEncoder {
-    private final NumberEncoder bigIntegerEncoder = new NumberEncoder();
+    private final NumberEncoder numberEncoder = new NumberEncoder();
 
     @Override
     public boolean canConvert(Class<?> type) {
@@ -18,7 +19,7 @@ public class AddressEncoder implements SolidityTypeEncoder {
     }
 
     @Override
-    public EthData encode(Object arg) {
-        return bigIntegerEncoder.encode(new BigInteger(1, ((EthAddress) arg).address));
+    public EthData encode(Object arg, SolidityType solidityType) {
+        return numberEncoder.encode(new BigInteger(1, ((EthAddress) arg).address), SolidityType.INT);
     }
 }

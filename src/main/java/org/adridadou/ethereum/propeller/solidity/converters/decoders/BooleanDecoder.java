@@ -12,7 +12,8 @@ import java.math.BigInteger;
 public class BooleanDecoder implements SolidityTypeDecoder {
 
     @Override
-    public Boolean decode(EthData word, EthData data, Type resultType) {
+    public Boolean decode(Integer index, EthData data, Type resultType) {
+        EthData word = data.word(index);
         return !(word.isEmpty() || (new BigInteger(1, word.data)).equals(BigInteger.ZERO));
     }
 

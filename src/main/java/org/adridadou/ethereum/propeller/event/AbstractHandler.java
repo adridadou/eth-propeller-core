@@ -19,7 +19,7 @@ public class AbstractHandler<T> implements Observable.OnSubscribe<T> {
         observable = Observable.unsafeCreate(this);
     }
 
-    public void newBlock(final T param) {
+    public void newElement(final T param) {
         removeUnSubscribed();
         subscribers.forEach(subscriber -> subscriber.onNext(param));
     }

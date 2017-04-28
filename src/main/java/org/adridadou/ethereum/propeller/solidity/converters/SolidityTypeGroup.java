@@ -8,7 +8,7 @@ import org.adridadou.ethereum.propeller.solidity.SolidityType;
  * This code is released under Apache 2 license
  */
 public enum SolidityTypeGroup {
-    Number, Bool, String, Array, Bytes, Bytes32, Address;
+    Number, Bool, String, Array, Raw, Address;
 
     public static SolidityTypeGroup resolveGroup(final SolidityType type) {
         switch (type) {
@@ -35,6 +35,10 @@ public enum SolidityTypeGroup {
                 return SolidityTypeGroup.Array;
             case ADDRESS:
                 return SolidityTypeGroup.Address;
+
+            case BYTES:
+            case BYTES32:
+                return SolidityTypeGroup.Raw;
 
             default:
                 throw new EthereumApiException("not encoder found for " + type.name());

@@ -20,12 +20,4 @@ public class SmartContractInfo {
     public EthAccount getAccount() {
         return account;
     }
-
-    @Override
-    public String toString() {
-        return "SmartContractInfo{" +
-                "address=" + address.withLeading0x() +
-                ", account=" + account.getAddress().withLeading0x() +
-                '}';
-    }
 }

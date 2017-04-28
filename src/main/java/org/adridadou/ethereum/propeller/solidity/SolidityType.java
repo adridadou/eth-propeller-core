@@ -10,7 +10,7 @@ import java.util.Optional;
 public enum SolidityType {
     UINT, UINT8, UINT16, UINT32, UINT64, UINT128, UINT256,
     INT, INT8, INT16, INT32, INT64, INT128, INT256,
-    BOOL, STRING(true), ARRAY(true), BYTES(true), ADDRESS;
+    BOOL, STRING(true), ARRAY(true), BYTES(true), ADDRESS, BYTES32;
 
     public final boolean isDynamic;
 
@@ -19,8 +19,8 @@ public enum SolidityType {
     }
 
 
-    SolidityType(boolean isFixed) {
-        this.isDynamic = isFixed;
+    SolidityType(boolean isDynamic) {
+        this.isDynamic = isDynamic;
 
     }
 

@@ -5,18 +5,17 @@ import org.adridadou.ethereum.propeller.values.EthData;
 import java.lang.reflect.Type;
 
 /**
- * Created by davidroon on 03.04.17.
+ * Created by davidroon on 23.04.17.
  * This code is released under Apache 2 license
  */
-public class VoidDecoder implements SolidityTypeDecoder {
-
+public class EthDataDecoder implements SolidityTypeDecoder {
     @Override
-    public Void decode(EthData word, EthData data, Type resultType) {
-        return null;
+    public Object decode(Integer index, EthData data, Type resultType) {
+        return data.word(index);
     }
 
     @Override
     public boolean canDecode(Class<?> resultCls) {
-        return Void.class.equals(resultCls) || resultCls.getName().equals("void");
+        return EthData.class.equals(resultCls);
     }
 }

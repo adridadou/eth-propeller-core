@@ -1,5 +1,6 @@
 package org.adridadou.ethereum.propeller.solidity.converters.encoders;
 
+import org.adridadou.ethereum.propeller.solidity.SolidityType;
 import org.adridadou.ethereum.propeller.values.EthData;
 
 import java.util.Date;
@@ -17,8 +18,8 @@ public class DateEncoder implements SolidityTypeEncoder {
     }
 
     @Override
-    public EthData encode(Object arg) {
+    public EthData encode(Object arg, SolidityType solidityType) {
         Date date = (Date) arg;
-        return numberEncoder.encode(date.getTime());
+        return numberEncoder.encode(date.getTime(), solidityType);
     }
 }

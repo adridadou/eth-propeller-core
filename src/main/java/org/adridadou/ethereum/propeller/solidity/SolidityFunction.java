@@ -71,15 +71,15 @@ public class SolidityFunction {
                 SolidityTypeEncoder encoder = encoders.get(i).stream()
                         .filter(enc -> enc.canConvert(arg.getClass()))
                         .findFirst().orElseThrow(() -> new EthereumApiException("encoder could not be found. Serious bug detected!!"));
-
-                SolidityType solidityType = SolidityType.find(description.getInputs().get(i).getType()).orElseThrow(() -> new EthereumApiException("unknown solidity type " + description.getType()));
-                if (solidityType.isDynamic) {
-                    result = result.merge(numberEncoder.encode(dynamicIndex));
-                    EthData dynamicEncode = encoder.encode(arg);
+                AbiParam param = description.getInputs().get(i);
+                SolidityType solidityType = SolidityType.find(param.getType()).orElseThrow(() -> new EthereumApiException("unknown solidity type " + description.getType()));
+                if (solidityType.isDynamic || param.isDynamic()) {
+                    result = result.merge(numberEncoder.encode(dynamicIndex, SolidityType.UINT));
+                    EthData dynamicEncode = encoder.encode(arg, solidityType);
                     dynamicIndex += dynamicEncode.length();
                     dynamicData.add(dynamicEncode);
                 } else {
-                    result = result.merge(encoder.encode(arg));
+                    result = result.merge(encoder.encode(arg, solidityType));
                 }
             }
         }
@@ -105,5 +105,13 @@ public class SolidityFunction {
 
     public Object decode(EthData ethData, Type genericReturnType) {
         return description.decode(ethData, decoders, genericReturnType);
+    }
+
+    public List<List<SolidityTypeEncoder>> getEncoders() {
+        return encoders;
+    }
+
+    public List<List<SolidityTypeDecoder>> getDecoders() {
+        return decoders;
     }
 }

@@ -20,16 +20,16 @@ public class EthereumEventHandler {
         this.onTransactionHandler = new OnTransactionHandler();
     }
 
-    public void onBlock(OnBlockParameters block) {
-        onBlockHandler.newBlock(block);
+    public void onBlock(BlockInfo block) {
+        onBlockHandler.newElement(block);
         currentBlockNumber = block.blockNumber;
     }
 
-    public void onPendingTransactionUpdate(OnTransactionParameters tx) {
+    public void onPendingTransactionUpdate(TransactionInfo tx) {
         onTransactionHandler.on(tx);
     }
 
-    public void onTransactionExecuted(OnTransactionParameters tx, List<OnTransactionParameters> internalTxes) {
+    public void onTransactionExecuted(TransactionInfo tx, List<TransactionInfo> internalTxes) {
         internalTxes.forEach(onTransactionHandler::on);
         onTransactionHandler.on(tx);
     }
@@ -46,11 +46,11 @@ public class EthereumEventHandler {
         return currentBlockNumber;
     }
 
-    public Observable<OnBlockParameters> observeBlocks() {
+    public Observable<BlockInfo> observeBlocks() {
         return onBlockHandler.observable;
     }
 
-    public Observable<OnTransactionParameters> observeTransactions() {
+    public Observable<TransactionInfo> observeTransactions() {
         return onTransactionHandler.observable;
     }
 

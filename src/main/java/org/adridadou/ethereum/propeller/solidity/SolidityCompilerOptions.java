@@ -11,18 +11,13 @@ public enum SolidityCompilerOptions {
     ABI("abi"),
     METADATA("metadata");
 
-    private String name;
+    private final String name;
 
     SolidityCompilerOptions(String name) {
         this.name = name;
     }
 
     public String getName() {
-        return name;
-    }
-
-    @Override
-    public String toString() {
         return name;
     }
 }

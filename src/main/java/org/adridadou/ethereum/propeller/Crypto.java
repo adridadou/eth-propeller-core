@@ -1,5 +1,6 @@
 package org.adridadou.ethereum.propeller;
 
+import org.adridadou.ethereum.propeller.values.EthData;
 import org.spongycastle.crypto.generators.SCrypt;
 import org.spongycastle.jcajce.provider.digest.Keccak;
 
@@ -16,8 +17,11 @@ import java.security.NoSuchAlgorithmException;
  * Created by davidroon on 23.03.17.
  * This code is released under Apache 2 license
  */
-public class Crypto {
-    public static final int KEY_LENGTH = 256;
+public final class Crypto {
+    private static final int KEY_LENGTH = 256;
+
+    private Crypto() {
+    }
 
     public static byte[] decryptAes(byte[] iv, byte[] keyBytes, byte[] cipherText) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
         //Initialisation
@@ -47,5 +51,9 @@ public class Crypto {
         KECCAK.reset();
         KECCAK.update(h);
         return KECCAK.digest();
+    }
+
+    public static EthData sha3(EthData h) {
+        return EthData.of(sha3(h.data));
     }
 }

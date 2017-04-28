@@ -9,7 +9,7 @@ import java.lang.reflect.Type;
  * This code is released under Apache 2 license
  */
 public interface SolidityTypeDecoder {
-    Object decode(EthData word, EthData data, Type resultType);
+    Object decode(Integer index, EthData data, Type resultType);
 
     boolean canDecode(Class<?> resultCls);
 }

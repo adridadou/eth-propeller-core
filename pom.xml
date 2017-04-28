@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.adridadou</groupId>
     <artifactId>eth-propeller-core</artifactId>
-    <version>0.1-SNAPSHOT</version>
+    <version>0.1</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -31,6 +30,12 @@
             <id>oss.jfrog.org</id>
             <name>Repository from Bintray</name>
             <url>http://dl.bintray.com/ethereum/maven</url>
+        </repository>
+
+        <repository>
+            <id>oss.jfrog.org2</id>
+            <name>Repository from Bintray</name>
+            <url>http://oss.jfrog.org/oss-snapshot-local</url>
         </repository>
 
         <repository>
@@ -96,15 +101,15 @@
         </dependency>
 
         <dependency>
-            <groupId>org.ethereum</groupId>
-            <artifactId>solcJ-all</artifactId>
-            <version>0.4.10</version>
-        </dependency>
-
-        <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>fluent-hc</artifactId>
             <version>4.5.3</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.zeroturnaround</groupId>
+            <artifactId>zt-exec</artifactId>
+            <version>1.9</version>
         </dependency>
 
         <dependency>
@@ -123,7 +128,7 @@
         <dependency>
             <groupId>org.ethereum</groupId>
             <artifactId>ethereumj-core</artifactId>
-            <version>1.5.0-SNAPSHOT</version>
+            <version>1.5.0-RELEASE</version>
             <scope>test</scope>
         </dependency>
 
@@ -150,12 +155,14 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- https://mvnrepository.com/artifact/org.scala-lang.modules/scala-java8-compat_2.10 -->
         <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <version>16.0.1</version>
+            <groupId>org.scala-lang.modules</groupId>
+            <artifactId>scala-java8-compat_2.12</artifactId>
+            <version>0.8.0</version>
             <scope>test</scope>
         </dependency>
+
     </dependencies>
 
     <build>
@@ -208,12 +215,45 @@
             <plugin>
                 <groupId>net.alchim31.maven</groupId>
                 <artifactId>scala-maven-plugin</artifactId>
-                <version>3.1.6</version>
+                <version>3.1.3</version>
                 <executions>
                     <execution>
-                        <phase>compile</phase>
+                        <id>scala-compile-first</id>
+                        <phase>process-resources</phase>
                         <goals>
+                            <goal>add-source</goal>
                             <goal>compile</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>scala-test-compile</id>
+                        <phase>process-test-resources</phase>
+                        <goals>
+                            <goal>testCompile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- disable surefire -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.7</version>
+                <configuration>
+                    <skipTests>true</skipTests>
+                </configuration>
+            </plugin>
+            <!-- enable scalatest -->
+            <plugin>
+                <groupId>org.scalatest</groupId>
+                <artifactId>scalatest-maven-plugin</artifactId>
+                <version>1.0</version>
+                <executions>
+                    <execution>
+                        <id>test</id>
+                        <goals>
+                            <goal>test</goal>
                         </goals>
                     </execution>
                 </executions>

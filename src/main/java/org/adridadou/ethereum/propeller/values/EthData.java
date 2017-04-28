@@ -10,7 +10,7 @@ import java.util.Arrays;
  * Created by davidroon on 19.04.16.
  * This code is released under Apache 2 license
  */
-public class EthData {
+public final class EthData {
     public static final int WORD_SIZE = 32;
     public final byte[] data;
 
@@ -41,6 +41,10 @@ public class EthData {
 
     public static EthData empty() {
         return EthData.of(new byte[0]);
+    }
+
+    public static EthData emptyWord() {
+        return EthData.of(new byte[WORD_SIZE]);
     }
 
     public static EthData of(int length) {
@@ -79,13 +83,21 @@ public class EthData {
     }
 
     public EthData word(int index) {
-        return EthData.of(ArrayUtils.subarray(data, WORD_SIZE * index, WORD_SIZE * (index + 1)));
+        byte[] word = ArrayUtils.subarray(data, WORD_SIZE * index, WORD_SIZE * (index + 1));
+        if (word.length < WORD_SIZE) {
+            word = ArrayUtils.addAll(word, new byte[WORD_SIZE - word.length]);
+        }
+        return EthData.of(word);
     }
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         EthData ethData = (EthData) o;
 

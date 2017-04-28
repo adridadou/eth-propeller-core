@@ -2,11 +2,11 @@ package org.adridadou.ethereum.propeller.event;
 
 import java.util.List;
 
-public class OnBlockParameters {
+public class BlockInfo {
     public final long blockNumber;
     public final List<TransactionReceipt> receipts;
 
-    public OnBlockParameters(long blockNumber, List<TransactionReceipt> receipts) {
+    public BlockInfo(long blockNumber, List<TransactionReceipt> receipts) {
         this.blockNumber = blockNumber;
         this.receipts = receipts;
     }
@@ -14,7 +14,7 @@ public class OnBlockParameters {
 
     @Override
     public String toString() {
-        return "OnBlockParameters{" +
+        return "BlockInfo{" +
                 "blockNumber=" + blockNumber +
                 ", receipts=" + receipts +
                 '}';

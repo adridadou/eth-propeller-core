@@ -3,11 +3,10 @@ package org.adridadou.ethereum.propeller;
 import org.adridadou.ethereum.propeller.converters.future.FutureConverter;
 import org.adridadou.ethereum.propeller.event.EthereumEventHandler;
 import org.adridadou.ethereum.propeller.exception.EthereumApiException;
-import org.adridadou.ethereum.propeller.solidity.CompilationResult;
-import org.adridadou.ethereum.propeller.solidity.SolidityCompiler;
-import org.adridadou.ethereum.propeller.solidity.SolidityContractDetails;
-import org.adridadou.ethereum.propeller.solidity.SolidityEvent;
+import org.adridadou.ethereum.propeller.solidity.*;
+import org.adridadou.ethereum.propeller.solidity.abi.AbiParam;
 import org.adridadou.ethereum.propeller.solidity.converters.decoders.SolidityTypeDecoder;
+import org.adridadou.ethereum.propeller.solidity.converters.encoders.SolidityTypeEncoder;
 import org.adridadou.ethereum.propeller.swarm.SwarmHash;
 import org.adridadou.ethereum.propeller.swarm.SwarmService;
 import org.adridadou.ethereum.propeller.values.*;
@@ -34,14 +33,19 @@ public class EthereumFacade {
     private final SwarmService swarmService;
     private final SolidityCompiler solidityCompiler;
 
-    public EthereumFacade(EthereumProxy ethereumProxy, SwarmService swarmService, SolidityCompiler solidityCompiler) {
+    EthereumFacade(EthereumProxy ethereumProxy, SwarmService swarmService, SolidityCompiler solidityCompiler) {
         this.swarmService = swarmService;
         this.solidityCompiler = solidityCompiler;
         this.handler = new EthereumContractInvocationHandler(ethereumProxy);
         this.ethereumProxy = ethereumProxy;
     }
 
-    public EthereumFacade addFutureConverter(final FutureConverter futureConverter) {
+    public EthereumFacade addVoidType(Class<?> cls) {
+        ethereumProxy.addVoidClass(cls);
+        return this;
+    }
+
+    public EthereumFacade addFutureConverter(FutureConverter futureConverter) {
         handler.addFutureConverter(futureConverter);
         return this;
     }
@@ -50,22 +54,16 @@ public class EthereumFacade {
         return createContractProxy(getDetails(address), address, account, contractInterface);
     }
 
+    public <T> T createContractProxy(EthAbi abi, EthAddress address, EthAccount account, Class<T> contractInterface) {
+        T proxy = (T) newProxyInstance(contractInterface.getClassLoader(), new Class[]{contractInterface}, handler);
+        handler.register(proxy, contractInterface, new SolidityContractDetails(abi.getAbi(), null, null), address, account);
+        return proxy;
+    }
+
     public <T> T createContractProxy(SolidityContractDetails details, EthAddress address, EthAccount account, Class<T> contractInterface) {
         T proxy = (T) newProxyInstance(contractInterface.getClassLoader(), new Class[]{contractInterface}, handler);
         handler.register(proxy, contractInterface, details, address, account);
         return proxy;
-    }
-
-    public <T> Builder<T> createContractProxy(EthAddress address, Class<T> contractInterface) {
-        return new Builder<>(contractInterface, address, getDetails(address));
-    }
-
-    public <T> Builder<T> createContractProxy(EthAddress address, SolidityContractDetails details, Class<T> contractInterface) {
-        return new Builder<>(contractInterface, address, details);
-    }
-
-    public <T> Builder<T> createContractProxy(SolidityContractDetails contract, EthAddress address, Class<T> contractInterface) {
-        return new Builder<>(contractInterface, address, contract);
     }
 
     public CompletableFuture<EthAddress> publishContract(SolidityContractDetails contract, EthAccount account, Object... constructorArgs) {
@@ -76,15 +74,15 @@ public class EthereumFacade {
         return swarmService.publish(contract.getMetadata());
     }
 
-    public boolean addressExists(final EthAddress address) {
+    public boolean addressExists(EthAddress address) {
         return ethereumProxy.addressExists(address);
     }
 
-    public EthValue getBalance(final EthAddress addr) {
+    public EthValue getBalance(EthAddress addr) {
         return ethereumProxy.getBalance(addr);
     }
 
-    public EthValue getBalance(final EthAccount account) {
+    public EthValue getBalance(EthAccount account) {
         return ethereumProxy.getBalance(account.getAddress());
     }
 
@@ -112,54 +110,62 @@ public class EthereumFacade {
         }
     }
 
-    public CompletableFuture<CompilationResult> compile(SoliditySourceFile src) {
-        return CompletableFuture.supplyAsync(() -> solidityCompiler.compileSrc(src));
+    public CompilationResult compile(SoliditySourceFile src) {
+        return solidityCompiler.compileSrc(src);
     }
 
-    public Optional<SolidityEvent> findEventDefinition(SolidityContractDetails contract, String eventName, Class<?> eventEntity) {
+    public <T> Optional<SolidityEvent<T>> findEventDefinition(SolidityContractDetails contract, String eventName, Class<T> eventEntity) {
         return contract.parseAbi().stream()
                 .filter(entry -> entry.getType().equals("event"))
                 .filter(entry -> entry.getName().equals(eventName))
                 .filter(entry -> {
-                    List<List<SolidityTypeDecoder>> decoders = entry.getInputs().stream().map(ethereumProxy::getDecoder).collect(Collectors.toList());
+                    List<List<SolidityTypeDecoder>> decoders = entry.getInputs().stream().map(ethereumProxy::getDecoders).collect(Collectors.toList());
                     return entry.findConstructor(decoders, eventEntity).isPresent();
                 })
                 .map(entry -> {
-                    List<List<SolidityTypeDecoder>> decoders = entry.getInputs().stream().map(ethereumProxy::getDecoder).collect(Collectors.toList());
-                    return new SolidityEvent(entry, decoders);
+                    List<List<SolidityTypeDecoder>> decoders = entry.getInputs().stream().map(ethereumProxy::getDecoders).collect(Collectors.toList());
+                    return new SolidityEvent<>(entry, decoders, eventEntity);
                 })
                 .findFirst();
     }
 
-    public <T> Observable<T> observeEvents(SolidityEvent eventDefiniton, EthAddress address, Class<T> cls) {
-        return ethereumProxy.observeEvents(eventDefiniton, address, cls);
+    public <T> Observable<T> observeEvents(SolidityEvent<T> eventDefiniton, EthAddress address) {
+        return ethereumProxy.observeEvents(eventDefiniton, address);
+    }
+
+    public <T> List<T> getEventsAt(Long blockNumber, SolidityEvent eventDefinition, EthAddress address, Class<T> cls) {
+        return ethereumProxy.getEvents(eventDefinition, address,cls, blockNumber);
+    }
+
+    public <T> List<T> getEventsAt(EthHash blockHash, SolidityEvent eventDefinition, EthAddress address, Class<T> cls) {
+        return ethereumProxy.getEvents(eventDefinition, address,cls, blockHash);
+    }
+
+    public EthData encode(Object arg, SolidityType solidityType) {
+        return Optional.of(arg).map(argument -> {
+            SolidityTypeEncoder encoder = ethereumProxy.getEncoders(new AbiParam(false, "", solidityType.name()))
+                    .stream().filter(enc -> enc.canConvert(arg.getClass()))
+                    .findFirst().orElseThrow(() -> new EthereumApiException("cannot convert the type " + argument.getClass() + " to the solidty type " + solidityType));
+
+            return encoder.encode(arg, solidityType);
+        }).orElseGet(EthData::empty);
+    }
+
+    public <T> T decode(Integer index, EthData data, SolidityType solidityType, Class<T> cls) {
+        if (ethereumProxy.isVoidType(cls)) {
+            return null;
+        }
+        SolidityTypeDecoder decoder = ethereumProxy.getDecoders(new AbiParam(false, "", solidityType.name()))
+                .stream()
+                .filter(dec -> dec.canDecode(cls))
+                .findFirst().orElseThrow(() -> new EthereumApiException("cannot decode " + solidityType.name() + " to " + cls.getTypeName()));
+
+        return (T) decoder.decode(index, data, cls);
     }
 
     private SolidityContractDetails getDetails(final EthAddress address) {
         SmartContractByteCode code = ethereumProxy.getCode(address);
         SmartContractMetadata metadata = getMetadata(code.getMetadaLink().orElseThrow(() -> new EthereumApiException("no metadata link found for smart contract on address " + address.toString())));
         return new SolidityContractDetails(metadata.getAbi(), "", "");
-    }
-
-    public EthereumProxy getProxy() {
-        return ethereumProxy;
-    }
-
-    public class Builder<T> {
-        private final Class<T> contractInterface;
-        private final EthAddress address;
-        private final SolidityContractDetails details;
-
-        public Builder(Class<T> contractInterface, EthAddress address, SolidityContractDetails details) {
-            this.contractInterface = contractInterface;
-            this.address = address;
-            this.details = details;
-        }
-
-        public T forAccount(final EthAccount account) {
-            T proxy = (T) newProxyInstance(contractInterface.getClassLoader(), new Class[]{contractInterface}, handler);
-            EthereumFacade.this.handler.register(proxy, contractInterface, details, address, account);
-            return proxy;
-        }
     }
 }

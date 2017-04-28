@@ -10,7 +10,7 @@ import java.util.concurrent.CompletableFuture;
  * This code is released under Apache 2 license
  */
 public interface FutureConverter {
-    <T> Object convert(final CompletableFuture<T> future);
+    <T> Object convert(CompletableFuture<T> future);
 
     boolean isFutureType(Class cls);
 

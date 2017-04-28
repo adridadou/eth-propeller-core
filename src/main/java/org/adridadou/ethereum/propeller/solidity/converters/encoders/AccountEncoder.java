@@ -1,5 +1,6 @@
 package org.adridadou.ethereum.propeller.solidity.converters.encoders;
 
+import org.adridadou.ethereum.propeller.solidity.SolidityType;
 import org.adridadou.ethereum.propeller.values.EthAccount;
 import org.adridadou.ethereum.propeller.values.EthData;
 
@@ -16,7 +17,7 @@ public class AccountEncoder implements SolidityTypeEncoder {
     }
 
     @Override
-    public EthData encode(Object arg) {
-        return addressEncoder.encode(((EthAccount) arg).getAddress());
+    public EthData encode(Object arg, SolidityType solidityType) {
+        return addressEncoder.encode(((EthAccount) arg).getAddress(), SolidityType.ADDRESS);
     }
 }

@@ -36,6 +36,10 @@ public class AbiParam {
         return type.contains("[");
     }
 
+    public boolean isDynamic() {
+        return type.contains("[]");
+    }
+
     @Override
     public String toString() {
         return "AbiParam{" +
