@@ -26,8 +26,8 @@ public class EthereumConfig {
     }
 
     public static class Builder {
-        private String swarmUrl = "http://swarm-gateways.net";
-        private long blockWaitLimit = 16;
+        protected String swarmUrl = "http://swarm-gateways.net";
+        protected long blockWaitLimit = 16;
 
 
         public Builder swarmUrl(String url) {
