@@ -28,8 +28,8 @@ public final class CoreEthereumFacadeProvider {
     }
 
     public static EthereumFacade create(EthereumBackend backend, EthereumEventHandler eventHandler, EthereumConfig config) {
-        SwarmService swarm = new SwarmService(SwarmService.PUBLIC_HOST);
-        EthereumProxy proxy = new EthereumProxy(backend, eventHandler);
+        SwarmService swarm = new SwarmService(config.swarmUrl());
+        EthereumProxy proxy = new EthereumProxy(backend, eventHandler, config);
 
         proxy.addVoidClass(Void.class);
 

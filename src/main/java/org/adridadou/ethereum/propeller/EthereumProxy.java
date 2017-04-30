@@ -30,10 +30,10 @@ import static org.adridadou.ethereum.propeller.values.EthValue.wei;
 class EthereumProxy {
     private static final int ADDITIONAL_GAS_FOR_CONTRACT_CREATION = 15_000;
     private static final int ADDITIONAL_GAS_DIRTY_FIX = 200_000;
-    private static final long BLOCK_WAIT_LIMIT = 16;
 
     private final EthereumBackend ethereum;
     private final EthereumEventHandler eventHandler;
+    private final EthereumConfig config;
     private final Map<EthAddress, Set<EthHash>> pendingTransactions = new ConcurrentHashMap<>();
     private final Map<EthAddress, Nonce> nonces = new ConcurrentHashMap<>();
     private final Map<SolidityTypeGroup, List<SolidityTypeEncoder>> encoders = new HashMap<>();
@@ -42,9 +42,10 @@ class EthereumProxy {
     private final List<Class<? extends CollectionEncoder>> listEncoders = new ArrayList<>();
     private final Set<Class<?>> voidClasses = new HashSet<>();
 
-    EthereumProxy(EthereumBackend ethereum, EthereumEventHandler eventHandler) {
+    EthereumProxy(EthereumBackend ethereum, EthereumEventHandler eventHandler, EthereumConfig config) {
         this.ethereum = ethereum;
         this.eventHandler = eventHandler;
+        this.config = config;
         updateNonce();
         ethereum.register(eventHandler);
     }
@@ -144,7 +145,7 @@ class EthereumProxy {
                 Observable<TransactionInfo> droppedTxs = eventHandler.observeTransactions()
                         .filter(params -> params.receipt != null && Objects.equals(params.receipt.hash, txHash) && params.status == TransactionStatus.Dropped);
                 Observable<TransactionInfo> timeoutBlock = eventHandler.observeBlocks()
-                        .filter(blockParams -> blockParams.blockNumber > currentBlock + BLOCK_WAIT_LIMIT)
+                        .filter(blockParams -> blockParams.blockNumber > currentBlock + config.blockWaitLimit())
                         .map(params -> null);
                 Observable<TransactionInfo> blockTxs = eventHandler.observeBlocks()
                         .flatMap(params -> Observable.from(params.receipts))
@@ -154,7 +155,7 @@ class EthereumProxy {
                 return Observable.merge(droppedTxs, blockTxs, timeoutBlock)
                         .map(params -> {
                             if (params == null) {
-                                throw new EthereumApiException("the transaction has not been included in the last " + BLOCK_WAIT_LIMIT + " blocks");
+                                throw new EthereumApiException("the transaction has not been included in the last " + config.blockWaitLimit() + " blocks");
                             }
                             TransactionReceipt receipt = params.receipt;
                             if (params.status == TransactionStatus.Dropped) {
