@@ -28,6 +28,10 @@ public class EthereumEventHandler {
         onTransactionHandler.on(tx);
     }
 
+    public void onTransactionDropped(TransactionInfo tx) {
+        onTransactionHandler.on(tx);
+    }
+
     public void onReady() {
         ready.complete(null);
     }
@@ -47,5 +51,4 @@ public class EthereumEventHandler {
     public Observable<TransactionInfo> observeTransactions() {
         return onTransactionHandler.observable;
     }
-
 }

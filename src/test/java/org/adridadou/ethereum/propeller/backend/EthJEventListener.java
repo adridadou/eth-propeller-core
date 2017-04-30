@@ -31,7 +31,19 @@ public class EthJEventListener extends EthereumListenerAdapter {
     @Override
     public void onBlock(Block block, List<TransactionReceipt> receipts) {
         eventHandler.onBlock(new BlockInfo(block.getNumber(), receipts.stream().map(this::toReceipt).collect(Collectors.toList())));
-        receipts.forEach(tx -> eventHandler.onTransactionExecuted(new TransactionInfo(toReceipt(tx), TransactionStatus.Executed)));
+        receipts.forEach(receipt -> eventHandler.onTransactionExecuted(new TransactionInfo(toReceipt(receipt), TransactionStatus.Executed)));
+    }
+
+    @Override
+    public void onPendingTransactionUpdate(TransactionReceipt txReceipt, PendingTransactionState state, Block block) {
+        switch (state) {
+            case DROPPED:
+                eventHandler.onTransactionDropped(new TransactionInfo(toReceipt(txReceipt), TransactionStatus.Dropped));
+                break;
+            default:
+                break;
+        }
+
     }
 
     private List<EventInfo> createEventInfoList(List<LogInfo> logs) {
