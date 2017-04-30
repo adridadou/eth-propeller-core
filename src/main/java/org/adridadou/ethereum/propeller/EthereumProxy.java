@@ -289,4 +289,8 @@ class EthereumProxy {
                 .filter(eventDefinition::match)
                 .map(data -> (T) eventDefinition.parseEvent(data, cls)).collect(Collectors.toList());
     }
+
+    public long getCurrentBlockNumber() {
+        return eventHandler.getCurrentBlockNumber();
+    }
 }
