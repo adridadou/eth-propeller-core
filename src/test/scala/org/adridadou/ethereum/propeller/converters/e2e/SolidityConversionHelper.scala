@@ -16,7 +16,7 @@ import scala.reflect.ClassTag
 
 object SolidityConversionHelper {
   val mainAccount = AccountProvider.fromSeed("test")
-  val facade = CoreEthereumFacadeProvider.create(new EthereumTest(TestConfig.builder().balance(mainAccount, EthValue.ether(10000000)).build()), new EthereumConfig())
+  val facade = CoreEthereumFacadeProvider.create(new EthereumTest(TestConfig.builder().balance(mainAccount, EthValue.ether(10000000)).build()), EthereumConfig.builder().build())
 }
 
 trait SolidityConversionHelper {

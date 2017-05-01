@@ -21,7 +21,7 @@ import scala.compat.java8.OptionConverters._
 class EventsTest extends FlatSpec with Matchers with Checkers {
 
   private val mainAccount = AccountProvider.fromSeed("hello")
-  private val ethereum = CoreEthereumFacadeProvider.create(new EthereumTest(TestConfig.builder.balance(mainAccount, ether(1000)).build), new EthereumConfig())
+  private val ethereum = CoreEthereumFacadeProvider.create(new EthereumTest(TestConfig.builder.balance(mainAccount, ether(1000)).build), EthereumConfig.builder().build())
   private val contractSource = SoliditySource.from(new File("src/test/resources/contractEvents.sol"))
 
   "Events" should "be observable from the ethereum network" in {
@@ -32,7 +32,7 @@ class EventsTest extends FlatSpec with Matchers with Checkers {
       val observeEvent = ethereum.observeEvents(solidityEvent, address)
       ethereum.events().observeTransactions().forEach(tx => println(tx.receipt.events))
       myContract.createEvent("my event is here")
-      assertEquals("my event is here", observeEvent.toBlocking.first.value)
+      assertEquals("my event is here", observeEvent.toBlocking.first().value)
     }).getOrElse(() => throw new EthereumApiException("something went wrong!"))
   }
 

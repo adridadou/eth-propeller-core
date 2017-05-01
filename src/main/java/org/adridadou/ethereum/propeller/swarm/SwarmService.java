@@ -17,8 +17,6 @@ import java.io.IOException;
  * This code is released under Apache 2 license
  */
 public class SwarmService {
-    public static final String PUBLIC_HOST = "http://swarm-gateways.net";
-
     private final String host;
 
     public SwarmService(String host) {

@@ -2,7 +2,6 @@ package org.adridadou.ethereum.propeller.event;
 
 import rx.Observable;
 
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -25,12 +24,11 @@ public class EthereumEventHandler {
         currentBlockNumber = block.blockNumber;
     }
 
-    public void onPendingTransactionUpdate(TransactionInfo tx) {
+    public void onTransactionExecuted(TransactionInfo tx) {
         onTransactionHandler.on(tx);
     }
 
-    public void onTransactionExecuted(TransactionInfo tx, List<TransactionInfo> internalTxes) {
-        internalTxes.forEach(onTransactionHandler::on);
+    public void onTransactionDropped(TransactionInfo tx) {
         onTransactionHandler.on(tx);
     }
 
@@ -53,5 +51,4 @@ public class EthereumEventHandler {
     public Observable<TransactionInfo> observeTransactions() {
         return onTransactionHandler.observable;
     }
-
 }
