@@ -70,6 +70,7 @@ public class EthereumFacade {
      * @param address the address of the smart contract
      * @param account the account to use to send transactions
      * @param contractInterface The interface representing the smart contract
+     * @param <T> the proxy object type
      * @return the contract proxy object
      */
     public <T> T createContractProxy(EthAddress address, EthAccount account, Class<T> contractInterface) {
@@ -82,6 +83,7 @@ public class EthereumFacade {
      * @param address The address of the smart contract
      * @param account The account to use to send transactions
      * @param contractInterface The interface representing the smart contract
+     * @param <T> the proxy object type
      * @return the contract proxy object
      */
     public <T> T createContractProxy(EthAbi abi, EthAddress address, EthAccount account, Class<T> contractInterface) {
@@ -96,6 +98,7 @@ public class EthereumFacade {
      * @param address The address of the smart contract
      * @param account The account to use to send transactions
      * @param contractInterface The interface representing the smart contract
+     * @param <T> the proxy object type
      * @return the contract proxy object
      */
     public <T> T createContractProxy(SolidityContractDetails details, EthAddress address, EthAccount account, Class<T> contractInterface) {
