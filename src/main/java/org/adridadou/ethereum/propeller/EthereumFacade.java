@@ -119,7 +119,7 @@ public class EthereumFacade {
     }
 
     /**
-     * Publishes the contract & sends ether at the same time
+     * Publishes the contract and sends ether at the same time
      * @param contract The compiled contract to publish
      * @param account The account that publishes it
      * @param value How much ether to send while publishing the smart contract
