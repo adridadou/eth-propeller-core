@@ -45,7 +45,7 @@ public class EthereumFacade {
      * This is used usually by wrapper projects to define language specific void types, for example Unit in Scala
      *
      * @param cls the class that needs to be seen as Void
-     * @return the EthereumFacade object itself
+     * @return The EthereumFacade object itself
      */
     public EthereumFacade addVoidType(Class<?> cls) {
         ethereumProxy.addVoidClass(cls);
@@ -56,7 +56,7 @@ public class EthereumFacade {
      * This method adds a converter from CompletableFuture to another future type. This is useful if you wnat to integrate a library with its own
      * Future type or for a wrapper project that wants to convert CompletableFuture to another Future type. for example scala Future
      * @param futureConverter the future converter to add
-     * @return the EthereumFacade object itself
+     * @return The EthereumFacade object itself
      */
     public EthereumFacade addFutureConverter(FutureConverter futureConverter) {
         handler.addFutureConverter(futureConverter);
@@ -70,7 +70,8 @@ public class EthereumFacade {
      * @param address the address of the smart contract
      * @param account the account to use to send transactions
      * @param contractInterface The interface representing the smart contract
-     * @return the contract proxy object
+     * @param <T> the proxy object type
+     * @return The contract proxy object
      */
     public <T> T createContractProxy(EthAddress address, EthAccount account, Class<T> contractInterface) {
         return createContractProxy(getDetails(address), address, account, contractInterface);
@@ -82,7 +83,8 @@ public class EthereumFacade {
      * @param address The address of the smart contract
      * @param account The account to use to send transactions
      * @param contractInterface The interface representing the smart contract
-     * @return the contract proxy object
+     * @param <T> the proxy object type
+     * @return The contract proxy object
      */
     public <T> T createContractProxy(EthAbi abi, EthAddress address, EthAccount account, Class<T> contractInterface) {
         T proxy = (T) newProxyInstance(contractInterface.getClassLoader(), new Class[]{contractInterface}, handler);
@@ -96,7 +98,8 @@ public class EthereumFacade {
      * @param address The address of the smart contract
      * @param account The account to use to send transactions
      * @param contractInterface The interface representing the smart contract
-     * @return the contract proxy object
+     * @param <T> the proxy object type
+     * @return The contract proxy object
      */
     public <T> T createContractProxy(SolidityContractDetails details, EthAddress address, EthAccount account, Class<T> contractInterface) {
         T proxy = (T) newProxyInstance(contractInterface.getClassLoader(), new Class[]{contractInterface}, handler);
@@ -116,7 +119,7 @@ public class EthereumFacade {
     }
 
     /**
-     * Publishes the contract & sends ether at the same time
+     * Publishes the contract and sends ether at the same time
      * @param contract The compiled contract to publish
      * @param account The account that publishes it
      * @param value How much ether to send while publishing the smart contract
@@ -174,8 +177,7 @@ public class EthereumFacade {
 
     /**
      * Returns the current best block number
-     *
-     * @return the best block number
+     * @return The best block number
      */
     public long getCurrentBlockNumber() {
         return ethereumProxy.getCurrentBlockNumber();
@@ -238,6 +240,7 @@ public class EthereumFacade {
      * @param contract The compiled contract
      * @param eventName The event name
      * @param eventEntity The entity that will represent the event
+     * @param <T> The event entity tpye
      * @return The solidity event definition if found
      */
     public <T> Optional<SolidityEvent<T>> findEventDefinition(SolidityContractDetails contract, String eventName, Class<T> eventEntity) {
@@ -271,6 +274,7 @@ public class EthereumFacade {
      * Observe an event from a smart contract
      * @param eventDefiniton The event definition
      * @param address The smart contract's address
+     * @param <T> The event entity type
      * @return The event observable
      */
     public <T> Observable<T> observeEvents(SolidityEvent<T> eventDefiniton, EthAddress address) {
@@ -283,6 +287,7 @@ public class EthereumFacade {
      * @param blockNumber     The block number
      * @param eventDefinition The event definition
      * @param address         The smart contract's address
+     * @param <T> The event entity type
      * @return The list of events
      */
     public <T> List<T> getEventsAt(Long blockNumber, SolidityEvent<T> eventDefinition, EthAddress address) {
@@ -295,6 +300,7 @@ public class EthereumFacade {
      * @param blockHash       The block hash
      * @param eventDefinition The event definition
      * @param address         The smart contract's address
+     * @param <T> The event entity type
      * @return The list of events
      */
     public <T> List<T> getEventsAt(EthHash blockHash, SolidityEvent<T> eventDefinition, EthAddress address) {
@@ -323,6 +329,7 @@ public class EthereumFacade {
      * @param data The data to decode
      * @param solidityType The target solidity type
      * @param cls The target class
+     * @param <T> The value type
      * @return The decoded value
      */
     public <T> T decode(Integer index, EthData data, SolidityType solidityType, Class<T> cls) {
