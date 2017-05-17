@@ -37,7 +37,7 @@ public class AbiParam {
     }
 
     public boolean isDynamic() {
-        return type.contains("[]") || type.equals("string");
+        return type.contains("[]") || type.equals("string") || type.equals("bytes");
     }
 
     @Override
