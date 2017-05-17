@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.adridadou.ethereum.propeller.exception.EthereumApiException;
 import org.adridadou.ethereum.propeller.solidity.converters.decoders.SolidityTypeDecoder;
 import org.adridadou.ethereum.propeller.values.EthData;
+import org.adridadou.ethereum.propeller.values.EventInfo;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
@@ -80,6 +81,46 @@ public class AbiEntry {
 
     public String getType() {
         return type;
+    }
+
+    public Object decode(EventInfo eventInfo, List<List<SolidityTypeDecoder>> decoders, Type resultCls) {
+        return findConstructor(decoders, (Class<?>) resultCls)
+                .map(constructor -> {
+                    try {
+                        Class[] resultClasses = constructor.getParameterTypes();
+                        Type[] resultTypes = constructor.getGenericParameterTypes();
+
+                        Object[] decodeResult = new Object[decoders.size()];
+
+                        int indexed = 0;
+                        int unindexed = 0;
+
+                        for (int i = 0; i < decoders.size(); i++) {
+                            AbiParam param = inputs.get(i);
+                            final Type resultType = resultTypes[i];
+                            final Class inputCls = resultClasses[i];
+
+                            SolidityTypeDecoder decoder = decoders.get(i).stream()
+                                    .filter(encoder -> encoder.canDecode(inputCls))
+                                    .findFirst().orElseThrow(() -> new EthereumApiException("could not find decoder for " + resultType.getTypeName() + " serious bug detected!"));
+
+                            if (param.isIndexed()) {
+                                if (param.isDynamic()) {
+                                    decodeResult[i] = decoder.decode(0, EthData.empty(), resultType);
+                                } else {
+                                    decodeResult[i] = decoder.decode(0, eventInfo.getIndexedArguments().get(indexed), resultType);
+                                }
+                                indexed++;
+                            } else {
+                                decodeResult[i] = decoder.decode(unindexed++, eventInfo.getEventArguments(), resultType);
+                            }
+                        }
+
+                        return constructor.newInstance(decodeResult);
+                    } catch (InstantiationException | InvocationTargetException | IllegalAccessException e) {
+                        throw new EthereumApiException("error while creating a new instance of " + resultCls.getTypeName());
+                    }
+                }).orElseThrow(() -> new EthereumApiException("could not find decoder for " + resultCls.getTypeName()));
     }
 
     public Object decode(EthData data, List<List<SolidityTypeDecoder>> decoders, Type resultType) {

@@ -32,6 +32,9 @@ contract myContract {
     }
 
     function mixWithStringFunc(int test1, string test2, bool test3, string test4) returns (string) {
+        if (test1 > 0 && test3 && bytes(test2).length > 23) {
+
+        }
         return test4;
     }
 
@@ -44,6 +47,9 @@ contract myContract {
     }
 
     function mixStringAddressFunc(string str, address addr) returns (string) {
+        if (addr == 0x0) {
+
+        }
         return str;
     }
 }
