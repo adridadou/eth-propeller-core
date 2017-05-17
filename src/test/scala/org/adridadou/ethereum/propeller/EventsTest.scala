@@ -7,7 +7,7 @@ import org.adridadou.ethereum.propeller.backend.{EthereumTest, TestConfig}
 import org.adridadou.ethereum.propeller.exception.EthereumApiException
 import org.adridadou.ethereum.propeller.keystore.AccountProvider
 import org.adridadou.ethereum.propeller.values.EthValue.ether
-import org.adridadou.ethereum.propeller.values.SoliditySource
+import org.adridadou.ethereum.propeller.values.{EthAddress, SoliditySource}
 import org.junit.Assert.assertEquals
 import org.scalatest.check.Checkers
 import org.scalatest.{FlatSpec, Matchers}
@@ -31,8 +31,8 @@ class EventsTest extends FlatSpec with Matchers with Checkers {
       val myContract = ethereum.createContractProxy(compiledContract, address, mainAccount, classOf[ContractEvents])
       val observeEvent = ethereum.observeEvents(solidityEvent, address)
       ethereum.events().observeTransactions().forEach(tx => println(tx.receipt.events))
-      myContract.createEvent("my event is here")
-      assertEquals("my event is here", observeEvent.toBlocking.first().value)
+      myContract.createEvent("my event is here and it is much longer than anticipated")
+      assertEquals("my event is here and it is much longer than anticipated", observeEvent.toBlocking.first().value)
     }).getOrElse(() => throw new EthereumApiException("something went wrong!"))
   }
 
@@ -47,6 +47,6 @@ trait ContractEvents {
   def createEvent(value: String): CompletableFuture[Void]
 }
 
-class MyEvent(val value: String) {
+class MyEvent(val from: EthAddress, val to: EthAddress, val value: String) {
   override def toString: String = "MyEvent{" + "value='" + value + '\'' + '}'
 }

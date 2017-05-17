@@ -12,6 +12,7 @@ import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
 import org.ethereum.core.TransactionReceipt;
 import org.ethereum.listener.EthereumListenerAdapter;
+import org.ethereum.vm.DataWord;
 import org.ethereum.vm.LogInfo;
 
 import java.util.List;
@@ -43,14 +44,18 @@ public class EthJEventListener extends EthereumListenerAdapter {
             default:
                 break;
         }
-
     }
 
     private List<EventInfo> createEventInfoList(List<LogInfo> logs) {
         return logs.stream().map(log -> {
-            EthData eventSignature = EthData.of(log.getTopics().get(0).getData());
+            List<DataWord> topics = log.getTopics();
+            EthData eventSignature = EthData.of(topics.get(0).getData());
             EthData eventArguments = EthData.of(log.getData());
-            return new EventInfo(eventSignature, eventArguments);
+            List<EthData> indexedArguments = topics.subList(1, topics.size()).stream()
+                    .map(dw -> EthData.of(dw.getData()))
+                    .collect(Collectors.toList());
+
+            return new EventInfo(eventSignature, eventArguments, indexedArguments);
         }).collect(Collectors.toList());
     }
 

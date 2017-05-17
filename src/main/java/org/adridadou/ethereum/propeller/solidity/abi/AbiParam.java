@@ -20,8 +20,8 @@ public class AbiParam {
         this.type = type;
     }
 
-    public Boolean getIndexed() {
-        return indexed;
+    public boolean isIndexed() {
+        return Boolean.TRUE.equals(indexed);
     }
 
     public String getName() {
@@ -37,7 +37,7 @@ public class AbiParam {
     }
 
     public boolean isDynamic() {
-        return type.contains("[]");
+        return type.contains("[]") || type.equals("string");
     }
 
     @Override

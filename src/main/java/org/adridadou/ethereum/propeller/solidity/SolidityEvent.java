@@ -26,8 +26,8 @@ public class SolidityEvent<T> {
 
     }
 
-    public <T> T parseEvent(EventInfo ethData, Class<T> clsResult) {
-        return (T) description.decode(ethData.getEventArguments(), decoders, clsResult);
+    public T parseEvent(EventInfo eventInfo, Class<T> clsResult) {
+        return (T) description.decode(eventInfo, decoders, clsResult);
     }
 
     public Class<T> getEntityClass() {
