@@ -156,6 +156,11 @@ public class AbiEntry {
     }
 
     public EthData signature() {
+        //Constructor has no signature has it is an anonyous function
+        if ("constructor".equals(type)) {
+            return EthData.empty();
+        }
+
         String params = getInputs().stream().map(AbiParam::getType).collect(Collectors.joining(","));
         return EthData.of(Arrays.copyOfRange(sha3((getName() + "(" + params + ")").getBytes()), 0, 4));
     }

@@ -126,12 +126,22 @@ class EthereumProxy {
                 .map(constructor -> constructor.encode(constructorArgs))
                 .orElseGet(() -> {
                     if (constructorArgs.length > 0) {
-                        throw new EthereumApiException("No constructor with params found");
+                        throw new EthereumApiException("No constructor found with params (" + printTypes(constructorArgs) + ")");
                     }
                     return EthData.empty();
                 });
         return publishContract(value, EthData.of(ArrayUtils.addAll(contract.getBinary().data, argsEncoded.data)), account);
 
+    }
+
+    private String printTypes(Object[] constructorArgs) {
+        return Arrays.stream(constructorArgs).map(arg -> {
+            if (arg == null) {
+                return "null";
+            } else {
+                return arg.getClass().getSimpleName();
+            }
+        }).reduce((a, b) -> a + ", " + b).orElse("[no args]");
     }
 
     private CompletableFuture<TransactionReceipt> sendTxInternal(EthValue value, EthData data, EthAccount account, EthAddress toAddress) {
