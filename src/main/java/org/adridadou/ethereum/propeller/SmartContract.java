@@ -47,6 +47,13 @@ public class SmartContract {
                 .collect(Collectors.toList());
     }
 
+    public List<SolidityFunction> getConstructors() {
+        return contract.parseAbi().stream()
+                .filter(entry -> "constructor".equals(entry.getType()))
+                .map(this::buildFunction)
+                .collect(Collectors.toList());
+    }
+
     private SolidityFunction buildFunction(AbiEntry entry) {
         return new SolidityFunction(entry, getEncoders(entry), getDecoders(entry));
     }
@@ -112,7 +119,7 @@ public class SmartContract {
     }
 
     Optional<SolidityFunction> getConstructor(Object[] args) {
-        return getFunctions().stream()
+        return getConstructors().stream()
                 .filter(func -> func.matchParams(args)).findFirst();
     }
 
