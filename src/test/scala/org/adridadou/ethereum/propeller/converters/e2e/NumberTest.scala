@@ -15,7 +15,7 @@ import scala.util.Try
   */
 class NumberTest extends FlatSpec with Matchers with Checkers with SolidityConversionHelper {
 
-  val contract = contractObject[NumberContract]
+  private val contract = contractObject[NumberContract]
 
   "Number type" should "convert big integer from and to the same value" in {
     check(forAll(arbitrary[BigInt])(checkEncode(contract, _)))

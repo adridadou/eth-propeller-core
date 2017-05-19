@@ -127,11 +127,11 @@ public class AbiEntry {
     public Object decode(EthData data, List<List<SolidityTypeDecoder>> decoders, Type resultType) {
         final Class<?> resultCls = resultType instanceof Class ? (Class) resultType : (Class) ((ParameterizedType) resultType).getRawType();
 
-        if (decoders.size() == 1) {
-            if (resultCls.equals(Void.class) || resultCls.getTypeName().equals("void")) {
-                return null;
-            }
+        if (resultCls.equals(Void.class) || resultCls.getTypeName().equals("void")) {
+            return null;
+        }
 
+        if (decoders.size() == 1) {
             Optional<SolidityTypeDecoder> optDecoder = decoders.get(0).stream().filter(dec -> dec.canDecode(resultCls))
                     .findFirst();
 
@@ -152,7 +152,11 @@ public class AbiEntry {
                     } catch (InstantiationException | InvocationTargetException | IllegalAccessException e) {
                         throw new EthereumApiException("error while creating a new instance of " + resultCls.getTypeName());
                     }
-                }).orElseThrow(() -> new EthereumApiException("could not find decoder for " + resultCls.getTypeName()));
+                }).orElseThrow(() -> new EthereumApiException("could not find decoder for (" + printOutputs() + ") to " + resultCls.getTypeName()));
+    }
+
+    private String printOutputs() {
+        return outputs.stream().map(AbiParam::getType).reduce((a, b) -> a + ", " + b).orElse("");
     }
 
     public EthData signature() {
