@@ -38,6 +38,10 @@ contract myContract {
         return test4;
     }
 
+    function complexReturnType(int test1, string test2, bool test3, string test4) returns (int, string, bool, string) {
+        return (test1, test2, test3, test4);
+    }
+
     function bytes32Func(bytes32 value) returns (bytes32) {
         return value;
     }

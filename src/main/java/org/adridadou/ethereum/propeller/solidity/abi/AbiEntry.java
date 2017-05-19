@@ -174,19 +174,6 @@ public class AbiEntry {
         return EthData.of(sha3((getName() + "(" + params + ")").getBytes()));
     }
 
-    @Override
-    public String toString() {
-        return "AbiEntry{" +
-                "anonymous=" + anonymous +
-                ", constant=" + constant +
-                ", payable=" + payable +
-                ", name='" + name + '\'' +
-                ", inputs=" + inputs +
-                ", outputs=" + outputs +
-                ", type='" + type + '\'' +
-                '}';
-    }
-
     public <U> Optional<Constructor<U>> findConstructor(List<List<SolidityTypeDecoder>> decoders, Class<U> resultCls) {
         return Arrays.stream(resultCls.getConstructors()).filter(constructor -> {
             if (constructor.getParameterCount() != decoders.size()) {
