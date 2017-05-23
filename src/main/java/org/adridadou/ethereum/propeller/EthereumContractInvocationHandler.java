@@ -119,12 +119,10 @@ class EthereumContractInvocationHandler implements InvocationHandler {
     private boolean validateReturnValue(Method method, SolidityFunction value) {
         return findConverter(method.getReturnType())
                 .map(converter -> {
-                    System.out.println("****** converter found ******");
                     value.decode(EthData.empty(), getGenericType(method.getGenericReturnType()));
                     return true;
                 })
                 .orElseGet(() -> {
-                    System.out.println("***** or else ***** " + method.getReturnType());
                     value.decode(EthData.empty(), method.getGenericReturnType());
                     return true;
                 });

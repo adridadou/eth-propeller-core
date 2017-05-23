@@ -6,8 +6,12 @@ contract myContract {
         return str;
     }
 
-    function intFunc(uint uintValue) returns (uint) {
+    function uintFunc(uint uintValue) returns (uint) {
         return uintValue;
+    }
+
+    function intFunc(int intValue) returns (int) {
+        return intValue;
     }
 
     function addressFunc(address addr) returns (address) {

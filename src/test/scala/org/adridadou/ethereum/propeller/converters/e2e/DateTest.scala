@@ -13,8 +13,9 @@ import org.scalatest.{FlatSpec, Matchers}
   */
 class DateTest extends FlatSpec with Matchers with Checkers with SolidityConversionHelper {
 
+  private val contract = contractObject[DateContract]
+
   "Date type" should "be converted from and to date with the same value" in {
-    val contract = contractObject[DateContract]
     check(forAll(arbitrary[Date])(checkEncode(contract, _)))
   }
 
@@ -22,7 +23,6 @@ class DateTest extends FlatSpec with Matchers with Checkers with SolidityConvers
     contractObject.dateFunc(date) shouldEqual date
     true
   }
-
 }
 
 trait DateContract {

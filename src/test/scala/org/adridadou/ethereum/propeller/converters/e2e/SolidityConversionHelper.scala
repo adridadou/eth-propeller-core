@@ -4,8 +4,9 @@ import java.io.File
 
 import org.adridadou.ethereum.propeller.backend.{EthereumTest, TestConfig}
 import org.adridadou.ethereum.propeller.keystore.AccountProvider
-import org.adridadou.ethereum.propeller.values.{EthValue, SoliditySourceFile}
-import org.adridadou.ethereum.propeller.{CoreEthereumFacadeProvider, EthereumConfig}
+import org.adridadou.ethereum.propeller.solidity.SolidityContractDetails
+import org.adridadou.ethereum.propeller.values.{EthAccount, EthValue, SoliditySourceFile}
+import org.adridadou.ethereum.propeller.{CoreEthereumFacadeProvider, EthereumConfig, EthereumFacade}
 
 import scala.reflect.ClassTag
 
@@ -15,17 +16,19 @@ import scala.reflect.ClassTag
   */
 
 object SolidityConversionHelper {
-  val mainAccount = AccountProvider.fromSeed("test")
-  val facade = CoreEthereumFacadeProvider.create(new EthereumTest(TestConfig.builder().balance(mainAccount, EthValue.ether(10000000)).build()), EthereumConfig.builder().build())
+  val mainAccount: EthAccount = AccountProvider.fromSeed("test")
+  val facade: EthereumFacade = CoreEthereumFacadeProvider
+    .create(new EthereumTest(TestConfig.builder()
+      .balance(mainAccount, EthValue.ether(10000000))
+      .build()), EthereumConfig.builder().build())
+  val contract: SolidityContractDetails = SolidityConversionHelper.facade.compile(SoliditySourceFile.from(new File("src/test/resources/conversionContract.sol")))
+    .findContract("myContract").get()
 }
 
 trait SolidityConversionHelper {
 
   def contractObject[T]()(implicit tag: ClassTag[T]): T = {
-    val contract = SolidityConversionHelper.facade.compile(SoliditySourceFile.from(new File("src/test/resources/conversionContract.sol")))
-      .findContract("myContract").get()
-
-    val contractAddress = SolidityConversionHelper.facade.publishContract(contract, SolidityConversionHelper.mainAccount).get()
-    SolidityConversionHelper.facade.createContractProxy(contract, contractAddress, SolidityConversionHelper.mainAccount, tag.runtimeClass).asInstanceOf[T]
+    val contractAddress = SolidityConversionHelper.facade.publishContract(SolidityConversionHelper.contract, SolidityConversionHelper.mainAccount).get()
+    SolidityConversionHelper.facade.createContractProxy(SolidityConversionHelper.contract, contractAddress, SolidityConversionHelper.mainAccount, tag.runtimeClass).asInstanceOf[T]
   }
 }

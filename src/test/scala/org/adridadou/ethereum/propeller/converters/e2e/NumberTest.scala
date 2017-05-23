@@ -31,20 +31,24 @@ class NumberTest extends FlatSpec with Matchers with Checkers with SolidityConve
 
   private def checkEncode(contract: NumberContract, seed: Long) = {
     if (seed < 0) {
-      Try(contract.intFunc(seed)).isFailure shouldEqual true
+      Try(contract.uintFunc(seed)).isFailure shouldEqual true
     } else {
-      contract.intFunc(seed) shouldEqual seed
+      contract.uintFunc(seed) shouldEqual seed
     }
+
+    contract.intFunc(seed) shouldEqual seed
 
     true
   }
 
   private def checkEncode(contract: NumberContract, seed: Int) = {
     if (seed < 0) {
-      Try(contract.intFunc(seed.asInstanceOf[Integer])).isFailure shouldEqual true
+      Try(contract.uintFunc(seed.asInstanceOf[Integer])).isFailure shouldEqual true
     } else {
-      contract.intFunc(seed.asInstanceOf[Integer]) shouldEqual seed
+      contract.uintFunc(seed.asInstanceOf[Integer]) shouldEqual seed
     }
+
+    contract.intFunc(seed.asInstanceOf[Integer]) shouldEqual seed
 
     true
   }
@@ -52,10 +56,12 @@ class NumberTest extends FlatSpec with Matchers with Checkers with SolidityConve
   private def checkEncode(contract: NumberContract, seed: BigInt) = {
     val biValue = seed.bigInteger
     if (biValue.signum() == -1) {
-      Try(contract.intFunc(biValue)).isFailure shouldEqual true
+      Try(contract.uintFunc(biValue)).isFailure shouldEqual true
     } else {
-      contract.intFunc(biValue) shouldEqual biValue
+      contract.uintFunc(biValue) shouldEqual biValue
     }
+
+    contract.intFunc(biValue) shouldEqual biValue
 
     true
   }
@@ -68,4 +74,10 @@ trait NumberContract {
   def intFunc(intValue: Integer): Integer
 
   def intFunc(intValue: java.lang.Long): java.lang.Long
+
+  def uintFunc(intValue: BigInteger): BigInteger
+
+  def uintFunc(intValue: Integer): Integer
+
+  def uintFunc(intValue: java.lang.Long): java.lang.Long
 }
