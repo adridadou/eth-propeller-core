@@ -129,7 +129,7 @@
         <dependency>
             <groupId>org.adridadou</groupId>
             <artifactId>ethereumj</artifactId>
-            <version>1.5.1-SNAPSHOT</version>
+            <version>1.5.1</version>
             <scope>test</scope>
         </dependency>
 
