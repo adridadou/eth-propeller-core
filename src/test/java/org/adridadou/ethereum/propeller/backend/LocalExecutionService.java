@@ -12,7 +12,7 @@ import java.math.BigInteger;
  * This code is released under Apache 2 license
  */
 public class LocalExecutionService {
-    public static final long GAS_LIMIT_FOR_LOCAL_EXECUTION = 100_000_000_000L;
+    private static final long GAS_LIMIT_FOR_LOCAL_EXECUTION = 100_000_000_000L;
     private final BlockchainImpl blockchain;
 
     public LocalExecutionService(BlockchainImpl blockchain) {

@@ -7,12 +7,16 @@ import org.adridadou.ethereum.propeller.solidity.SolidityContractDetails;
 import org.adridadou.ethereum.propeller.solidity.SolidityFunction;
 import org.adridadou.ethereum.propeller.values.EthAccount;
 import org.adridadou.ethereum.propeller.values.EthAddress;
+import org.adridadou.ethereum.propeller.values.EthData;
 import org.adridadou.ethereum.propeller.values.SmartContractInfo;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static org.adridadou.ethereum.propeller.values.EthValue.wei;
@@ -82,7 +86,8 @@ class EthereumContractInvocationHandler implements InvocationHandler {
     }
 
     private Optional<FutureConverter> findConverter(Class type) {
-        return futureConverters.stream().filter(converter -> converter.isFutureType(type) || converter.isPayableType(type)).findFirst();
+        return futureConverters.stream()
+                .filter(converter -> converter.isFutureType(type) || converter.isPayableType(type)).findFirst();
     }
 
     <T> void register(T proxy, Class<T> contractInterface, SolidityContractDetails contract, EthAddress address, EthAccount account) {
@@ -102,29 +107,51 @@ class EthereumContractInvocationHandler implements InvocationHandler {
         Set<Method> interfaceMethods = new HashSet<>(Arrays.asList(contractInterface.getMethods()));
         Set<SolidityFunction> solidityFunctions = new HashSet<>(smartContract.getFunctions());
 
+        Map<Method, Optional<SolidityFunction>> matches = interfaceMethods.stream()
+                .collect(Collectors.toMap(Function.identity(), method -> solidityFunctions.stream()
+                        .filter(solidityMethod -> solidityMethod.getName().equals(method.getName()) && solidityMethod.matchParams(method.getParameterTypes())).findFirst()));
+
+        matches.forEach((key, optValue) -> optValue
+                .map(value -> validateReturnValue(key, value))
+                .orElseThrow(() -> new EthereumApiException(generateUnmatchedMethodsError(solidityFunctions, interfaceMethods))));
+    }
+
+    private boolean validateReturnValue(Method method, SolidityFunction value) {
+        return findConverter(method.getReturnType())
+                .map(converter -> {
+                    value.decode(EthData.empty(), getGenericType(method.getGenericReturnType()));
+                    return true;
+                })
+                .orElseGet(() -> {
+                    value.decode(EthData.empty(), method.getGenericReturnType());
+                    return true;
+                });
+
+    }
+
+    private String generateUnmatchedMethodsError(Set<SolidityFunction> solidityFunctions, Set<Method> interfaceMethods) {
+        String unmatchedSolidityMethods = solidityFunctions.stream().filter(solidityMethod -> interfaceMethods.stream()
+                .noneMatch(method -> solidityMethod.getName().equals(method.getName()) && solidityMethod.matchParams(method.getParameterTypes())))
+                .map(func -> "- " + func.toString())
+                .collect(Collectors.joining("\n"));
+
         List<Method> unmatched = interfaceMethods.stream().filter(method -> solidityFunctions.stream()
-                .noneMatch(solidityMethod -> solidityMethod.matchParams(method.getParameterTypes())))
+                .noneMatch(solidityMethod -> solidityMethod.getName().equals(method.getName()) && solidityMethod.matchParams(method.getParameterTypes())))
                 .collect(Collectors.toList());
 
-        if (!unmatched.isEmpty()) {
-            String unmatchedSolidityMethods = solidityFunctions.stream().filter(solidityMethod -> interfaceMethods.stream()
-                    .noneMatch(method -> solidityMethod.matchParams(method.getParameterTypes())))
-                    .map(func -> "- " + func.toString())
-                    .collect(Collectors.joining("\n"));
+        String functions = unmatched.stream()
+                .map(method -> "- " + method.getName() + "(" + Arrays.stream(method.getParameterTypes()).map(Class::getSimpleName).collect(Collectors.joining(", ")) + ")")
+                .collect(Collectors.joining("\n"));
 
-            String functions = unmatched.stream()
-                    .map(method -> "- " + method.getName() + "(" + Arrays.stream(method.getParameterTypes()).map(Class::getSimpleName).collect(Collectors.joining(", ")) + ")")
-                    .collect(Collectors.joining("\n"));
-
-            String message = "*** unmatched *** \nsolidity:\n" + unmatchedSolidityMethods +
-                    "\njava:\n" + functions;
-
-            throw new EthereumApiException(message);
-        }
-
+        return "*** unmatched *** \nsolidity:\n" + unmatchedSolidityMethods +
+                "\njava:\n" + functions;
     }
 
     void addFutureConverter(final FutureConverter futureConverter) {
         futureConverters.add(futureConverter);
+    }
+
+    private Class<?> getGenericType(Type genericType) {
+        return (Class<?>) ((ParameterizedType) genericType).getActualTypeArguments()[0];
     }
 }
