@@ -21,6 +21,8 @@ public class EthDataEncoder implements SolidityTypeEncoder {
         switch (solidityType) {
             case BYTES:
                 return encodeToBytes((EthData) arg);
+            case BYTES8:
+            case BYTES16:
             case BYTES32:
                 return encodeToBytes32((EthData) arg);
             default:
