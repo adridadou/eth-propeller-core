@@ -1,6 +1,8 @@
 package org.adridadou.ethereum.propeller.values;
 
 
+import org.adridadou.ethereum.propeller.exception.EthereumApiException;
+
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Objects;
@@ -14,6 +16,7 @@ public class EthValue implements Comparable<EthValue> {
     private final BigDecimal value;
 
     public EthValue(BigInteger value) {
+        if (value.signum() == -1) throw new EthereumApiException("a value cannot be negative");
         this.value = new BigDecimal(value);
     }
 
