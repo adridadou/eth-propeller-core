@@ -5,16 +5,14 @@ import org.adridadou.ethereum.propeller.converters.future.FutureConverter;
 import org.adridadou.ethereum.propeller.exception.EthereumApiException;
 import org.adridadou.ethereum.propeller.solidity.SolidityContractDetails;
 import org.adridadou.ethereum.propeller.solidity.SolidityFunction;
-import org.adridadou.ethereum.propeller.values.EthAccount;
-import org.adridadou.ethereum.propeller.values.EthAddress;
-import org.adridadou.ethereum.propeller.values.EthData;
-import org.adridadou.ethereum.propeller.values.SmartContractInfo;
+import org.adridadou.ethereum.propeller.values.*;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -62,7 +60,27 @@ class EthereumContractInvocationHandler implements InvocationHandler {
                 if (converter.isFutureType(method.getReturnType())) {
                     return converter.convert(contract.callFunction(method, arguments));
                 }
-                return converter.getPayable(contract, arguments, method);
+                if (converter.isPayableType(method.getReturnType())) {
+                    return converter.getPayable(contract, arguments, method);
+                }
+
+                if (converter.isFutureTypeWithDetails(method.getReturnType())) {
+                    try {
+                        CallDetails details = contract.callFunctionAndGetDetails(wei(0), method, args).get();
+                        CompletableFuture<?> futureResult = contract.transformDetailsToResult(details, method);
+                        return converter.convertWithDetails(details, futureResult);
+                    } catch (InterruptedException | ExecutionException e) {
+                        throw new EthereumApiException(e.getMessage(), e);
+                    }
+                }
+
+                if (converter.isPayableTypeWithDetails(method.getReturnType())) {
+                    return converter.getPayableWithDetails(contract, arguments, method);
+                }
+
+
+                throw new EthereumApiException("serious bug! the type \"" + method.getReturnType().getSimpleName() + "\" is define has a type from FutureConverter but none found!");
+
             }).orElseGet(() -> contract.callConstFunction(method, wei(0), arguments));
         }
     }
@@ -87,7 +105,8 @@ class EthereumContractInvocationHandler implements InvocationHandler {
 
     private Optional<FutureConverter> findConverter(Class type) {
         return futureConverters.stream()
-                .filter(converter -> converter.isFutureType(type) || converter.isPayableType(type)).findFirst();
+                .filter(converter -> converter.isAnyFutureDependentType(type))
+                .findFirst();
     }
 
     <T> void register(T proxy, Class<T> contractInterface, SolidityContractDetails contract, EthAddress address, EthAccount account) {
@@ -126,7 +145,6 @@ class EthereumContractInvocationHandler implements InvocationHandler {
                     value.decode(EthData.empty(), method.getGenericReturnType());
                     return true;
                 });
-
     }
 
     private String generateUnmatchedMethodsError(Set<SolidityFunction> solidityFunctions, Set<Method> interfaceMethods) {

@@ -9,7 +9,7 @@ import java.util.concurrent.CompletableFuture;
  * Created by davidroon on 15.01.17.
  * This code is released under Apache 2 license
  */
-public class Payable<T> implements IPayable {
+public class Payable<T> {
 
     private final SmartContract contract;
     private final Method method;

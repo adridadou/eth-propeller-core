@@ -105,12 +105,12 @@ class EthereumProxy {
 
     private CompletableFuture<EthAddress> publishContract(EthValue ethValue, EthData data, EthAccount account) {
         return this.sendTxInternal(ethValue, data, account, EthAddress.empty())
+                .thenCompose(CallDetails::getResult)
                 .thenApply(receipt -> receipt.contractAddress);
     }
 
-    CompletableFuture<EthExecutionResult> sendTx(EthValue value, EthData data, EthAccount account, EthAddress address) {
-        return this.sendTxInternal(value, data, account, address)
-                .thenApply(receipt -> new EthExecutionResult(receipt.executionResult));
+    CompletableFuture<CallDetails> sendTx(EthValue value, EthData data, EthAccount account, EthAddress address) {
+        return this.sendTxInternal(value, data, account, address);
     }
 
     public SmartContract getSmartContract(SolidityContractDetails details, EthAddress address, EthAccount account) {
@@ -144,19 +144,19 @@ class EthereumProxy {
         }).reduce((a, b) -> a + ", " + b).orElse("[no args]");
     }
 
-    private CompletableFuture<TransactionReceipt> sendTxInternal(EthValue value, EthData data, EthAccount account, EthAddress toAddress) {
-        return eventHandler.ready().thenCompose((v) -> {
+    private CompletableFuture<CallDetails> sendTxInternal(EthValue value, EthData data, EthAccount account, EthAddress toAddress) {
+        return eventHandler.ready().thenApply((v) -> {
             GasUsage gasLimit = estimateGas(value, data, account, toAddress);
             EthHash txHash = ethereum.submit(account, toAddress, value, data, getNonce(account.getAddress()), gasLimit);
 
             long currentBlock = eventHandler.getCurrentBlockNumber();
-
             CompletableFuture<TransactionReceipt> result = CompletableFuture.supplyAsync(() -> {
                 Observable<TransactionInfo> droppedTxs = eventHandler.observeTransactions()
                         .filter(params -> params.receipt != null && Objects.equals(params.receipt.hash, txHash) && params.status == TransactionStatus.Dropped);
                 Observable<TransactionInfo> timeoutBlock = eventHandler.observeBlocks()
                         .filter(blockParams -> blockParams.blockNumber > currentBlock + config.blockWaitLimit())
                         .map(params -> null);
+
                 Observable<TransactionInfo> blockTxs = eventHandler.observeBlocks()
                         .flatMap(params -> Observable.from(params.receipts))
                         .filter(receipt -> Objects.equals(receipt.hash, txHash))
@@ -176,7 +176,7 @@ class EthereumProxy {
 
             });
             increasePendingTransactionCounter(account.getAddress(), txHash);
-            return result;
+            return new CallDetails(result, txHash);
         });
     }
 
