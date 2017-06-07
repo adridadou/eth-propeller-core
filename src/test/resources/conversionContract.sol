@@ -18,6 +18,10 @@ contract myContract {
         return addr;
     }
 
+    function addressPayableFunc(address addr) payable returns (address) {
+        return addr;
+    }
+
     function dateFunc(int dateValue) returns (int) {
         return dateValue;
     }

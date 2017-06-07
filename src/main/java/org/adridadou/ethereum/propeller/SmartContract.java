@@ -6,10 +6,7 @@ import org.adridadou.ethereum.propeller.solidity.SolidityFunction;
 import org.adridadou.ethereum.propeller.solidity.abi.AbiEntry;
 import org.adridadou.ethereum.propeller.solidity.converters.decoders.SolidityTypeDecoder;
 import org.adridadou.ethereum.propeller.solidity.converters.encoders.SolidityTypeEncoder;
-import org.adridadou.ethereum.propeller.values.EthAccount;
-import org.adridadou.ethereum.propeller.values.EthAddress;
-import org.adridadou.ethereum.propeller.values.EthData;
-import org.adridadou.ethereum.propeller.values.EthValue;
+import org.adridadou.ethereum.propeller.values.*;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
@@ -88,17 +85,31 @@ public class SmartContract {
         return callFunction(value, method, arguments);
     }
 
-    CompletableFuture<?> callFunction(EthValue value, Method method, Object... args) {
+    public CompletableFuture<?> callFunction(EthValue value, Method method, Object... args) {
+        return callFunctionAndGetDetails(value, method, args).thenCompose(callDetails -> this.transformDetailsToResult(callDetails, method));
+    }
+
+    private SolidityFunction getFunctionOrThrow(Method method) {
+        return getFunction(method)
+                .orElseThrow(() -> new EthereumApiException("function " + method.getName() + " cannot be found. available:" + getAvailableFunctions()));
+    }
+
+    public CompletableFuture<?> transformDetailsToResult(CallDetails details, Method method) {
+        return details.getResult().thenApply(receipt -> {
+            SolidityFunction func = getFunctionOrThrow(method);
+            Class<?> returnType = getGenericType(method.getGenericReturnType());
+            if (proxy.isVoidType(returnType)) {
+                return null;
+            }
+
+            return func.decode(receipt.executionResult, returnType);
+        });
+    }
+
+    public CompletableFuture<CallDetails> callFunctionAndGetDetails(EthValue value, Method method, Object... args) {
         return getFunction(method).map(func -> {
             EthData functionCallBytes = func.encode(args);
-            return proxy.sendTx(value, functionCallBytes, account, address)
-                    .thenApply(receipt -> {
-                        Class<?> returnType = getGenericType(method.getGenericReturnType());
-                        if (proxy.isVoidType(returnType)) {
-                            return null;
-                        }
-                        return func.decode(receipt.getResult(), returnType);
-                    });
+            return proxy.sendTx(value, functionCallBytes, account, address);
         }).orElseThrow(() -> new EthereumApiException("function " + method.getName() + " cannot be found. available:" + getAvailableFunctions()));
     }
 

@@ -31,17 +31,4 @@ public class TransactionReceipt {
         this.isSuccessful = isSuccessful;
         this.events = events;
     }
-
-    @Override
-    public String toString() {
-        return "TransactionReceipt{" +
-                "hash=" + hash +
-                ", sender=" + sender +
-                ", receiveAddress=" + receiveAddress +
-                ", contractAddress=" + contractAddress +
-                ", error='" + error + '\'' +
-                ", executionResult=" + executionResult +
-                ", isSuccessful=" + isSuccessful +
-                '}';
-    }
 }
