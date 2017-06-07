@@ -1,9 +1,4 @@
-package org.adridadou.ethereum.propeller.event;
-
-import org.adridadou.ethereum.propeller.values.EthAddress;
-import org.adridadou.ethereum.propeller.values.EthData;
-import org.adridadou.ethereum.propeller.values.EthHash;
-import org.adridadou.ethereum.propeller.values.EventInfo;
+package org.adridadou.ethereum.propeller.values;
 
 import java.util.List;
 

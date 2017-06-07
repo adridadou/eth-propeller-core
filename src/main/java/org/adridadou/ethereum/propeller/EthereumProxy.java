@@ -1,6 +1,7 @@
 package org.adridadou.ethereum.propeller;
 
-import org.adridadou.ethereum.propeller.event.*;
+import org.adridadou.ethereum.propeller.event.BlockInfo;
+import org.adridadou.ethereum.propeller.event.EthereumEventHandler;
 import org.adridadou.ethereum.propeller.exception.EthereumApiException;
 import org.adridadou.ethereum.propeller.solidity.SolidityContractDetails;
 import org.adridadou.ethereum.propeller.solidity.SolidityEvent;
@@ -97,8 +98,8 @@ class EthereumProxy {
 
     <T> Observable<T> observeEvents(SolidityEvent eventDefinition, EthAddress contractAddress) {
         return eventHandler.observeTransactions()
-                .filter(params -> contractAddress.equals(params.receipt.receiveAddress))
-                .flatMap(params -> Observable.from(params.getReceipt().events))
+                .filter(params -> params.getReceipt().map(receipt -> contractAddress.equals(receipt.receiveAddress)).orElse(false))
+                .flatMap(params -> Observable.from(params.getReceipt().map(receipt -> receipt.events).get()))
                 .filter(eventDefinition::match)
                 .map(data -> (T) eventDefinition.parseEvent(data, eventDefinition.getEntityClass()));
     }
@@ -152,7 +153,7 @@ class EthereumProxy {
             long currentBlock = eventHandler.getCurrentBlockNumber();
             CompletableFuture<TransactionReceipt> result = CompletableFuture.supplyAsync(() -> {
                 Observable<TransactionInfo> droppedTxs = eventHandler.observeTransactions()
-                        .filter(params -> params.receipt != null && Objects.equals(params.receipt.hash, txHash) && params.status == TransactionStatus.Dropped);
+                        .filter(params -> params.getReceipt().map(receipt -> Objects.equals(receipt.hash, txHash)).orElse(false) && params.getStatus() == TransactionStatus.Dropped);
                 Observable<TransactionInfo> timeoutBlock = eventHandler.observeBlocks()
                         .filter(blockParams -> blockParams.blockNumber > currentBlock + config.blockWaitLimit())
                         .map(params -> null);
@@ -167,9 +168,9 @@ class EthereumProxy {
                             if (params == null) {
                                 throw new EthereumApiException("the transaction has not been included in the last " + config.blockWaitLimit() + " blocks");
                             }
-                            TransactionReceipt receipt = params.receipt;
-                            if (params.status == TransactionStatus.Dropped) {
-                                throw new EthereumApiException("the transaction has been dropped! - " + params.receipt.error);
+                            TransactionReceipt receipt = params.getReceipt().orElseThrow(() -> new EthereumApiException("no Transaction receipt found!"));
+                            if (params.getStatus() == TransactionStatus.Dropped) {
+                                throw new EthereumApiException("the transaction has been dropped! - " + receipt.error);
                             }
                             return checkForErrors(receipt);
                         }).toBlocking().first();
@@ -190,7 +191,7 @@ class EthereumProxy {
     }
 
     private TransactionInfo createTransactionParameters(TransactionReceipt receipt) {
-        return new TransactionInfo(receipt, TransactionStatus.Executed);
+        return new TransactionInfo(receipt.hash, receipt, TransactionStatus.Executed);
     }
 
     private TransactionReceipt checkForErrors(final TransactionReceipt receipt) {
@@ -203,10 +204,11 @@ class EthereumProxy {
 
     private void updateNonce() {
         eventHandler.observeTransactions()
-                .filter(tx -> tx.status == TransactionStatus.Dropped)
+                .filter(tx -> tx.getStatus() == TransactionStatus.Dropped)
                 .forEach(params -> {
-                    EthAddress currentAddress = params.receipt.sender;
-                    EthHash hash = params.receipt.hash;
+                    TransactionReceipt receipt = params.getReceipt().orElseThrow(() -> new EthereumApiException("no Transaction receipt found!"));
+                    EthAddress currentAddress = receipt.sender;
+                    EthHash hash = receipt.hash;
                     Optional.ofNullable(pendingTransactions.get(currentAddress)).ifPresent(hashes -> {
                         hashes.remove(hash);
                         nonces.put(currentAddress, ethereum.getNonce(currentAddress));
@@ -285,15 +287,15 @@ class EthereumProxy {
         return voidClasses.contains(cls);
     }
 
-    public <T> List<T> getEvents(SolidityEvent eventDefinition, EthAddress address, Class<T> cls, Long blockNumber) {
-        return getEvents(eventDefinition, address, cls, ethereum.getBlock(blockNumber));
+    public <T> List<T> getEventsAtBlock(SolidityEvent eventDefinition, EthAddress address, Class<T> cls, Long blockNumber) {
+        return getEventsAtBlock(eventDefinition, address, cls, ethereum.getBlock(blockNumber));
     }
 
-    public <T> List<T> getEvents(SolidityEvent eventDefinition, EthAddress address, Class<T> cls, EthHash blockHash) {
-        return getEvents(eventDefinition, address, cls, ethereum.getBlock(blockHash));
+    public <T> List<T> getEventsAtBlock(SolidityEvent eventDefinition, EthAddress address, Class<T> cls, EthHash blockHash) {
+        return getEventsAtBlock(eventDefinition, address, cls, ethereum.getBlock(blockHash));
     }
 
-    private <T> List<T> getEvents(SolidityEvent eventDefinition, EthAddress address, Class<T> cls, BlockInfo blockInfo) {
+    private <T> List<T> getEventsAtBlock(SolidityEvent eventDefinition, EthAddress address, Class<T> cls, BlockInfo blockInfo) {
         return blockInfo.receipts.stream()
                 .filter(params -> address.equals(params.receiveAddress))
                 .flatMap(params -> params.events.stream())
@@ -301,7 +303,22 @@ class EthereumProxy {
                 .map(data -> (T) eventDefinition.parseEvent(data, cls)).collect(Collectors.toList());
     }
 
+
+    public <T> List<T> getEventsAtTransaction(SolidityEvent eventDefinition, EthAddress address, Class<T> cls, EthHash transactionHash) {
+        TransactionReceipt receipt = ethereum.getTransactionInfo(transactionHash).getReceipt().orElseThrow(() -> new EthereumApiException("no Transaction receipt found!"));
+        if (address.equals(receipt.receiveAddress)) {
+            return receipt.events.stream().filter(eventDefinition::match)
+                    .map(data -> (T) eventDefinition.parseEvent(data, cls)).collect(Collectors.toList());
+        }
+
+        return new ArrayList<>();
+    }
+
     public long getCurrentBlockNumber() {
         return eventHandler.getCurrentBlockNumber();
+    }
+
+    public TransactionInfo getTransactionInfo(EthHash hash) {
+        return ethereum.getTransactionInfo(hash);
     }
 }
