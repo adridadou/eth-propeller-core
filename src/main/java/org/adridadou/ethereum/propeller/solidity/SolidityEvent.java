@@ -2,7 +2,7 @@ package org.adridadou.ethereum.propeller.solidity;
 
 import org.adridadou.ethereum.propeller.solidity.abi.AbiEntry;
 import org.adridadou.ethereum.propeller.solidity.converters.decoders.SolidityTypeDecoder;
-import org.adridadou.ethereum.propeller.values.EventInfo;
+import org.adridadou.ethereum.propeller.values.EventData;
 
 import java.util.List;
 
@@ -21,13 +21,13 @@ public class SolidityEvent<T> {
         this.entityClass = entityClass;
     }
 
-    public boolean match(EventInfo data) {
+    public boolean match(EventData data) {
         return data.getEventSignature().equals(description.signature()) || data.getEventSignature().equals(description.signatureLong());
 
     }
 
-    public T parseEvent(EventInfo eventInfo, Class<T> clsResult) {
-        return (T) description.decode(eventInfo, decoders, clsResult);
+    public T parseEvent(EventData eventData, Class<T> clsResult) {
+        return (T) description.decode(eventData, decoders, clsResult);
     }
 
     public Class<T> getEntityClass() {

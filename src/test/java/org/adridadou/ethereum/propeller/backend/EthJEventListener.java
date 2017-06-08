@@ -24,7 +24,7 @@ public class EthJEventListener extends EthereumListenerAdapter {
         this.eventHandler = eventHandler;
     }
 
-    static List<EventInfo> createEventInfoList(List<LogInfo> logs) {
+    static List<EventData> createEventInfoList(EthHash transactionHash, List<LogInfo> logs) {
         return logs.stream().map(log -> {
             List<DataWord> topics = log.getTopics();
             EthData eventSignature = EthData.of(topics.get(0).getData());
@@ -33,13 +33,20 @@ public class EthJEventListener extends EthereumListenerAdapter {
                     .map(dw -> EthData.of(dw.getData()))
                     .collect(Collectors.toList());
 
-            return new EventInfo(eventSignature, eventArguments, indexedArguments);
+            return new EventData(transactionHash, eventSignature, eventArguments, indexedArguments);
         }).collect(Collectors.toList());
     }
 
     static org.adridadou.ethereum.propeller.values.TransactionReceipt toReceipt(TransactionReceipt transactionReceipt) {
         Transaction tx = transactionReceipt.getTransaction();
-        return new org.adridadou.ethereum.propeller.values.TransactionReceipt(EthHash.of(tx.getHash()), EthAddress.of(tx.getSender()), EthAddress.of(tx.getReceiveAddress()), EthAddress.of(tx.getContractAddress()), transactionReceipt.getError(), EthData.of(transactionReceipt.getExecutionResult()), transactionReceipt.isSuccessful() && transactionReceipt.isValid(), createEventInfoList(transactionReceipt.getLogInfoList()));
+        return new org.adridadou.ethereum.propeller.values.TransactionReceipt(
+                EthHash.of(tx.getHash()),
+                EthAddress.of(tx.getSender()),
+                EthAddress.of(tx.getReceiveAddress()),
+                EthAddress.of(tx.getContractAddress()),
+                transactionReceipt.getError(),
+                EthData.of(transactionReceipt.getExecutionResult()),
+                transactionReceipt.isSuccessful() && transactionReceipt.isValid(), createEventInfoList(EthHash.of(tx.getHash()), transactionReceipt.getLogInfoList()));
     }
 
     @Override

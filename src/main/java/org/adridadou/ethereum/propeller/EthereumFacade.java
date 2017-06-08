@@ -284,6 +284,18 @@ public class EthereumFacade {
     }
 
     /**
+     * Observe an event from a smart contract and returns not only the event but the transaction info as well
+     *
+     * @param eventDefiniton The event definition
+     * @param address        The smart contract's address
+     * @param <T>            The event entity type
+     * @return The event observable with the info
+     */
+    public <T> Observable<EventInfo<T>> observeEventsWithInfo(SolidityEvent<T> eventDefiniton, EthAddress address) {
+        return ethereumProxy.observeEventsWithInfo(eventDefiniton, address);
+    }
+
+    /**
      * Returns all the events that happened at a specific block
      *
      * @param blockNumber     The block number
@@ -320,6 +332,45 @@ public class EthereumFacade {
      */
     public <T> List<T> getEventsAtTransaction(EthHash transactionHash, SolidityEvent<T> eventDefinition, EthAddress address) {
         return ethereumProxy.getEventsAtTransaction(eventDefinition, address, eventDefinition.getEntityClass(), transactionHash);
+    }
+
+    /**
+     * Returns all the events that happened at a specific block
+     *
+     * @param blockNumber     The block number
+     * @param eventDefinition The event definition
+     * @param address         The smart contract's address
+     * @param <T>             The event entity type
+     * @return The list of events
+     */
+    public <T> List<EventInfo<T>> getEventsAtBlockWithInfo(Long blockNumber, SolidityEvent<T> eventDefinition, EthAddress address) {
+        return ethereumProxy.getEventsAtBlockWithInfo(eventDefinition, address, eventDefinition.getEntityClass(), blockNumber);
+    }
+
+    /**
+     * Returns all the events that happened at a specific block
+     *
+     * @param blockHash       The block hash
+     * @param eventDefinition The event definition
+     * @param address         The smart contract's address
+     * @param <T>             The event entity type
+     * @return The list of events
+     */
+    public <T> List<EventInfo<T>> getEventsAtBlockWithInfo(EthHash blockHash, SolidityEvent<T> eventDefinition, EthAddress address) {
+        return ethereumProxy.getEventsAtBlockWithInfo(eventDefinition, address, eventDefinition.getEntityClass(), blockHash);
+    }
+
+    /**
+     * Returns all the events that happened at a specific block
+     *
+     * @param transactionHash The transactionHash hash
+     * @param eventDefinition The event definition
+     * @param address         The smart contract's address
+     * @param <T>             The event entity type
+     * @return The list of events
+     */
+    public <T> List<EventInfo<T>> getEventsAtTransactionWithInfo(EthHash transactionHash, SolidityEvent<T> eventDefinition, EthAddress address) {
+        return ethereumProxy.getEventsAtTransactionWithInfo(eventDefinition, address, eventDefinition.getEntityClass(), transactionHash);
     }
 
     /**
