@@ -14,9 +14,9 @@ public class TransactionReceipt {
     public final String error;
     public final EthData executionResult;
     public final boolean isSuccessful;
-    public final List<EventInfo> events;
+    public final List<EventData> events;
 
-    public TransactionReceipt(EthHash hash, EthAddress sender, EthAddress receiveAddress, EthAddress contractAddress, String error, EthData executionResult, boolean isSuccessful, List<EventInfo> events) {
+    public TransactionReceipt(EthHash hash, EthAddress sender, EthAddress receiveAddress, EthAddress contractAddress, String error, EthData executionResult, boolean isSuccessful, List<EventData> events) {
         this.hash = hash;
         this.sender = sender;
         this.receiveAddress = receiveAddress;

@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.adridadou.ethereum.propeller.exception.EthereumApiException;
 import org.adridadou.ethereum.propeller.solidity.converters.decoders.SolidityTypeDecoder;
 import org.adridadou.ethereum.propeller.values.EthData;
-import org.adridadou.ethereum.propeller.values.EventInfo;
+import org.adridadou.ethereum.propeller.values.EventData;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
@@ -84,7 +84,7 @@ public class AbiEntry {
         return type;
     }
 
-    public Object decode(EventInfo eventInfo, List<List<SolidityTypeDecoder>> decoders, Type resultCls) {
+    public Object decode(EventData eventData, List<List<SolidityTypeDecoder>> decoders, Type resultCls) {
         return findConstructor(decoders, (Class<?>) resultCls)
                 .map(constructor -> {
                     try {
@@ -109,11 +109,11 @@ public class AbiEntry {
                                 if (param.isDynamic()) {
                                     decodeResult[i] = decoder.decode(0, EthData.empty(), resultType);
                                 } else {
-                                    decodeResult[i] = decoder.decode(0, eventInfo.getIndexedArguments().get(indexed), resultType);
+                                    decodeResult[i] = decoder.decode(0, eventData.getIndexedArguments().get(indexed), resultType);
                                 }
                                 indexed++;
                             } else {
-                                decodeResult[i] = decoder.decode(unindexed++, eventInfo.getEventArguments(), resultType);
+                                decodeResult[i] = decoder.decode(unindexed++, eventData.getEventArguments(), resultType);
                             }
                         }
 

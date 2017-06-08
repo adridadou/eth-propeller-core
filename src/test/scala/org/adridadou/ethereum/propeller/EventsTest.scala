@@ -7,8 +7,7 @@ import org.adridadou.ethereum.propeller.backend.{EthereumTest, TestConfig}
 import org.adridadou.ethereum.propeller.exception.EthereumApiException
 import org.adridadou.ethereum.propeller.keystore.AccountProvider
 import org.adridadou.ethereum.propeller.values.EthValue.ether
-import org.adridadou.ethereum.propeller.values.{EthAddress, EthData, SoliditySource}
-import org.junit.Assert.assertEquals
+import org.adridadou.ethereum.propeller.values.{EthAddress, EthData, EthHash, SoliditySource}
 import org.scalatest.check.Checkers
 import org.scalatest.{FlatSpec, Matchers}
 
@@ -29,10 +28,14 @@ class EventsTest extends FlatSpec with Matchers with Checkers {
     (for (compiledContract <- ethereum.compile(contractSource).findContract("contractEvents").asScala;
           solidityEvent <- ethereum.findEventDefinition(compiledContract, "MyEvent", classOf[MyEvent]).asScala) yield {
       val myContract = ethereum.createContractProxy(compiledContract, address, mainAccount, classOf[ContractEvents])
-      val observeEvent = ethereum.observeEvents(solidityEvent, address)
+      val observeEventWithInfo = ethereum.observeEventsWithInfo(solidityEvent, address)
 
       myContract.createEvent("my event is here and it is much longer than anticipated")
-      assertEquals("my event is here and it is much longer than anticipated", observeEvent.toBlocking.first().value)
+      val result = observeEventWithInfo.toBlocking.first()
+
+      result.getTransactionHash shouldBe EthHash.of("6717c8616d06184e589aae321d1a2349679675fc6c7af95368c2e5f3e71daaef")
+      result.getResult.value shouldBe "my event is here and it is much longer than anticipated"
+
     }).getOrElse(() => throw new EthereumApiException("something went wrong!"))
   }
 
