@@ -28,4 +28,13 @@ public class EventInfo {
     public EthData getEventArguments() {
         return eventArguments;
     }
+
+    @Override
+    public String toString() {
+        return "EventInfo{" +
+                "eventSignature=" + eventSignature +
+                ", eventArguments=" + eventArguments +
+                ", indexedArguments=" + indexedArguments +
+                '}';
+    }
 }

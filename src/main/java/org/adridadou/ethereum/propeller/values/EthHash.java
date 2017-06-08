@@ -30,6 +30,10 @@ public final class EthHash {
         return EthHash.of(new byte[0]);
     }
 
+    public boolean isEmpty() {
+        return data.length == 0;
+    }
+
     public String withLeading0x() {
         return "0x" + this.toString();
     }

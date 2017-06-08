@@ -1,9 +1,4 @@
-package org.adridadou.ethereum.propeller.event;
-
-import org.adridadou.ethereum.propeller.values.EthAddress;
-import org.adridadou.ethereum.propeller.values.EthData;
-import org.adridadou.ethereum.propeller.values.EthHash;
-import org.adridadou.ethereum.propeller.values.EventInfo;
+package org.adridadou.ethereum.propeller.values;
 
 import java.util.List;
 
@@ -30,5 +25,19 @@ public class TransactionReceipt {
         this.executionResult = executionResult;
         this.isSuccessful = isSuccessful;
         this.events = events;
+    }
+
+    @Override
+    public String toString() {
+        return "TransactionReceipt{" +
+                "hash=" + hash +
+                ", sender=" + sender +
+                ", receiveAddress=" + receiveAddress +
+                ", contractAddress=" + contractAddress +
+                ", error='" + error + '\'' +
+                ", executionResult=" + executionResult +
+                ", isSuccessful=" + isSuccessful +
+                ", events=" + events +
+                '}';
     }
 }

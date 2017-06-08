@@ -34,4 +34,5 @@ public interface EthereumBackend {
     void register(EthereumEventHandler eventHandler);
 
 
+    TransactionInfo getTransactionInfo(EthHash hash);
 }

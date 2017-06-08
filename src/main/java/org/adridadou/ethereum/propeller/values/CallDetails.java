@@ -1,7 +1,5 @@
 package org.adridadou.ethereum.propeller.values;
 
-import org.adridadou.ethereum.propeller.event.TransactionReceipt;
-
 import java.util.concurrent.CompletableFuture;
 
 /**

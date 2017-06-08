@@ -292,8 +292,8 @@ public class EthereumFacade {
      * @param <T> The event entity type
      * @return The list of events
      */
-    public <T> List<T> getEventsAt(Long blockNumber, SolidityEvent<T> eventDefinition, EthAddress address) {
-        return ethereumProxy.getEvents(eventDefinition, address, eventDefinition.getEntityClass(), blockNumber);
+    public <T> List<T> getEventsAtBlock(Long blockNumber, SolidityEvent<T> eventDefinition, EthAddress address) {
+        return ethereumProxy.getEventsAtBlock(eventDefinition, address, eventDefinition.getEntityClass(), blockNumber);
     }
 
     /**
@@ -305,8 +305,21 @@ public class EthereumFacade {
      * @param <T> The event entity type
      * @return The list of events
      */
-    public <T> List<T> getEventsAt(EthHash blockHash, SolidityEvent<T> eventDefinition, EthAddress address) {
-        return ethereumProxy.getEvents(eventDefinition, address, eventDefinition.getEntityClass(), blockHash);
+    public <T> List<T> getEventsAtBlock(EthHash blockHash, SolidityEvent<T> eventDefinition, EthAddress address) {
+        return ethereumProxy.getEventsAtBlock(eventDefinition, address, eventDefinition.getEntityClass(), blockHash);
+    }
+
+    /**
+     * Returns all the events that happened at a specific block
+     *
+     * @param transactionHash The transactionHash hash
+     * @param eventDefinition The event definition
+     * @param address         The smart contract's address
+     * @param <T>             The event entity type
+     * @return The list of events
+     */
+    public <T> List<T> getEventsAtTransaction(EthHash transactionHash, SolidityEvent<T> eventDefinition, EthAddress address) {
+        return ethereumProxy.getEventsAtTransaction(eventDefinition, address, eventDefinition.getEntityClass(), transactionHash);
     }
 
     /**
@@ -344,6 +357,16 @@ public class EthereumFacade {
                 .findFirst().orElseThrow(() -> new EthereumApiException("cannot decode " + solidityType.name() + " to " + cls.getTypeName()));
 
         return (T) decoder.decode(index, data, cls);
+    }
+
+    /**
+     * Gets info for the transaction with the specific hash
+     *
+     * @param hash The hash of the transaction
+     * @return the info
+     */
+    public TransactionInfo getTransactionInfo(EthHash hash) {
+        return ethereumProxy.getTransactionInfo(hash);
     }
 
     private SolidityContractDetails getDetails(final EthAddress address) {

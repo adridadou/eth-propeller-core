@@ -1,5 +1,7 @@
 package org.adridadou.ethereum.propeller.event;
 
+import org.adridadou.ethereum.propeller.values.TransactionReceipt;
+
 import java.util.List;
 
 public class BlockInfo {

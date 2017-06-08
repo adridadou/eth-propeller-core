@@ -122,6 +122,13 @@ public class EthereumTest implements EthereumBackend {
         blockchain.addEthereumListener(new EthJEventListener(eventHandler));
     }
 
+    @Override
+    public TransactionInfo getTransactionInfo(EthHash hash) {
+        org.ethereum.core.TransactionInfo info = blockchain.getBlockchain().getTransactionInfo(hash.data);
+        TransactionStatus status = info.isPending() ? TransactionStatus.Pending : EthHash.of(info.getBlockHash()).isEmpty() ? TransactionStatus.Unknown : TransactionStatus.Executed;
+        return new TransactionInfo(hash, EthJEventListener.toReceipt(info.getReceipt()), status);
+    }
+
     private ECKey getKey(EthAccount account) {
         return ECKey.fromPrivate(account.getBigIntPrivateKey());
     }
@@ -130,7 +137,7 @@ public class EthereumTest implements EthereumBackend {
         return new BlockInfo(block.getNumber(), block.getTransactionsList().stream().map(this::toReceipt).collect(Collectors.toList()));
     }
 
-    private org.adridadou.ethereum.propeller.event.TransactionReceipt toReceipt(Transaction tx) {
-        return new org.adridadou.ethereum.propeller.event.TransactionReceipt(EthHash.of(tx.getHash()), EthAddress.of(tx.getSender()), EthAddress.of(tx.getReceiveAddress()), EthAddress.empty(), "", EthData.empty(), true, Collections.emptyList());
+    private TransactionReceipt toReceipt(Transaction tx) {
+        return new TransactionReceipt(EthHash.of(tx.getHash()), EthAddress.of(tx.getSender()), EthAddress.of(tx.getReceiveAddress()), EthAddress.empty(), "", EthData.empty(), true, Collections.emptyList());
     }
 }

@@ -1,4 +1,4 @@
-package org.adridadou.ethereum.propeller.event;
+package org.adridadou.ethereum.propeller.values;
 
 /**
  * Created by davidroon on 09.01.17.
