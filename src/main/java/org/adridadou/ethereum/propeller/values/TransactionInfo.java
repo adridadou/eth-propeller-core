@@ -32,4 +32,14 @@ public class TransactionInfo {
     public boolean isContractCreation() {
         return contractCreation;
     }
+
+    @Override
+    public String toString() {
+        return "TransactionInfo{" +
+                "transactionHash=" + transactionHash +
+                ", receipt=" + receipt +
+                ", status=" + status +
+                ", contractCreation=" + contractCreation +
+                '}';
+    }
 }
