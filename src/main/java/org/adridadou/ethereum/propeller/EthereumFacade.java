@@ -5,6 +5,7 @@ import org.adridadou.ethereum.propeller.event.EthereumEventHandler;
 import org.adridadou.ethereum.propeller.exception.EthereumApiException;
 import org.adridadou.ethereum.propeller.solidity.*;
 import org.adridadou.ethereum.propeller.solidity.abi.AbiParam;
+import org.adridadou.ethereum.propeller.solidity.converters.SolidityTypeGroup;
 import org.adridadou.ethereum.propeller.solidity.converters.decoders.SolidityTypeDecoder;
 import org.adridadou.ethereum.propeller.solidity.converters.encoders.SolidityTypeEncoder;
 import org.adridadou.ethereum.propeller.swarm.SwarmHash;
@@ -75,6 +76,19 @@ public class EthereumFacade {
      */
     public <T> T createContractProxy(EthAddress address, EthAccount account, Class<T> contractInterface) {
         return createContractProxy(getDetails(address), address, account, contractInterface);
+    }
+
+
+    public SmartContract createSmartContract(SolidityContractDetails contract, EthAddress address, EthAccount account) {
+        return ethereumProxy.getSmartContract(contract, address, account);
+    }
+
+    public SmartContract createSmartContract(EthAddress address, EthAccount account) {
+        return createSmartContract(getDetails(address), address, account);
+    }
+
+    public SmartContract createSmartContract(EthAbi abi, EthAddress address, EthAccount account) {
+        return createSmartContract(new SolidityContractDetails(abi.getAbi(), null, null), address, account);
     }
 
     /**
@@ -418,6 +432,16 @@ public class EthereumFacade {
      */
     public TransactionInfo getTransactionInfo(EthHash hash) {
         return ethereumProxy.getTransactionInfo(hash);
+    }
+
+    public EthereumFacade addDecoder(SolidityTypeGroup solidityTypeGroup, SolidityTypeDecoder decoder) {
+        ethereumProxy.addDecoder(solidityTypeGroup, decoder);
+        return this;
+    }
+
+    public EthereumFacade addEncoder(SolidityTypeGroup solidityTypeGroup, SolidityTypeEncoder encoder) {
+        ethereumProxy.addEncoder(solidityTypeGroup, encoder);
+        return this;
     }
 
     private SolidityContractDetails getDetails(final EthAddress address) {
