@@ -22,7 +22,7 @@ public class Payable<T> {
     }
 
     public CompletableFuture<T> with(EthValue value) {
-        return (CompletableFuture<T>) contract.callFunction(method, value, arguments);
+        return (CompletableFuture<T>) contract.callFunction(value, method, arguments);
     }
 
 }

@@ -81,10 +81,6 @@ public class SmartContract {
         return callFunction(wei(0), method, args);
     }
 
-    public CompletableFuture<?> callFunction(Method method, EthValue value, Object... arguments) {
-        return callFunction(value, method, arguments);
-    }
-
     public CompletableFuture<?> callFunction(EthValue value, Method method, Object... args) {
         return callFunctionAndGetDetails(value, method, args).thenCompose(callDetails -> this.transformDetailsToResult(callDetails, method));
     }
@@ -107,10 +103,12 @@ public class SmartContract {
     }
 
     public CompletableFuture<CallDetails> callFunctionAndGetDetails(EthValue value, Method method, Object... args) {
-        return getFunction(method).map(func -> {
-            EthData functionCallBytes = func.encode(args);
-            return proxy.sendTx(value, functionCallBytes, account, address);
-        }).orElseThrow(() -> new EthereumApiException("function " + method.getName() + " cannot be found. available:" + getAvailableFunctions()));
+        return getFunction(method).map(func -> callFunctionAndGetDetails(value, func, args)).orElseThrow(() -> new EthereumApiException("function " + method.getName() + " cannot be found. available:" + getAvailableFunctions()));
+    }
+
+    public CompletableFuture<CallDetails> callFunctionAndGetDetails(EthValue value, SolidityFunction func, Object... args) {
+        EthData functionCallBytes = func.encode(args);
+        return proxy.sendTx(value, functionCallBytes, account, address);
     }
 
     private String getAvailableFunctions() {
