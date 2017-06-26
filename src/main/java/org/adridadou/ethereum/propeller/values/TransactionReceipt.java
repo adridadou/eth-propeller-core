@@ -8,6 +8,7 @@ import java.util.List;
  */
 public class TransactionReceipt {
     public final EthHash hash;
+    public final EthHash blockHash;
     public final EthAddress sender;
     public final EthAddress receiveAddress;
     public final EthAddress contractAddress;
@@ -16,8 +17,9 @@ public class TransactionReceipt {
     public final boolean isSuccessful;
     public final List<EventData> events;
 
-    public TransactionReceipt(EthHash hash, EthAddress sender, EthAddress receiveAddress, EthAddress contractAddress, String error, EthData executionResult, boolean isSuccessful, List<EventData> events) {
+    public TransactionReceipt(EthHash hash, EthHash blockHash, EthAddress sender, EthAddress receiveAddress, EthAddress contractAddress, String error, EthData executionResult, boolean isSuccessful, List<EventData> events) {
         this.hash = hash;
+        this.blockHash = blockHash;
         this.sender = sender;
         this.receiveAddress = receiveAddress;
         this.contractAddress = contractAddress;
@@ -25,19 +27,5 @@ public class TransactionReceipt {
         this.executionResult = executionResult;
         this.isSuccessful = isSuccessful;
         this.events = events;
-    }
-
-    @Override
-    public String toString() {
-        return "TransactionReceipt{" +
-                "hash=" + hash +
-                ", sender=" + sender +
-                ", receiveAddress=" + receiveAddress +
-                ", contractAddress=" + contractAddress +
-                ", error='" + error + '\'' +
-                ", executionResult=" + executionResult +
-                ", isSuccessful=" + isSuccessful +
-                ", events=" + events +
-                '}';
     }
 }
