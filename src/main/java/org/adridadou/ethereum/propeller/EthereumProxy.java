@@ -20,6 +20,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static org.adridadou.ethereum.propeller.values.EthValue.wei;
@@ -105,9 +106,6 @@ class EthereumProxy {
                 .filter(params -> params.getReceipt().map(receipt -> contractAddress.equals(receipt.receiveAddress)).orElse(false))
                 .flatMap(params -> Observable.from(params.getReceipt().map(receipt -> receipt.events).get().stream().filter(eventDefinition::match)
                         .map(data -> new EventInfo<>(params.getTransactionHash(), eventDefinition.parseEvent(data, eventDefinition.getEntityClass()))).collect(Collectors.toList())));
-
-
-
     }
 
     private CompletableFuture<EthAddress> publishContract(EthValue ethValue, EthData data, EthAccount account) {
@@ -169,7 +167,11 @@ class EthereumProxy {
                         .filter(receipt -> Objects.equals(receipt.hash, txHash))
                         .map(this::createTransactionParameters);
 
-                return Observable.merge(droppedTxs, blockTxs, timeoutBlock)
+                Observable<TransactionInfo> observeTx = Observable.interval(10, TimeUnit.SECONDS)
+                        .map(x -> getTransactionInfo(txHash))
+                        .filter(tx -> tx.getStatus().equals(TransactionStatus.Executed));
+
+                return Observable.merge(droppedTxs, blockTxs, timeoutBlock, observeTx)
                         .map(params -> {
                             if (params == null) {
                                 throw new EthereumApiException("the transaction has not been included in the last " + config.blockWaitLimit() + " blocks");
