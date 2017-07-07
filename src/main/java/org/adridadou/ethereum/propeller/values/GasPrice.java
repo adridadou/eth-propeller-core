@@ -16,4 +16,26 @@ public class GasPrice {
     public BigInteger getPrice() {
         return price;
     }
+
+    @Override
+    public String toString() {
+        return "GasPrice{" +
+                "price=" + price +
+                '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        GasPrice gasPrice = (GasPrice) o;
+
+        return price != null ? price.equals(gasPrice.price) : gasPrice.price == null;
+    }
+
+    @Override
+    public int hashCode() {
+        return price != null ? price.hashCode() : 0;
+    }
 }

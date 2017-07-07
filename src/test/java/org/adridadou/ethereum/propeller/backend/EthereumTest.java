@@ -13,6 +13,7 @@ import org.ethereum.util.blockchain.StandaloneBlockchain;
 
 import java.math.BigInteger;
 import java.util.Collections;
+import java.util.Optional;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
@@ -69,15 +70,20 @@ public class EthereumTest implements EthereumBackend {
     }
 
     @Override
-    public EthHash submit(EthAccount account, EthAddress address, EthValue value, EthData data, Nonce nonce, GasUsage gasLimit) {
-        Transaction tx = createTransaction(account, nonce, gasLimit, address, value, data);
+    public EthHash submit(TransactionRequest request, Nonce nonce) {
+        Transaction tx = createTransaction(request, nonce);
         this.transactions.add(tx);
         return EthHash.of(tx.getHash());
     }
 
-    private Transaction createTransaction(EthAccount account, Nonce nonce, GasUsage gasLimit, EthAddress address, EthValue value, EthData data) {
-        Transaction transaction = new Transaction(ByteUtil.bigIntegerToBytes(nonce.getValue()), ByteUtil.bigIntegerToBytes(BigInteger.ZERO), ByteUtil.bigIntegerToBytes(gasLimit.getUsage()), address.address, ByteUtil.bigIntegerToBytes(value.inWei()), data.data, null);
-        transaction.sign(getKey(account));
+    @Override
+    public EthHash getTransactionHash(TransactionRequest request, Nonce nonce) {
+        return EthHash.of(createTransaction(request, nonce).getHash());
+    }
+
+    private Transaction createTransaction(TransactionRequest request, Nonce nonce) {
+        Transaction transaction = new Transaction(ByteUtil.bigIntegerToBytes(nonce.getValue()), ByteUtil.bigIntegerToBytes(BigInteger.ZERO), ByteUtil.bigIntegerToBytes(request.getGasLimit().getUsage()), request.getAddress().address, ByteUtil.bigIntegerToBytes(request.getValue().inWei()), request.getData().data, null);
+        transaction.sign(getKey(request.getAccount()));
         return transaction;
     }
 
@@ -123,11 +129,12 @@ public class EthereumTest implements EthereumBackend {
     }
 
     @Override
-    public TransactionInfo getTransactionInfo(EthHash hash) {
-        org.ethereum.core.TransactionInfo info = blockchain.getBlockchain().getTransactionInfo(hash.data);
-        EthHash blockHash = EthHash.of(info.getBlockHash());
-        TransactionStatus status = info.isPending() ? TransactionStatus.Pending : blockHash.isEmpty() ? TransactionStatus.Unknown : TransactionStatus.Executed;
-        return new TransactionInfo(hash, EthJEventListener.toReceipt(info.getReceipt(), blockHash), status);
+    public Optional<TransactionInfo> getTransactionInfo(EthHash hash) {
+        return Optional.ofNullable(blockchain.getBlockchain().getTransactionInfo(hash.data)).map(info -> {
+            EthHash blockHash = EthHash.of(info.getBlockHash());
+            TransactionStatus status = info.isPending() ? TransactionStatus.Pending : blockHash.isEmpty() ? TransactionStatus.Unknown : TransactionStatus.Executed;
+            return new TransactionInfo(hash, EthJEventListener.toReceipt(info.getReceipt(), blockHash), status);
+        });
     }
 
     private ECKey getKey(EthAccount account) {

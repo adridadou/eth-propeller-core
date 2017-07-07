@@ -20,4 +20,26 @@ public class GasUsage {
     public GasUsage add(int additionalGasForContractCreation) {
         return new GasUsage(this.usage.add(BigInteger.valueOf(additionalGasForContractCreation)));
     }
+
+    @Override
+    public String toString() {
+        return "GasUsage{" +
+                "usage=" + usage +
+                '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        GasUsage gasUsage = (GasUsage) o;
+
+        return usage != null ? usage.equals(gasUsage.usage) : gasUsage.usage == null;
+    }
+
+    @Override
+    public int hashCode() {
+        return usage != null ? usage.hashCode() : 0;
+    }
 }
