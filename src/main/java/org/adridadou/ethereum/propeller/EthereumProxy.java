@@ -191,39 +191,41 @@ class EthereumProxy {
     private CompletableFuture<TransactionReceipt> waitForResult(EthHash txHash) {
         Objects.requireNonNull(txHash);
         long currentBlock = eventHandler.getCurrentBlockNumber();
-        return CompletableFuture.supplyAsync(() -> {
-            Observable<TransactionInfo> droppedTxs = eventHandler.observeTransactions()
-                    .filter(params -> params.getReceipt().map(receipt -> Objects.equals(receipt.hash, txHash)).orElse(false) && params.getStatus() == TransactionStatus.Dropped);
-            Observable<TransactionInfo> timeoutBlock = eventHandler.observeBlocks()
-                    .filter(blockParams -> blockParams.blockNumber > currentBlock + config.blockWaitLimit())
-                    .map(params -> null);
 
-            Observable<TransactionInfo> blockTxs = eventHandler.observeBlocks()
-                    .flatMap(params -> Observable.from(params.receipts))
-                    .filter(receipt -> Objects.equals(receipt.hash, txHash))
-                    .map(this::createTransactionParameters);
+        Observable<TransactionInfo> droppedTxs = eventHandler.observeTransactions()
+                .filter(params -> params.getReceipt().map(receipt -> Objects.equals(receipt.hash, txHash)).orElse(false) && params.getStatus() == TransactionStatus.Dropped);
+        Observable<TransactionInfo> timeoutBlock = eventHandler.observeBlocks()
+                .filter(blockParams -> blockParams.blockNumber > currentBlock + config.blockWaitLimit())
+                .map(params -> null);
 
-            Observable<TransactionInfo> observeTx = Observable.interval(10, TimeUnit.SECONDS)
-                    .map(x -> getTransactionInfo(txHash))
-                    .filter(tx -> tx
-                            .map(TransactionInfo::getStatus)
-                            .map(TransactionStatus.Executed::equals).orElse(false))
-                    .filter(Optional::isPresent)
-                    .map(Optional::get);
+        Observable<TransactionInfo> blockTxs = eventHandler.observeBlocks()
+                .flatMap(params -> Observable.from(params.receipts))
+                .filter(receipt -> Objects.equals(receipt.hash, txHash))
+                .map(this::createTransactionParameters);
 
-            return Observable.merge(droppedTxs, blockTxs, timeoutBlock, observeTx)
-                    .map(params -> {
-                        if (params == null) {
-                            throw new EthereumApiException("the transaction has not been included in the last " + config.blockWaitLimit() + " blocks");
-                        }
-                        TransactionReceipt receipt = params.getReceipt().orElseThrow(() -> new EthereumApiException("no Transaction receipt found!"));
-                        if (params.getStatus() == TransactionStatus.Dropped) {
-                            throw new EthereumApiException("the transaction has been dropped! - " + receipt.error);
-                        }
-                        return checkForErrors(receipt);
-                    }).toBlocking().first();
+        Observable<TransactionInfo> observeTx = Observable.interval(10, TimeUnit.SECONDS)
+                .map(x -> getTransactionInfo(txHash))
+                .filter(tx -> tx
+                        .map(TransactionInfo::getStatus)
+                        .map(TransactionStatus.Executed::equals).orElse(false))
+                .filter(Optional::isPresent)
+                .map(Optional::get);
 
-        });
+        CompletableFuture<TransactionReceipt> futureResult = new CompletableFuture<>();
+
+        Observable.merge(droppedTxs, blockTxs, timeoutBlock, observeTx)
+                .map(params -> {
+                    if (params == null) {
+                        throw new EthereumApiException("the transaction has not been included in the last " + config.blockWaitLimit() + " blocks");
+                    }
+                    TransactionReceipt receipt = params.getReceipt().orElseThrow(() -> new EthereumApiException("no Transaction receipt found!"));
+                    if (params.getStatus() == TransactionStatus.Dropped) {
+                        throw new EthereumApiException("the transaction has been dropped! - " + receipt.error);
+                    }
+                    return checkForErrors(receipt);
+                }).first().forEach(futureResult::complete);
+
+        return futureResult;
     }
 
     private GasUsage estimateGas(EthValue value, EthData data, EthAccount account, EthAddress toAddress) {
