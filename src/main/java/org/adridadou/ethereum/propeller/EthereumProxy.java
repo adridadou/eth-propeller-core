@@ -169,8 +169,8 @@ class EthereumProxy {
     }
 
     private CompletableFuture<EthHash> submitTransaction(TransactionRequest request) {
-        transactions.add(request);
         CompletableFuture<EthHash> future = new CompletableFuture<>();
+        transactions.add(request);
         futureMap.put(request, future);
         return future;
     }
@@ -181,10 +181,7 @@ class EthereumProxy {
             GasPrice gasPrice = ethereum.getGasPrice();
 
             return submitTransaction(new TransactionRequest(account, toAddress, value, data, gasLimit, gasPrice))
-                    .thenApply(txHash -> {
-                        CompletableFuture<TransactionReceipt> result = this.waitForResult(txHash);
-                        return new CallDetails(result, txHash);
-                    });
+                    .thenApply(txHash -> new CallDetails(this.waitForResult(txHash), txHash));
         });
     }
 

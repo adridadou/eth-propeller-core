@@ -4,7 +4,6 @@ import rx.Observable;
 import rx.Subscriber;
 
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -38,9 +37,7 @@ public class AbstractHandler<T> implements Observable.OnSubscribe<T> {
 
     public void on(final T param) {
         removeUnSubscribed();
-        CompletableFuture.runAsync(() -> {
-            subscribers.forEach(subscriber -> subscriber.onNext(param));
-        });
+        subscribers.forEach(subscriber -> subscriber.onNext(param));
     }
 
 }
