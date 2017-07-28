@@ -18,9 +18,7 @@ import rx.Observable;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
 import static org.adridadou.ethereum.propeller.values.EthValue.wei;
@@ -33,16 +31,20 @@ class EthereumProxy {
     private static final int ADDITIONAL_GAS_FOR_CONTRACT_CREATION = 15_000;
     private static final int ADDITIONAL_GAS_DIRTY_FIX = 200_000;
 
+    private final BlockingQueue<TransactionRequest> transactions = new ArrayBlockingQueue<>(10000);
+    private final Map<TransactionRequest, CompletableFuture<EthHash>> futureMap = new LinkedHashMap<>();
+
     private final EthereumBackend ethereum;
     private final EthereumEventHandler eventHandler;
     private final EthereumConfig config;
-    private final Map<EthAddress, Set<EthHash>> pendingTransactions = new ConcurrentHashMap<>();
-    private final Map<EthAddress, Nonce> nonces = new ConcurrentHashMap<>();
+    private final Map<EthAddress, Set<EthHash>> pendingTransactions = new HashMap<>();
+    private final Map<EthAddress, Nonce> nonces = new HashMap<>();
     private final Map<SolidityTypeGroup, List<SolidityTypeEncoder>> encoders = new HashMap<>();
     private final Map<SolidityTypeGroup, List<SolidityTypeDecoder>> decoders = new HashMap<>();
     private final List<Class<? extends CollectionDecoder>> listDecoders = new ArrayList<>();
     private final List<Class<? extends CollectionEncoder>> listEncoders = new ArrayList<>();
     private final Set<Class<?>> voidClasses = new HashSet<>();
+    private final ExecutorService executor = Executors.newCachedThreadPool();
 
     EthereumProxy(EthereumBackend ethereum, EthereumEventHandler eventHandler, EthereumConfig config) {
         this.ethereum = ethereum;
@@ -50,6 +52,21 @@ class EthereumProxy {
         this.config = config;
         updateNonce();
         ethereum.register(eventHandler);
+
+        executor.submit(() -> {
+            try {
+                while (true) {
+                    TransactionRequest request = transactions.take();
+                    Nonce nonce = getNonce(request.getAccount().getAddress());
+                    increasePendingTransactionCounter(request.getAccount().getAddress(), ethereum.getTransactionHash(request, nonce));
+                    ethereum.submit(request, nonce);
+                    futureMap.get(request).complete(ethereum.getTransactionHash(request, nonce));
+                    futureMap.remove(request);
+                }
+            } catch (InterruptedException e) {
+                throw new EthereumApiException("error while polling transactions to submit", e);
+            }
+        });
     }
 
     EthereumProxy addVoidClass(Class<?> cls) {
@@ -149,44 +166,61 @@ class EthereumProxy {
         }).reduce((a, b) -> a + ", " + b).orElse("[no args]");
     }
 
+    private CompletableFuture<EthHash> submitTransaction(TransactionRequest request) {
+        CompletableFuture<EthHash> future = new CompletableFuture<>();
+        transactions.add(request);
+        futureMap.put(request, future);
+        return future;
+    }
+
     private CompletableFuture<CallDetails> sendTxInternal(EthValue value, EthData data, EthAccount account, EthAddress toAddress) {
-        return eventHandler.ready().thenApply((v) -> {
+        return eventHandler.ready().thenCompose((v) -> {
             GasUsage gasLimit = estimateGas(value, data, account, toAddress);
-            EthHash txHash = ethereum.submit(account, toAddress, value, data, getNonce(account.getAddress()), gasLimit);
+            GasPrice gasPrice = ethereum.getGasPrice();
 
-            long currentBlock = eventHandler.getCurrentBlockNumber();
-            CompletableFuture<TransactionReceipt> result = CompletableFuture.supplyAsync(() -> {
-                Observable<TransactionInfo> droppedTxs = eventHandler.observeTransactions()
-                        .filter(params -> params.getReceipt().map(receipt -> Objects.equals(receipt.hash, txHash)).orElse(false) && params.getStatus() == TransactionStatus.Dropped);
-                Observable<TransactionInfo> timeoutBlock = eventHandler.observeBlocks()
-                        .filter(blockParams -> blockParams.blockNumber > currentBlock + config.blockWaitLimit())
-                        .map(params -> null);
-
-                Observable<TransactionInfo> blockTxs = eventHandler.observeBlocks()
-                        .flatMap(params -> Observable.from(params.receipts))
-                        .filter(receipt -> Objects.equals(receipt.hash, txHash))
-                        .map(this::createTransactionParameters);
-
-                Observable<TransactionInfo> observeTx = Observable.interval(10, TimeUnit.SECONDS)
-                        .map(x -> getTransactionInfo(txHash))
-                        .filter(tx -> tx.getStatus().equals(TransactionStatus.Executed));
-
-                return Observable.merge(droppedTxs, blockTxs, timeoutBlock, observeTx)
-                        .map(params -> {
-                            if (params == null) {
-                                throw new EthereumApiException("the transaction has not been included in the last " + config.blockWaitLimit() + " blocks");
-                            }
-                            TransactionReceipt receipt = params.getReceipt().orElseThrow(() -> new EthereumApiException("no Transaction receipt found!"));
-                            if (params.getStatus() == TransactionStatus.Dropped) {
-                                throw new EthereumApiException("the transaction has been dropped! - " + receipt.error);
-                            }
-                            return checkForErrors(receipt);
-                        }).toBlocking().first();
-
-            });
-            increasePendingTransactionCounter(account.getAddress(), txHash);
-            return new CallDetails(result, txHash);
+            return submitTransaction(new TransactionRequest(account, toAddress, value, data, gasLimit, gasPrice))
+                    .thenApply(txHash -> new CallDetails(this.waitForResult(txHash), txHash));
         });
+    }
+
+    private CompletableFuture<TransactionReceipt> waitForResult(EthHash txHash) {
+        Objects.requireNonNull(txHash);
+        long currentBlock = eventHandler.getCurrentBlockNumber();
+
+        Observable<TransactionInfo> droppedTxs = eventHandler.observeTransactions()
+                .filter(params -> params.getReceipt().map(receipt -> Objects.equals(receipt.hash, txHash)).orElse(false) && params.getStatus() == TransactionStatus.Dropped);
+        Observable<TransactionInfo> timeoutBlock = eventHandler.observeBlocks()
+                .filter(blockParams -> blockParams.blockNumber > currentBlock + config.blockWaitLimit())
+                .map(params -> null);
+
+        Observable<TransactionInfo> blockTxs = eventHandler.observeBlocks()
+                .flatMap(params -> Observable.from(params.receipts))
+                .filter(receipt -> Objects.equals(receipt.hash, txHash))
+                .map(this::createTransactionParameters);
+
+        Observable<TransactionInfo> observeTx = Observable.interval(10, TimeUnit.SECONDS)
+                .map(x -> getTransactionInfo(txHash))
+                .filter(tx -> tx
+                        .map(TransactionInfo::getStatus)
+                        .map(TransactionStatus.Executed::equals).orElse(false))
+                .filter(Optional::isPresent)
+                .map(Optional::get);
+
+        CompletableFuture<TransactionReceipt> futureResult = new CompletableFuture<>();
+
+        Observable.merge(droppedTxs, blockTxs, timeoutBlock, observeTx)
+                .map(params -> {
+                    if (params == null) {
+                        throw new EthereumApiException("the transaction has not been included in the last " + config.blockWaitLimit() + " blocks");
+                    }
+                    TransactionReceipt receipt = params.getReceipt().orElseThrow(() -> new EthereumApiException("no Transaction receipt found!"));
+                    if (params.getStatus() == TransactionStatus.Dropped) {
+                        throw new EthereumApiException("the transaction has been dropped! - " + receipt.error);
+                    }
+                    return checkForErrors(receipt);
+                }).first().forEach(futureResult::complete);
+
+        return futureResult;
     }
 
     private GasUsage estimateGas(EthValue value, EthData data, EthAccount account, EthAddress toAddress) {
@@ -332,7 +366,7 @@ class EthereumProxy {
     }
 
     public <T> List<EventInfo<T>> getEventsAtTransactionWithInfo(SolidityEvent eventDefinition, EthAddress address, Class<T> cls, EthHash transactionHash) {
-        TransactionReceipt receipt = ethereum.getTransactionInfo(transactionHash).getReceipt().orElseThrow(() -> new EthereumApiException("no Transaction receipt found!"));
+        TransactionReceipt receipt = ethereum.getTransactionInfo(transactionHash).flatMap(TransactionInfo::getReceipt).orElseThrow(() -> new EthereumApiException("no Transaction receipt found!"));
         if (address.equals(receipt.receiveAddress)) {
             return receipt.events.stream().filter(eventDefinition::match)
                     .map(data -> new EventInfo<>(data.getTransactionHash(), (T) eventDefinition.parseEvent(data, cls)))
@@ -346,7 +380,7 @@ class EthereumProxy {
         return eventHandler.getCurrentBlockNumber();
     }
 
-    public TransactionInfo getTransactionInfo(EthHash hash) {
+    public Optional<TransactionInfo> getTransactionInfo(EthHash hash) {
         return ethereum.getTransactionInfo(hash);
     }
 }

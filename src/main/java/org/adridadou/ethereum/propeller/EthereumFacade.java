@@ -430,7 +430,7 @@ public class EthereumFacade {
      * @param hash The hash of the transaction
      * @return the info
      */
-    public TransactionInfo getTransactionInfo(EthHash hash) {
+    public Optional<TransactionInfo> getTransactionInfo(EthHash hash) {
         return ethereumProxy.getTransactionInfo(hash);
     }
 

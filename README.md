@@ -29,7 +29,7 @@ You still need to decide which backend you want to use. There are two possibilit
 <dependency>
     <groupId>org.adridadou</groupId>
     <artifactId>eth-propeller-{ethj or web3j}</artifactId>
-    <version>0.2</version>
+    <version>0.13</version>
 </dependency>
 ```
 

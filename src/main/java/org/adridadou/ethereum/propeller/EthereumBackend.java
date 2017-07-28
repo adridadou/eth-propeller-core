@@ -4,6 +4,8 @@ import org.adridadou.ethereum.propeller.event.BlockInfo;
 import org.adridadou.ethereum.propeller.event.EthereumEventHandler;
 import org.adridadou.ethereum.propeller.values.*;
 
+import java.util.Optional;
+
 /**
  * Created by davidroon on 20.01.17.
  * This code is released under Apache 2 license
@@ -15,7 +17,9 @@ public interface EthereumBackend {
 
     boolean addressExists(EthAddress address);
 
-    EthHash submit(EthAccount account, EthAddress address, EthValue value, EthData data, Nonce nonce, GasUsage gasLimit);
+    EthHash submit(TransactionRequest request, Nonce nonce);
+
+    EthHash getTransactionHash(TransactionRequest request, Nonce nonce);
 
     GasUsage estimateGas(EthAccount account, EthAddress address, EthValue value, EthData data);
 
@@ -33,6 +37,5 @@ public interface EthereumBackend {
 
     void register(EthereumEventHandler eventHandler);
 
-
-    TransactionInfo getTransactionInfo(EthHash hash);
+    Optional<TransactionInfo> getTransactionInfo(EthHash hash);
 }
