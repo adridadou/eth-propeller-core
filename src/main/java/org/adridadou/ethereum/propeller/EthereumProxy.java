@@ -18,10 +18,7 @@ import rx.Observable;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
 import static org.adridadou.ethereum.propeller.values.EthValue.wei;
@@ -47,6 +44,7 @@ class EthereumProxy {
     private final List<Class<? extends CollectionDecoder>> listDecoders = new ArrayList<>();
     private final List<Class<? extends CollectionEncoder>> listEncoders = new ArrayList<>();
     private final Set<Class<?>> voidClasses = new HashSet<>();
+    private final ExecutorService executor = Executors.newCachedThreadPool();
 
     EthereumProxy(EthereumBackend ethereum, EthereumEventHandler eventHandler, EthereumConfig config) {
         this.ethereum = ethereum;
@@ -55,7 +53,7 @@ class EthereumProxy {
         updateNonce();
         ethereum.register(eventHandler);
 
-        CompletableFuture.runAsync(() -> {
+        executor.submit(() -> {
             try {
                 while (true) {
                     TransactionRequest request = transactions.take();

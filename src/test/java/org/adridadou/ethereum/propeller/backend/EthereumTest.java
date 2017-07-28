@@ -16,7 +16,7 @@ import java.util.Collections;
 import java.util.Optional;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 /**
@@ -40,7 +40,7 @@ public class EthereumTest implements EthereumBackend {
         testConfig.getBalances().forEach((key, value) -> blockchain.withAccountBalance(key.getAddress().address, value.inWei()));
 
         localExecutionService = new LocalExecutionService(blockchain.getBlockchain());
-        CompletableFuture.runAsync(() -> {
+        Executors.newCachedThreadPool().submit(() -> {
             try {
                 while (true) {
                     blockchain.submitTransaction(transactions.take());
