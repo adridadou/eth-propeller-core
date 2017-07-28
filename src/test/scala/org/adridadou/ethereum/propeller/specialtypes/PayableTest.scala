@@ -16,6 +16,7 @@ class PayableTest extends FlatSpec with Matchers with Checkers with SolidityConv
 
   "The address type" should "be converted from and to address and stay the same value" in {
     val (address, contract) = contractObjectWithAddress[PayableContract]
+    println("**** start testing ****")
     check(forAll(arbitrary[BigInt])(checkEncode(contract, address, _)))
   }
 
