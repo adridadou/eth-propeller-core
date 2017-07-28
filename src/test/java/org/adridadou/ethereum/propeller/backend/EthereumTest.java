@@ -78,11 +78,6 @@ public class EthereumTest implements EthereumBackend {
         return EthHash.of(tx.getHash());
     }
 
-    @Override
-    public EthHash getTransactionHash(TransactionRequest request, Nonce nonce) {
-        return EthHash.of(createTransaction(request, nonce).getHash());
-    }
-
     private Transaction createTransaction(TransactionRequest request, Nonce nonce) {
         Transaction transaction = new Transaction(ByteUtil.bigIntegerToBytes(nonce.getValue()), ByteUtil.bigIntegerToBytes(BigInteger.ZERO), ByteUtil.bigIntegerToBytes(request.getGasLimit().getUsage()), request.getAddress().address, ByteUtil.bigIntegerToBytes(request.getValue().inWei()), request.getData().data, null);
         transaction.sign(getKey(request.getAccount()));

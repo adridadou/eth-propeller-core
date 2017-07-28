@@ -58,9 +58,9 @@ class EthereumProxy {
                 while (true) {
                     TransactionRequest request = transactions.take();
                     Nonce nonce = getNonce(request.getAccount().getAddress());
-                    increasePendingTransactionCounter(request.getAccount().getAddress(), ethereum.getTransactionHash(request, nonce));
-                    ethereum.submit(request, nonce);
-                    futureMap.get(request).complete(ethereum.getTransactionHash(request, nonce));
+                    EthHash hash = ethereum.submit(request, nonce);
+                    increasePendingTransactionCounter(request.getAccount().getAddress(), hash);
+                    futureMap.get(request).complete(hash);
                     futureMap.remove(request);
                 }
             } catch (InterruptedException e) {

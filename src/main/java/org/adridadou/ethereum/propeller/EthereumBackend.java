@@ -19,8 +19,6 @@ public interface EthereumBackend {
 
     EthHash submit(TransactionRequest request, Nonce nonce);
 
-    EthHash getTransactionHash(TransactionRequest request, Nonce nonce);
-
     GasUsage estimateGas(EthAccount account, EthAddress address, EthValue value, EthData data);
 
     Nonce getNonce(EthAddress currentAddress);
