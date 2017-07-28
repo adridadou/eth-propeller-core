@@ -16,6 +16,7 @@ import java.util.Collections;
 import java.util.Optional;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
@@ -28,6 +29,7 @@ public class EthereumTest implements EthereumBackend {
     private final TestConfig testConfig;
     private final BlockingQueue<Transaction> transactions = new ArrayBlockingQueue<>(100);
     private final LocalExecutionService localExecutionService;
+    private final ExecutorService executor = Executors.newCachedThreadPool();
 
     public EthereumTest(TestConfig testConfig) {
         this.blockchain = new StandaloneBlockchain();
@@ -40,7 +42,7 @@ public class EthereumTest implements EthereumBackend {
         testConfig.getBalances().forEach((key, value) -> blockchain.withAccountBalance(key.getAddress().address, value.inWei()));
 
         localExecutionService = new LocalExecutionService(blockchain.getBlockchain());
-        Executors.newCachedThreadPool().submit(() -> {
+        executor.submit(() -> {
             try {
                 while (true) {
                     blockchain.submitTransaction(transactions.take());
@@ -72,7 +74,7 @@ public class EthereumTest implements EthereumBackend {
     @Override
     public EthHash submit(TransactionRequest request, Nonce nonce) {
         Transaction tx = createTransaction(request, nonce);
-        this.transactions.add(tx);
+        executor.submit(() -> this.transactions.add(tx));
         return EthHash.of(tx.getHash());
     }
 
