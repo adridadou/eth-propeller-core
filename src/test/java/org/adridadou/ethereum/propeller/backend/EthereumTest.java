@@ -29,7 +29,7 @@ public class EthereumTest implements EthereumBackend {
     private final TestConfig testConfig;
     private final BlockingQueue<Transaction> transactions = new ArrayBlockingQueue<>(100);
     private final LocalExecutionService localExecutionService;
-    private final ExecutorService executor = Executors.newCachedThreadPool();
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
     public EthereumTest(TestConfig testConfig) {
         this.blockchain = new StandaloneBlockchain();
@@ -74,7 +74,7 @@ public class EthereumTest implements EthereumBackend {
     @Override
     public EthHash submit(TransactionRequest request, Nonce nonce) {
         Transaction tx = createTransaction(request, nonce);
-        executor.submit(() -> this.transactions.add(tx));
+        this.transactions.add(tx);
         return EthHash.of(tx.getHash());
     }
 
