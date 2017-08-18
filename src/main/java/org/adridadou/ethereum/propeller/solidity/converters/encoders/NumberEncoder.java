@@ -4,6 +4,7 @@ import org.adridadou.ethereum.propeller.exception.EthereumApiException;
 import org.adridadou.ethereum.propeller.solidity.SolidityType;
 import org.adridadou.ethereum.propeller.values.EthData;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 
 /**
@@ -22,6 +23,10 @@ public class NumberEncoder implements SolidityTypeEncoder {
         if (solidityType.name().startsWith("U")) {
             if (arg instanceof BigInteger) {
                 if (((BigInteger) arg).signum() == -1) {
+                    throw new EthereumApiException("unsigned type cannot encode negative values");
+                }
+            } else if (arg instanceof BigDecimal) {
+                if (((BigDecimal) arg).signum() == -1) {
                     throw new EthereumApiException("unsigned type cannot encode negative values");
                 }
             } else if (((Number) arg).longValue() < 0) {
