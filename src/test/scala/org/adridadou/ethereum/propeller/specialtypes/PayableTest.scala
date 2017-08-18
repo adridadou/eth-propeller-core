@@ -15,9 +15,7 @@ import org.scalatest.{FlatSpec, Matchers}
 class PayableTest extends FlatSpec with Matchers with Checkers with SolidityConversionHelper {
 
   "The address type" should "be converted from and to address and stay the same value" in {
-    println("**** start testing ****")
     val (address, contract) = contractObjectWithAddress[PayableContract]
-    println("**** testing ready ****")
     check(forAll(arbitrary[BigInt])(checkEncode(contract, address, _)))
   }
 

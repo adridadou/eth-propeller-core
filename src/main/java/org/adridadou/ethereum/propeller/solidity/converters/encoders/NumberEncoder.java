@@ -22,6 +22,7 @@ public class NumberEncoder implements SolidityTypeEncoder {
     public EthData encode(Object arg, SolidityType solidityType) {
         if (solidityType.name().startsWith("U")) {
             if (arg instanceof BigInteger) {
+                //we can only accept non decimal values
                 if (((BigInteger) arg).signum() == -1) {
                     throw new EthereumApiException("unsigned type cannot encode negative values");
                 }
