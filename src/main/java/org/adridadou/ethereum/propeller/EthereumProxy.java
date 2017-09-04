@@ -1,5 +1,27 @@
 package org.adridadou.ethereum.propeller;
 
+import static org.adridadou.ethereum.propeller.values.EthValue.wei;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+
 import org.adridadou.ethereum.propeller.event.BlockInfo;
 import org.adridadou.ethereum.propeller.event.EthereumEventHandler;
 import org.adridadou.ethereum.propeller.exception.EthereumApiException;
@@ -12,16 +34,23 @@ import org.adridadou.ethereum.propeller.solidity.converters.decoders.SolidityTyp
 import org.adridadou.ethereum.propeller.solidity.converters.decoders.list.CollectionDecoder;
 import org.adridadou.ethereum.propeller.solidity.converters.encoders.SolidityTypeEncoder;
 import org.adridadou.ethereum.propeller.solidity.converters.encoders.list.CollectionEncoder;
-import org.adridadou.ethereum.propeller.values.*;
+import org.adridadou.ethereum.propeller.values.CallDetails;
+import org.adridadou.ethereum.propeller.values.EthAccount;
+import org.adridadou.ethereum.propeller.values.EthAddress;
+import org.adridadou.ethereum.propeller.values.EthData;
+import org.adridadou.ethereum.propeller.values.EthHash;
+import org.adridadou.ethereum.propeller.values.EthValue;
+import org.adridadou.ethereum.propeller.values.EventInfo;
+import org.adridadou.ethereum.propeller.values.GasPrice;
+import org.adridadou.ethereum.propeller.values.GasUsage;
+import org.adridadou.ethereum.propeller.values.Nonce;
+import org.adridadou.ethereum.propeller.values.SmartContractByteCode;
+import org.adridadou.ethereum.propeller.values.TransactionInfo;
+import org.adridadou.ethereum.propeller.values.TransactionReceipt;
+import org.adridadou.ethereum.propeller.values.TransactionRequest;
+import org.adridadou.ethereum.propeller.values.TransactionStatus;
 import org.apache.commons.lang.ArrayUtils;
 import rx.Observable;
-
-import java.lang.reflect.InvocationTargetException;
-import java.util.*;
-import java.util.concurrent.*;
-import java.util.stream.Collectors;
-
-import static org.adridadou.ethereum.propeller.values.EthValue.wei;
 
 /**
  * Created by davidroon on 20.04.16.
@@ -64,6 +93,8 @@ class EthereumProxy {
                     futureMap.remove(request);
                 }
             } catch (InterruptedException e) {
+                //TODO I've experienced EthereumApiException been thorown above, in case of rpc call failure. It will stop everything
+                //Ignore? Retry?
                 throw new EthereumApiException("error while polling transactions to submit", e);
             }
         });
@@ -105,6 +136,7 @@ class EthereumProxy {
     }
 
     Nonce getNonce(final EthAddress address) {
+        //TODO here it must wait if new block been processing
         nonces.computeIfAbsent(address, ethereum::getNonce);
         Integer offset = Optional.ofNullable(pendingTransactions.get(address)).map(Set::size).orElse(0);
         return nonces.get(address).add(offset);
@@ -258,8 +290,10 @@ class EthereumProxy {
                 });
         eventHandler.observeBlocks()
                 .forEach(params -> params.receipts
+                        //TODO before next loop it must lock pendingTransactions *in case it has 1+ from ours!*
+                        //I did it ugly with BlockingQueues
                         .forEach(receipt -> Optional.ofNullable(pendingTransactions.get(receipt.sender))
-                                .ifPresent(hashes -> {
+                                 .ifPresent(hashes -> {
                                     hashes.remove(receipt.hash);
                                     nonces.put(receipt.sender, ethereum.getNonce(receipt.sender));
                                 })));

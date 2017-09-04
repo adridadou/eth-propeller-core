@@ -18,7 +18,7 @@ class SolidityCompilerTest extends FlatSpec with Matchers with Checkers {
 
   "Solidity compiler" should "get the compiler version" in {
     val solidityVersion = solidityCompiler.getVersion.getVersion
-    assertTrue(solidityVersion.startsWith("0.4.13"))
+    assertTrue(solidityVersion.startsWith("0.4.15"))
   }
 
   it should "compile a smart contract from a single file" in {

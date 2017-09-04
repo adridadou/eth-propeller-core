@@ -33,11 +33,8 @@ trait SolidityConversionHelper {
   }
 
   def contractObjectWithAddress[T]()(implicit tag: ClassTag[T]): (EthAddress, T) = {
-    println("**** contract object with address start ***")
     val contractAddress = SolidityConversionHelper.facade.publishContract(SolidityConversionHelper.contract, SolidityConversionHelper.mainAccount).get()
     val result = (contractAddress, SolidityConversionHelper.facade.createContractProxy(SolidityConversionHelper.contract, contractAddress, SolidityConversionHelper.mainAccount, tag.runtimeClass).asInstanceOf[T])
-
-    println("*** contract object with address done  ***")
 
     result
   }
