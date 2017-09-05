@@ -263,13 +263,20 @@ class EthereumProxy {
         eventHandler.observeTransactions()
                 .filter(tx -> tx.getStatus() == TransactionStatus.Dropped)
                 .forEach(params -> {
-                    TransactionReceipt receipt = params.getReceipt().orElseThrow(() -> new EthereumApiException("no Transaction receipt found!"));
-                    EthAddress currentAddress = receipt.sender;
-                    EthHash hash = receipt.hash;
-                    Optional.ofNullable(pendingTransactions.get(currentAddress)).ifPresent(hashes -> {
-                        hashes.remove(hash);
-                        nonces.put(currentAddress, ethereum.getNonce(currentAddress));
-                    });
+                    lock.lock();
+                    try {
+                        TransactionReceipt receipt = params.getReceipt().orElseThrow(() -> new EthereumApiException("no Transaction receipt found!"));
+                        EthAddress currentAddress = receipt.sender;
+                        EthHash hash = receipt.hash;
+                        Optional.ofNullable(pendingTransactions.get(currentAddress)).ifPresent(hashes -> {
+                            hashes.remove(hash);
+                            nonces.put(currentAddress, ethereum.getNonce(currentAddress));
+                        });
+                        lock.unlock();
+                    } catch (Throwable e) {
+                        lock.unlock();
+                        throw e;
+                    }
                 });
         eventHandler.observeBlocks()
                 .forEach(params -> {
