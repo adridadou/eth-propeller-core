@@ -120,8 +120,9 @@ class EthereumProxy {
         lock.lock();
         nonces.computeIfAbsent(address, ethereum::getNonce);
         Integer offset = Optional.ofNullable(pendingTransactions.get(address)).map(Set::size).orElse(0);
+        Nonce nonce = nonces.get(address).add(offset);
         lock.unlock();
-        return nonces.get(address).add(offset);
+        return nonce;
     }
 
     SmartContractByteCode getCode(EthAddress address) {
@@ -263,20 +264,15 @@ class EthereumProxy {
         eventHandler.observeTransactions()
                 .filter(tx -> tx.getStatus() == TransactionStatus.Dropped)
                 .forEach(params -> {
+                    TransactionReceipt receipt = params.getReceipt().orElseThrow(() -> new EthereumApiException("no Transaction receipt found!"));
+                    EthAddress currentAddress = receipt.sender;
+                    EthHash hash = receipt.hash;
                     lock.lock();
-                    try {
-                        TransactionReceipt receipt = params.getReceipt().orElseThrow(() -> new EthereumApiException("no Transaction receipt found!"));
-                        EthAddress currentAddress = receipt.sender;
-                        EthHash hash = receipt.hash;
-                        Optional.ofNullable(pendingTransactions.get(currentAddress)).ifPresent(hashes -> {
-                            hashes.remove(hash);
-                            nonces.put(currentAddress, ethereum.getNonce(currentAddress));
-                        });
-                        lock.unlock();
-                    } catch (Throwable e) {
-                        lock.unlock();
-                        throw e;
-                    }
+                    Optional.ofNullable(pendingTransactions.get(currentAddress)).ifPresent(hashes -> {
+                        hashes.remove(hash);
+                        nonces.put(currentAddress, ethereum.getNonce(currentAddress));
+                    });
+                    lock.unlock();
                 });
         eventHandler.observeBlocks()
                 .forEach(params -> {
