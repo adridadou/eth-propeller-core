@@ -49,7 +49,8 @@ class EthereumProxy {
     private final List<Class<? extends CollectionEncoder>> listEncoders = new ArrayList<>();
     private final Set<Class<?>> voidClasses = new HashSet<>();
     private final ExecutorService executor = Executors.newCachedThreadPool();
-    private final ReentrantLock lock = new ReentrantLock();
+    private final ReentrantLock nonceLock = new ReentrantLock();
+    private final ReentrantLock txLock = new ReentrantLock();
 
     EthereumProxy(EthereumBackend ethereum, EthereumEventHandler eventHandler, EthereumConfig config) {
         this.ethereum = ethereum;
@@ -77,8 +78,10 @@ class EthereumProxy {
         Nonce nonce = getNonce(request.getAccount().getAddress());
         EthHash hash = ethereum.submit(request, nonce);
         increasePendingTransactionCounter(request.getAccount().getAddress(), hash);
+        txLock.lock();
         futureMap.get(request).complete(hash);
         futureMap.remove(request);
+        txLock.unlock();
     }
 
     EthereumProxy addVoidClass(Class<?> cls) {
@@ -117,11 +120,11 @@ class EthereumProxy {
     }
 
     Nonce getNonce(final EthAddress address) {
-        lock.lock();
+        nonceLock.lock();
         nonces.computeIfAbsent(address, ethereum::getNonce);
         Integer offset = Optional.ofNullable(pendingTransactions.get(address)).map(Set::size).orElse(0);
         Nonce nonce = nonces.get(address).add(offset);
-        lock.unlock();
+        nonceLock.unlock();
         return nonce;
     }
 
@@ -183,8 +186,10 @@ class EthereumProxy {
 
     private CompletableFuture<EthHash> submitTransaction(TransactionRequest request) {
         CompletableFuture<EthHash> future = new CompletableFuture<>();
+        txLock.lock();
         transactions.add(request);
         futureMap.put(request, future);
+        txLock.unlock();
         return future;
     }
 
@@ -267,23 +272,23 @@ class EthereumProxy {
                     TransactionReceipt receipt = params.getReceipt().orElseThrow(() -> new EthereumApiException("no Transaction receipt found!"));
                     EthAddress currentAddress = receipt.sender;
                     EthHash hash = receipt.hash;
-                    lock.lock();
+                    nonceLock.lock();
                     Optional.ofNullable(pendingTransactions.get(currentAddress)).ifPresent(hashes -> {
                         hashes.remove(hash);
                         nonces.put(currentAddress, ethereum.getNonce(currentAddress));
                     });
-                    lock.unlock();
+                    nonceLock.unlock();
                 });
         eventHandler.observeBlocks()
                 .forEach(params -> {
-                    lock.lock();
+                    nonceLock.lock();
                     params.receipts
                             .forEach(receipt -> Optional.ofNullable(pendingTransactions.get(receipt.sender))
                                     .ifPresent(hashes -> {
                                         hashes.remove(receipt.hash);
                                         nonces.put(receipt.sender, ethereum.getNonce(receipt.sender));
                                     }));
-                    lock.unlock();
+                    nonceLock.unlock();
                 });
     }
 
