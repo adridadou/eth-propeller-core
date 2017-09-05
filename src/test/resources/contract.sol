@@ -52,7 +52,7 @@ contract myContract2 {
     }
 
     function throwMe() {
-        throw;
+        revert();
     }
 
     function getInitTime(uint time) constant returns (uint) {
