@@ -28,7 +28,7 @@ public class AbiEntry {
     private final Boolean anonymous;
     private final Boolean constant;
     private final Boolean payable;
-    private final Boolean stateMutability;
+    private final String stateMutability;
     private final String name;
     private final List<AbiParam> inputs;
     private final List<AbiParam> outputs;
@@ -38,7 +38,7 @@ public class AbiEntry {
         this(null, null, null, null, null, null, null, null);
     }
 
-    private AbiEntry(Boolean anonymous, Boolean constant, Boolean payable, Boolean stateMutability, String name, List<AbiParam> inputs, List<AbiParam> outputs, String type) {
+    private AbiEntry(Boolean anonymous, Boolean constant, Boolean payable, String stateMutability, String name, List<AbiParam> inputs, List<AbiParam> outputs, String type) {
         this.anonymous = anonymous;
         this.constant = constant;
         this.payable = payable;
@@ -70,7 +70,7 @@ public class AbiEntry {
         return payable;
     }
 
-    public Boolean getStateMutability() {
+    public String getStateMutability() {
         return stateMutability;
     }
 
