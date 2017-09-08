@@ -3,6 +3,7 @@ package org.adridadou.ethereum.propeller.backend;
 
 import org.adridadou.ethereum.propeller.values.EthAccount;
 import org.adridadou.ethereum.propeller.values.EthValue;
+import org.adridadou.ethereum.propeller.values.GasPrice;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -13,14 +14,14 @@ import java.util.Map;
  * This code is released under Apache 2 license
  */
 public class TestConfig {
-    public static final int DEFAULT_GAS_LIMIT = 4_700_000;
-    public static final long DEFAULT_GAS_PRICE = 50_000_000_000L;
+    private static final int DEFAULT_GAS_LIMIT = 4_700_000;
+    private static final GasPrice DEFAULT_GAS_PRICE = new GasPrice(EthValue.wei(50_000_000_000L));
     private final Date initialTime;
     private final long gasLimit;
-    private final long gasPrice;
+    private final GasPrice gasPrice;
     private final Map<EthAccount, EthValue> balances;
 
-    public TestConfig(Date initialTime, long gasLimit, long gasPrice, Map<EthAccount, EthValue> balances) {
+    public TestConfig(Date initialTime, long gasLimit, GasPrice gasPrice, Map<EthAccount, EthValue> balances) {
         this.initialTime = initialTime;
         this.gasLimit = gasLimit;
         this.gasPrice = gasPrice;
@@ -35,7 +36,7 @@ public class TestConfig {
         return gasLimit;
     }
 
-    public long getGasPrice() {
+    public GasPrice getGasPrice() {
         return gasPrice;
     }
 
@@ -50,7 +51,7 @@ public class TestConfig {
     public static class Builder {
         private final Map<EthAccount, EthValue> balances = new HashMap<>();
         private long gasLimit = DEFAULT_GAS_LIMIT;
-        private long gasPrice = DEFAULT_GAS_PRICE;
+        private GasPrice gasPrice = DEFAULT_GAS_PRICE;
         private Date initialTime = new Date();
 
         public Builder gasLimit(long gasLimit) {
@@ -58,7 +59,7 @@ public class TestConfig {
             return this;
         }
 
-        public Builder gasPrice(long gasPrice) {
+        public Builder gasPrice(GasPrice gasPrice) {
             this.gasPrice = gasPrice;
             return this;
         }
