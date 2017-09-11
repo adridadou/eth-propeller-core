@@ -50,6 +50,4 @@ trait ContractEvents {
   def createEvent(value: String): CompletableFuture[Void]
 }
 
-class MyEvent(val from: EthAddress, val to: EthAddress, val value: String, val ethData: EthData) {
-  override def toString: String = "MyEvent{" + "value='" + value + '\'' + '}'
-}
+case class MyEvent(from: EthAddress, to: EthAddress, value: String, ethData: EthData)
