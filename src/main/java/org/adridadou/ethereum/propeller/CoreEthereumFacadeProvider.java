@@ -62,6 +62,7 @@ public final class CoreEthereumFacadeProvider {
                 .addEncoder(SolidityTypeGroup.Address, new AccountEncoder())
                 .addEncoder(SolidityTypeGroup.Number, new DateEncoder())
                 .addEncoder(SolidityTypeGroup.Number, new EthValueEncoder())
+                .addEncoder(SolidityTypeGroup.Raw, new SignatureEncoder())
                 .addEncoder(SolidityTypeGroup.Raw, new EthDataEncoder());
     }
 

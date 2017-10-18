@@ -29,6 +29,10 @@ class NumberTest extends FlatSpec with Matchers with Checkers with SolidityConve
     check(forAll(arbitrary[Long])(checkEncode(contract, _)))
   }
 
+  it should "convert byte from and to the same value" in {
+    check(forAll(arbitrary[Byte])(checkEncodeSmall(contract, _)))
+  }
+
   private def checkEncode(contract: NumberContract, seed: Long) = {
     if (seed < 0) {
       Try(contract.uintFunc(seed)).isFailure shouldEqual true
@@ -49,6 +53,16 @@ class NumberTest extends FlatSpec with Matchers with Checkers with SolidityConve
     }
 
     contract.intFunc(seed.asInstanceOf[Integer]) shouldEqual seed
+
+    true
+  }
+
+  private def checkEncodeSmall(contract: NumberContract, seed: Byte) = {
+    if (seed < 0) {
+      Try(contract.smallUintFunc(seed.asInstanceOf[java.lang.Byte])).isFailure shouldEqual true
+    } else {
+      contract.smallUintFunc(seed.asInstanceOf[java.lang.Byte]) shouldEqual seed
+    }
 
     true
   }
@@ -80,4 +94,6 @@ trait NumberContract {
   def uintFunc(intValue: Integer): Integer
 
   def uintFunc(intValue: java.lang.Long): java.lang.Long
+
+  def smallUintFunc(byteValue: java.lang.Byte): java.lang.Byte
 }

@@ -21,6 +21,7 @@ object SolidityConversionHelper {
     .create(new EthereumTest(TestConfig.builder()
       .balance(mainAccount, EthValue.ether(10000000))
       .build()), EthereumConfig.builder().build())
+
   val contract: SolidityContractDetails = SolidityConversionHelper.facade.compile(SoliditySourceFile.from(new File("src/test/resources/conversionContract.sol")))
     .findContract("myContract").get()
 }
