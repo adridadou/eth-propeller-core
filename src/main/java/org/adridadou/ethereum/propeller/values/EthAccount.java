@@ -94,7 +94,7 @@ public class EthAccount {
 
     private EthSignature doSign(Sha3 hash) {
         ECDSASigner signer = new ECDSASigner(new HMacDSAKCalculator(new SHA256Digest()));
-        ECPrivateKeyParameters privKeyParams = new ECPrivateKeyParameters((privateKey).getD(), EC_DOMAIN_PARAMETERS);
+        ECPrivateKeyParameters privKeyParams = new ECPrivateKeyParameters(privateKey.getD(), EC_DOMAIN_PARAMETERS);
         signer.init(true, privKeyParams);
         BigInteger[] components = signer.generateSignature(hash.hash);
 
@@ -110,8 +110,10 @@ public class EthAccount {
         }
 
         ECPoint R = decompressKey(x, recId);
-        if (!R.multiply(EC_DOMAIN_PARAMETERS.getN()).isInfinity())
+        if (!R.multiply(EC_DOMAIN_PARAMETERS.getN()).isInfinity()) {
             return Optional.empty();
+        }
+
         BigInteger e = new BigInteger(1, messageHash);
 
         BigInteger eInv = BigInteger.ZERO.subtract(e).mod(EC_DOMAIN_PARAMETERS.getN());
