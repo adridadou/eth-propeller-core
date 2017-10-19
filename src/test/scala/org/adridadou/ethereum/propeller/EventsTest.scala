@@ -35,6 +35,9 @@ class EventsTest extends FlatSpec with Matchers with Checkers {
       result.getTransactionHash shouldBe EthHash.of("6606fca5639a42661b2446004c41d7de2acb37884d49247b5cbb526527c31308")
       result.getResult.value shouldBe "my event is here and it is much longer than anticipated"
 
+      val events = ethereum.getEventsAtBlock(ethereum.getTransactionInfo(result.getTransactionHash).get().getBlockHash, solidityEvent, address)
+      println(events)
+
     }).getOrElse(() => throw new EthereumApiException("something went wrong!"))
   }
 

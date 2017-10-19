@@ -254,7 +254,7 @@ class EthereumProxy {
     }
 
     private TransactionInfo createTransactionParameters(TransactionReceipt receipt) {
-        return new TransactionInfo(receipt.hash, receipt, TransactionStatus.Executed);
+        return new TransactionInfo(receipt.hash, receipt, TransactionStatus.Executed, receipt.blockHash);
     }
 
     private Optional<TransactionReceipt> checkForErrors(final TransactionReceipt receipt) {
@@ -357,11 +357,11 @@ class EthereumProxy {
     }
 
     public <T> List<T> getEventsAtBlock(SolidityEvent eventDefinition, EthAddress address, Class<T> cls, Long blockNumber) {
-        return getEventsAtBlock(eventDefinition, address, cls, ethereum.getBlock(blockNumber));
+        return ethereum.getBlock(blockNumber).map(block -> getEventsAtBlock(eventDefinition, address, cls, block)).orElseGet(ArrayList::new);
     }
 
     public <T> List<T> getEventsAtBlock(SolidityEvent eventDefinition, EthAddress address, Class<T> cls, EthHash blockHash) {
-        return getEventsAtBlock(eventDefinition, address, cls, ethereum.getBlock(blockHash));
+        return ethereum.getBlock(blockHash).map(block -> getEventsAtBlock(eventDefinition, address, cls, block)).orElseGet(ArrayList::new);
     }
 
     private <T> List<T> getEventsAtBlock(SolidityEvent eventDefinition, EthAddress address, Class<T> cls, BlockInfo blockInfo) {
@@ -371,11 +371,11 @@ class EthereumProxy {
     }
 
     public <T> List<EventInfo<T>> getEventsAtBlockWithInfo(SolidityEvent eventDefinition, EthAddress address, Class<T> cls, Long blockNumber) {
-        return getEventsAtBlockWithInfo(eventDefinition, address, cls, ethereum.getBlock(blockNumber));
+        return ethereum.getBlock(blockNumber).map(block -> getEventsAtBlockWithInfo(eventDefinition, address, cls, block)).orElseGet(ArrayList::new);
     }
 
     public <T> List<EventInfo<T>> getEventsAtBlockWithInfo(SolidityEvent eventDefinition, EthAddress address, Class<T> cls, EthHash blockHash) {
-        return getEventsAtBlockWithInfo(eventDefinition, address, cls, ethereum.getBlock(blockHash));
+        return ethereum.getBlock(blockHash).map(block -> getEventsAtBlockWithInfo(eventDefinition, address, cls, block)).orElseGet(ArrayList::new);
     }
 
     private <T> List<EventInfo<T>> getEventsAtBlockWithInfo(SolidityEvent eventDefinition, EthAddress address, Class<T> cls, BlockInfo blockInfo) {

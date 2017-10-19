@@ -57,14 +57,14 @@ public class EthJEventListener extends EthereumListenerAdapter {
                 .map(tx -> EthJEventListener.toReceipt(tx, blockHash))
                 .collect(Collectors.toList())));
 
-        receipts.forEach(receipt -> eventHandler.onTransactionExecuted(new TransactionInfo(EthHash.of(receipt.getTransaction().getHash()), toReceipt(receipt, blockHash), TransactionStatus.Executed)));
+        receipts.forEach(receipt -> eventHandler.onTransactionExecuted(new TransactionInfo(EthHash.of(receipt.getTransaction().getHash()), toReceipt(receipt, blockHash), TransactionStatus.Executed, blockHash)));
     }
 
     @Override
     public void onPendingTransactionUpdate(TransactionReceipt txReceipt, PendingTransactionState state, Block block) {
         switch (state) {
             case DROPPED:
-                eventHandler.onTransactionDropped(new TransactionInfo(EthHash.of(txReceipt.getTransaction().getHash()), toReceipt(txReceipt, EthHash.empty()), TransactionStatus.Dropped));
+                eventHandler.onTransactionDropped(new TransactionInfo(EthHash.of(txReceipt.getTransaction().getHash()), toReceipt(txReceipt, EthHash.empty()), TransactionStatus.Dropped, EthHash.empty()));
                 break;
             default:
                 break;
