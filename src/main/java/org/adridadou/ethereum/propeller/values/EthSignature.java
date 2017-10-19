@@ -77,13 +77,21 @@ public class EthSignature {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         EthSignature that = (EthSignature) o;
 
-        if (recId != that.recId) return false;
-        if (r != null ? !r.equals(that.r) : that.r != null) return false;
+        if (recId != that.recId) {
+            return false;
+        }
+        if (r != null ? !r.equals(that.r) : that.r != null) {
+            return false;
+        }
         return s != null ? s.equals(that.s) : that.s == null;
     }
 
