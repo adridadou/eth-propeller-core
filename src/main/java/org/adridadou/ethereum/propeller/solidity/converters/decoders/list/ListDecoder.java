@@ -19,7 +19,7 @@ public class ListDecoder extends CollectionDecoder {
     }
 
     @Override
-    public Object decode(Integer index, EthData data, Type resultType) {
+    public List<?> decode(Integer index, EthData data, Type resultType) {
         return new ArrayList<>(Arrays.asList(decodeCollection(index, data, getGenericType(resultType))));
     }
 

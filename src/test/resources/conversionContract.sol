@@ -54,11 +54,15 @@ contract myContract {
         return (test1, test2, test3, test4);
     }
 
-    function bytes32Func(bytes32 value)  public  pure returns (bytes32) {
+    function bytes32Func(bytes32 value) public pure returns (bytes32) {
         return value;
     }
 
-    function bytesFunc(bytes value) public   pure returns (bytes) {
+    function bytesFunc(bytes value) public pure returns (bytes) {
+        return value;
+    }
+
+    function signatureFunc(bytes value) public pure returns (bytes) {
         return value;
     }
 

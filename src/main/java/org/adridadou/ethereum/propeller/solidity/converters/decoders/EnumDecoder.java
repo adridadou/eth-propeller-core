@@ -13,7 +13,7 @@ public class EnumDecoder implements SolidityTypeDecoder {
     private final NumberDecoder numberDecoder = new NumberDecoder();
 
     @Override
-    public Object decode(Integer index, EthData data, Type resultType) {
+    public Enum decode(Integer index, EthData data, Type resultType) {
         Integer ordinal = numberDecoder.decode(index, data, Integer.class).intValue();
         return ((Class<? extends Enum>) resultType).getEnumConstants()[ordinal];
     }

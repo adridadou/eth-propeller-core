@@ -10,7 +10,7 @@ import java.lang.reflect.Type;
  */
 public class EthDataDecoder implements SolidityTypeDecoder {
     @Override
-    public Object decode(Integer index, EthData data, Type resultType) {
+    public EthData decode(Integer index, EthData data, Type resultType) {
         return data.word(index);
     }
 

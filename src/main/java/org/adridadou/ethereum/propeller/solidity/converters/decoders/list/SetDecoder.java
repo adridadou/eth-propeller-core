@@ -20,7 +20,7 @@ public class SetDecoder extends CollectionDecoder {
     }
 
     @Override
-    public Object decode(Integer index, EthData data, Type resultType) {
+    public Set<?> decode(Integer index, EthData data, Type resultType) {
         return new HashSet<>(Arrays.asList(decodeCollection(index, data, getGenericType(resultType))));
     }
 

@@ -50,6 +50,7 @@ class AccountTest extends FlatSpec with Matchers with Checkers with SolidityConv
     val signatureEthj = ECKey.fromPrivate(account1.getBigIntPrivateKey).sign(hash.data)
 
     signature.toData shouldBe EthData.of(signatureEthj.toByteArray)
+    signature shouldBe EthSignature.of(signature.toData)
 
     true
   }

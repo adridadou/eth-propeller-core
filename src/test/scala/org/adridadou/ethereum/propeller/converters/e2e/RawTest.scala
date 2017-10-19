@@ -1,6 +1,6 @@
 package org.adridadou.ethereum.propeller.converters.e2e
 
-import org.adridadou.ethereum.propeller.values.EthData
+import org.adridadou.ethereum.propeller.values.{EthData, EthSignature}
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Prop.forAll
 import org.scalatest.check.Checkers
@@ -26,6 +26,11 @@ class RawTest extends FlatSpec with Matchers with Checkers with SolidityConversi
     } else {
       contract.bytes32Func(data) shouldEqual data.word(0)
     }
+
+    val signature = SolidityConversionHelper.mainAccount.sign(data)
+
+    contract.signatureFunc(signature) shouldBe signature
+
     true
   }
 }
@@ -34,6 +39,8 @@ trait RawContract {
   def bytes32Func(value: EthData): EthData
 
   def bytesFunc(value: EthData): EthData
+
+  def signatureFunc(signature: EthSignature): EthSignature
 }
 
 

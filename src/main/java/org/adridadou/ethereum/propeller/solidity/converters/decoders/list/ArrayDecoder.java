@@ -17,7 +17,7 @@ public class ArrayDecoder extends CollectionDecoder {
     }
 
     @Override
-    public Object decode(Integer index, EthData data, Type resultType) {
+    public Object[] decode(Integer index, EthData data, Type resultType) {
         return decodeCollection(index, data, ((Class) resultType).getComponentType());
     }
 

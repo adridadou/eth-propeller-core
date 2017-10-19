@@ -1,8 +1,6 @@
 package org.adridadou.ethereum.propeller.values;
 
 import org.adridadou.ethereum.propeller.exception.EthereumApiException;
-import org.adridadou.ethereum.propeller.solidity.SolidityType;
-import org.adridadou.ethereum.propeller.solidity.converters.encoders.NumberEncoder;
 
 import java.math.BigInteger;
 
@@ -10,12 +8,33 @@ import static org.adridadou.ethereum.propeller.values.EthAccount.CURVE_PARAMS;
 import static org.adridadou.ethereum.propeller.values.EthAccount.EC_DOMAIN_PARAMETERS;
 
 public class EthSignature {
-    private static final NumberEncoder numberEncoder = new NumberEncoder();
     private final BigInteger r, s;
     private final byte recId;
 
-    public EthSignature(BigInteger r, BigInteger s) {
-        this(r, s, (byte) 0);
+    public static EthSignature of(byte[] data) {
+        return EthSignature.of(EthData.of(data));
+    }
+
+    public static EthSignature of(String data) {
+        return EthSignature.of(EthData.of(data));
+    }
+
+    public static EthSignature of(EthData data) {
+        if (data.isEmpty()) {
+            return new EthSignature(BigInteger.ZERO, BigInteger.ZERO, (byte) 0);
+        }
+        BigInteger r = toUnsigned(data.word(0).data);
+        BigInteger s = toUnsigned(data.word(1).data);
+        return new EthSignature(r, s, data.data[data.length - 1]);
+    }
+
+    private static BigInteger toUnsigned(byte[] data) {
+        BigInteger value = new BigInteger(data);
+        if (value.signum() == -1) {
+            value = new BigInteger(1, data);
+        }
+
+        return value;
     }
 
     public EthSignature(BigInteger r, BigInteger s, byte recId) {
@@ -39,14 +58,9 @@ public class EthSignature {
     }
 
     public EthData toData() {
-        final byte fixedV = this.recId >= 27
-                ? (byte) (this.recId - 27)
-                : this.recId;
-
-        return numberEncoder
-                .encode(this.r, SolidityType.UINT)
-                .merge(numberEncoder.encode(this.s, SolidityType.UINT))
-                .merge(EthData.of(new byte[]{fixedV}));
+        return EthData.of(this.r)
+                .merge(EthData.of(this.s))
+                .merge(EthData.of(new byte[]{recId}));
     }
 
     public BigInteger getS() {
@@ -59,5 +73,30 @@ public class EthSignature {
 
     public byte getRecId() {
         return recId;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        EthSignature that = (EthSignature) o;
+
+        if (recId != that.recId) return false;
+        if (r != null ? !r.equals(that.r) : that.r != null) return false;
+        return s != null ? s.equals(that.s) : that.s == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = r != null ? r.hashCode() : 0;
+        result = 31 * result + (s != null ? s.hashCode() : 0);
+        result = 31 * result + (int) recId;
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return toData().toString();
     }
 }

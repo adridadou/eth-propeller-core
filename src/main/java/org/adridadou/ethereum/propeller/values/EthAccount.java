@@ -82,7 +82,7 @@ public class EthAccount {
         Sha3 hash = data.sha3();
         EthSignature sig = doSign(hash);
 
-        return new EthSignature(sig.getR(), sig.getS(), (byte) (getRecId(sig.getR(), sig.getS(), hash) + 27));
+        return new EthSignature(sig.getR(), sig.getS(), getRecId(sig.getR(), sig.getS(), hash));
     }
 
     private byte getRecId(BigInteger r, BigInteger s, Sha3 hash) {
