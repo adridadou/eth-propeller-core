@@ -44,6 +44,7 @@ class AccountTest extends FlatSpec with Matchers with Checkers with SolidityConv
     val hash = Crypto.sha3(data)
 
     val signature = account1.sign(data)
+    signature.ecrecover(data) shouldBe account1.getAddress
     account1.verify(signature, data) shouldBe true
     account2.verify(signature, data) shouldBe false
 

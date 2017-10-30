@@ -403,6 +403,9 @@ public class EthereumFacade {
         }).orElseGet(EthData::empty);
     }
 
+    public <T> T decode(EthData data, SolidityType solidityType, Class<T> cls) {
+        return decode(0, data, solidityType, cls);
+    }
     /**
      * Decodes an ouput. This is useful when a function returns bytes or bytes32 and you want to cast it to a specific type
      * @param index It can be that more than one value has been encoded in the data. This is the index of this value. It starts with 0

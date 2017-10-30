@@ -50,7 +50,7 @@ public class EthereumTest implements EthereumBackend {
                     blockchain.submitTransaction(transactions.take());
                     blockchain.createBlock();
                 }
-            } catch (InterruptedException e) {
+            } catch (Throwable e) {
                 throw new EthereumApiException("error while polling transactions for test env", e);
             }
         });

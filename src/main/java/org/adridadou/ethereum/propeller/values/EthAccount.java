@@ -4,7 +4,6 @@ import org.adridadou.ethereum.propeller.Crypto;
 import org.adridadou.ethereum.propeller.exception.EthereumApiException;
 import org.spongycastle.asn1.sec.SECNamedCurves;
 import org.spongycastle.asn1.x9.X9ECParameters;
-import org.spongycastle.asn1.x9.X9IntegerConverter;
 import org.spongycastle.crypto.digests.SHA256Digest;
 import org.spongycastle.crypto.params.ECDomainParameters;
 import org.spongycastle.crypto.params.ECPrivateKeyParameters;
@@ -14,7 +13,6 @@ import org.spongycastle.jcajce.provider.asymmetric.ec.BCECPrivateKey;
 import org.spongycastle.jce.provider.BouncyCastleProvider;
 import org.spongycastle.jce.spec.ECParameterSpec;
 import org.spongycastle.jce.spec.ECPrivateKeySpec;
-import org.spongycastle.math.ec.ECAlgorithms;
 import org.spongycastle.math.ec.ECCurve;
 import org.spongycastle.math.ec.ECPoint;
 
@@ -22,7 +20,6 @@ import java.math.BigInteger;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
-import java.util.Optional;
 import java.util.stream.IntStream;
 
 import static java.util.Arrays.copyOfRange;
@@ -35,7 +32,7 @@ public class EthAccount {
     static final ECDomainParameters EC_DOMAIN_PARAMETERS;
     static final X9ECParameters CURVE_PARAMS = SECNamedCurves.getByName("secp256k1");
 
-    private static final ECCurve.Fp CURVE;
+    static final ECCurve.Fp CURVE;
     private static final KeyFactory keyFactory;
     private static final ECParameterSpec CURVE_SPEC;
 
@@ -75,20 +72,20 @@ public class EthAccount {
     }
 
     public boolean verify(EthSignature signature, EthData data) {
-        return getRecId(signature.getR(), signature.getS(), data.sha3()) > -1;
+        return getRecId(signature, data.sha3()) > -1;
     }
 
     public EthSignature sign(EthData data) {
         Sha3 hash = data.sha3();
         EthSignature sig = doSign(hash);
 
-        return new EthSignature(sig.getR(), sig.getS(), getRecId(sig.getR(), sig.getS(), hash));
+        return new EthSignature(sig.getR(), sig.getS(), getRecId(sig, hash));
     }
 
-    private byte getRecId(BigInteger r, BigInteger s, Sha3 hash) {
+    private byte getRecId(EthSignature signature, Sha3 hash) {
         EthData thisKey = EthData.of(publicKey.getEncoded(/* compressed */ false));
 
-        return (byte) IntStream.range(0, 4).filter(i -> recoverPubBytesFromSignature((byte) i, r, s, hash.hash)
+        return (byte) IntStream.range(0, 4).filter(i -> signature.recoverPubBytesFromSignature((byte) i, hash.hash)
                 .map(thisKey::equals).orElse(false)).findFirst().orElse(-1);
     }
 
@@ -99,36 +96,6 @@ public class EthAccount {
         BigInteger[] components = signer.generateSignature(hash.hash);
 
         return new EthSignature(components[0], components[1], (byte) 0);
-    }
-
-    private Optional<EthData> recoverPubBytesFromSignature(byte recId, BigInteger r, BigInteger s, byte[] messageHash) {
-        BigInteger i = BigInteger.valueOf(recId / 2);
-        BigInteger x = r.add(i.multiply(EC_DOMAIN_PARAMETERS.getN()));
-
-        if (x.compareTo(CURVE.getQ()) >= 0) {
-            return Optional.empty();
-        }
-
-        ECPoint R = decompressKey(x, recId);
-        if (!R.multiply(EC_DOMAIN_PARAMETERS.getN()).isInfinity()) {
-            return Optional.empty();
-        }
-
-        BigInteger e = new BigInteger(1, messageHash);
-
-        BigInteger eInv = BigInteger.ZERO.subtract(e).mod(EC_DOMAIN_PARAMETERS.getN());
-        BigInteger rInv = r.modInverse(EC_DOMAIN_PARAMETERS.getN());
-        BigInteger srInv = rInv.multiply(s).mod(EC_DOMAIN_PARAMETERS.getN());
-        BigInteger eInvrInv = rInv.multiply(eInv).mod(EC_DOMAIN_PARAMETERS.getN());
-        ECPoint.Fp q = (ECPoint.Fp) ECAlgorithms.sumOfTwoMultiplies(EC_DOMAIN_PARAMETERS.getG(), eInvrInv, R, srInv);
-        return Optional.of(EthData.of(q.getEncoded(/* compressed */ false)));
-    }
-
-    private ECPoint decompressKey(BigInteger xBN, byte recId) {
-        X9IntegerConverter x9 = new X9IntegerConverter();
-        byte[] compEnc = x9.integerToBytes(xBN, 1 + x9.getByteLength(CURVE));
-        compEnc[0] = (byte) ((recId & 1) == 1 ? 0x03 : 0x02);
-        return CURVE.decodePoint(compEnc);
     }
 
     @Override

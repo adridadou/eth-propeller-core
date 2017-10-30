@@ -1,13 +1,20 @@
 package org.adridadou.ethereum.propeller.values;
 
+import org.adridadou.ethereum.propeller.Crypto;
 import org.adridadou.ethereum.propeller.exception.EthereumApiException;
+import org.spongycastle.asn1.x9.X9IntegerConverter;
+import org.spongycastle.math.ec.ECAlgorithms;
+import org.spongycastle.math.ec.ECPoint;
 
+import java.io.Serializable;
 import java.math.BigInteger;
+import java.util.Optional;
 
+import static java.util.Arrays.copyOfRange;
 import static org.adridadou.ethereum.propeller.values.EthAccount.CURVE_PARAMS;
 import static org.adridadou.ethereum.propeller.values.EthAccount.EC_DOMAIN_PARAMETERS;
 
-public class EthSignature {
+public class EthSignature implements Serializable {
     private final BigInteger r, s;
     private final byte recId;
 
@@ -35,6 +42,43 @@ public class EthSignature {
         }
 
         return value;
+    }
+
+    public EthAddress ecrecover(EthData data) {
+        return recoverPubBytesFromSignature(recId, data.sha3().hash).map(pubKey -> {
+            byte[] hash = Crypto.sha3(copyOfRange(pubKey.data, 1, pubKey.length));
+            return EthAddress.of(copyOfRange(hash, 12, hash.length));
+        }).orElseGet(EthAddress::empty);
+    }
+
+    public Optional<EthData> recoverPubBytesFromSignature(byte recId, byte[] messageHash) {
+        BigInteger i = BigInteger.valueOf(recId / 2);
+        BigInteger x = r.add(i.multiply(EC_DOMAIN_PARAMETERS.getN()));
+
+        if (x.compareTo(EthAccount.CURVE.getQ()) >= 0) {
+            return Optional.empty();
+        }
+
+        ECPoint R = decompressKey(x, recId);
+        if (!R.multiply(EC_DOMAIN_PARAMETERS.getN()).isInfinity()) {
+            return Optional.empty();
+        }
+
+        BigInteger e = new BigInteger(1, messageHash);
+
+        BigInteger eInv = BigInteger.ZERO.subtract(e).mod(EC_DOMAIN_PARAMETERS.getN());
+        BigInteger rInv = r.modInverse(EC_DOMAIN_PARAMETERS.getN());
+        BigInteger srInv = rInv.multiply(s).mod(EC_DOMAIN_PARAMETERS.getN());
+        BigInteger eInvrInv = rInv.multiply(eInv).mod(EC_DOMAIN_PARAMETERS.getN());
+        ECPoint.Fp q = (ECPoint.Fp) ECAlgorithms.sumOfTwoMultiplies(EC_DOMAIN_PARAMETERS.getG(), eInvrInv, R, srInv);
+        return Optional.of(EthData.of(q.getEncoded(/* compressed */ false)));
+    }
+
+    private ECPoint decompressKey(BigInteger xBN, byte recId) {
+        X9IntegerConverter x9 = new X9IntegerConverter();
+        byte[] compEnc = x9.integerToBytes(xBN, 1 + x9.getByteLength(EthAccount.CURVE));
+        compEnc[0] = (byte) ((recId & 1) == 1 ? 0x03 : 0x02);
+        return EthAccount.CURVE.decodePoint(compEnc);
     }
 
     public EthSignature(BigInteger r, BigInteger s, byte recId) {

@@ -14,6 +14,7 @@ import org.adridadou.ethereum.propeller.solidity.converters.encoders.SolidityTyp
 import org.adridadou.ethereum.propeller.solidity.converters.encoders.list.CollectionEncoder;
 import org.adridadou.ethereum.propeller.values.*;
 import org.apache.commons.lang.ArrayUtils;
+import org.apache.http.util.Asserts;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.Observable;
@@ -79,7 +80,8 @@ class EthereumProxy {
         EthHash hash = ethereum.submit(request, nonce);
         increasePendingTransactionCounter(request.getAccount().getAddress(), hash);
         txLock.lock();
-        futureMap.get(request).complete(hash);
+        Optional.ofNullable(futureMap.get(request))
+                .ifPresent(future -> future.complete(hash));
         futureMap.remove(request);
         txLock.unlock();
     }
@@ -137,10 +139,16 @@ class EthereumProxy {
     }
 
     <T> Observable<EventInfo<T>> observeEventsWithInfo(SolidityEvent<T> eventDefinition, EthAddress contractAddress) {
+        Asserts.check(eventDefinition != null, "event definition cannot be null!");
+        Asserts.check(contractAddress != null, "contract address cannot be null!");
         return eventHandler.observeTransactions()
                 .filter(params -> params.getReceipt().map(receipt -> contractAddress.equals(receipt.receiveAddress)).orElse(false))
-                .flatMap(params -> Observable.from(params.getReceipt().map(receipt -> receipt.events).get().stream().filter(eventDefinition::match)
-                        .map(data -> new EventInfo<>(params.getTransactionHash(), eventDefinition.parseEvent(data, eventDefinition.getEntityClass()))).collect(Collectors.toList())));
+                .flatMap(params -> {
+                    Optional<TransactionReceipt> optReceipt = params.getReceipt();
+                    List<EventData> events = optReceipt.map(receipt -> receipt.events).get();
+                    return Observable.from(events.stream().filter(eventDefinition::match)
+                            .map(data -> new EventInfo<>(params.getTransactionHash(), eventDefinition.parseEvent(data, eventDefinition.getEntityClass()))).collect(Collectors.toList()));
+                });
     }
 
     private CompletableFuture<EthAddress> publishContract(EthValue ethValue, EthData data, EthAccount account) {
@@ -208,7 +216,9 @@ class EthereumProxy {
         long currentBlock = eventHandler.getCurrentBlockNumber();
 
         Observable<TransactionInfo> droppedTxs = eventHandler.observeTransactions()
-                .filter(params -> params.getReceipt().map(receipt -> Objects.equals(receipt.hash, txHash)).orElse(false) && params.getStatus() == TransactionStatus.Dropped);
+                .filter(params -> params.getReceipt().map(receipt -> Objects.equals(receipt.hash, txHash))
+                        .orElse(false) && params.getStatus() == TransactionStatus.Dropped);
+
         Observable<TransactionInfo> timeoutBlock = eventHandler.observeBlocks()
                 .filter(blockParams -> blockParams.blockNumber > currentBlock + config.blockWaitLimit())
                 .map(params -> null);
@@ -218,7 +228,7 @@ class EthereumProxy {
                 .filter(receipt -> Objects.equals(receipt.hash, txHash))
                 .map(this::createTransactionParameters);
 
-        Observable<TransactionInfo> observeTx = Observable.interval(10, TimeUnit.SECONDS)
+        Observable<TransactionInfo> observeTx = Observable.interval(0, 10, TimeUnit.SECONDS)
                 .map(x -> getTransactionInfo(txHash))
                 .filter(tx -> tx
                         .map(TransactionInfo::getStatus)
@@ -228,18 +238,17 @@ class EthereumProxy {
 
         CompletableFuture<TransactionReceipt> futureResult = new CompletableFuture<>();
 
-        Observable.merge(droppedTxs, blockTxs, timeoutBlock, observeTx)
-                .map(params -> {
-                    if (params == null) {
-                        throw new EthereumApiException("the transaction has not been included in the last " + config.blockWaitLimit() + " blocks");
-                    }
-                    TransactionReceipt receipt = params.getReceipt().orElseThrow(() -> new EthereumApiException("no Transaction receipt found!"));
-                    if (params.getStatus() == TransactionStatus.Dropped) {
-                        throw new EthereumApiException("the transaction has been dropped! - " + receipt.error);
-                    }
-                    Optional<TransactionReceipt> result = checkForErrors(receipt);
-                    return result.orElseThrow(() -> new EthereumApiException("error with the transaction " + receipt.hash + ". error:" + receipt.error));
-                }).first().forEach(futureResult::complete);
+        Observable.merge(droppedTxs, blockTxs, timeoutBlock, observeTx).map(params -> {
+            if (params == null) {
+                throw new EthereumApiException("the transaction has not been included in the last " + config.blockWaitLimit() + " blocks");
+            }
+            TransactionReceipt receipt = params.getReceipt().orElseThrow(() -> new EthereumApiException("no Transaction receipt found!"));
+            if (params.getStatus() == TransactionStatus.Dropped) {
+                throw new EthereumApiException("the transaction has been dropped! - " + receipt.error);
+            }
+            Optional<TransactionReceipt> result = checkForErrors(receipt);
+            return result.orElseThrow(() -> new EthereumApiException("error with the transaction " + receipt.hash + ". error:" + receipt.error));
+        }).first().forEach(futureResult::complete);
 
         return futureResult;
     }
