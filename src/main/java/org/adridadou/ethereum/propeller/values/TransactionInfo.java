@@ -8,13 +8,15 @@ public class TransactionInfo {
     private final TransactionReceipt receipt;
     private final TransactionStatus status;
     private final boolean contractCreation;
+    private final EthHash blockHash;
 
 
-    public TransactionInfo(EthHash transactionHash, TransactionReceipt receipt, TransactionStatus status) {
+    public TransactionInfo(EthHash transactionHash, TransactionReceipt receipt, TransactionStatus status, EthHash blockHash) {
         this.transactionHash = transactionHash;
         this.receipt = receipt;
         this.status = status;
         this.contractCreation = this.receipt != null && Optional.ofNullable(receipt).map(r -> r.receiveAddress.isEmpty()).orElse(false);
+        this.blockHash = blockHash;
     }
 
     public Optional<TransactionReceipt> getReceipt() {
@@ -33,13 +35,7 @@ public class TransactionInfo {
         return contractCreation;
     }
 
-    @Override
-    public String toString() {
-        return "TransactionInfo{" +
-                "transactionHash=" + transactionHash +
-                ", receipt=" + receipt +
-                ", status=" + status +
-                ", contractCreation=" + contractCreation +
-                '}';
+    public EthHash getBlockHash() {
+        return blockHash;
     }
 }

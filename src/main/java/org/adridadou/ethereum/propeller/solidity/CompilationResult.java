@@ -2,6 +2,7 @@ package org.adridadou.ethereum.propeller.solidity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.adridadou.ethereum.propeller.exception.EthereumApiException;
 
@@ -32,7 +33,12 @@ public class CompilationResult {
         if (json == null || json.isEmpty()) {
             throw new EthereumApiException("empty compilation result!");
         }
-        return new ObjectMapper().readValue(json, CompilationResult.class);
+        try {
+            return new ObjectMapper().readValue(json, CompilationResult.class);
+        } catch (JsonParseException ex) {
+            throw new EthereumApiException(json);
+        }
+
 
     }
 

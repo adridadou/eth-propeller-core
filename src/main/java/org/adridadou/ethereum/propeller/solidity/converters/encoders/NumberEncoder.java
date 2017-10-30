@@ -15,7 +15,10 @@ public class NumberEncoder implements SolidityTypeEncoder {
 
     @Override
     public boolean canConvert(Class<?> type) {
-        return type.getTypeName().equals("int") || type.getTypeName().equals("long") || Number.class.isAssignableFrom(type);
+        return type.getTypeName().equals("int") ||
+                type.getTypeName().equals("long") ||
+                type.getTypeName().equals("byte") ||
+                Number.class.isAssignableFrom(type);
     }
 
     @Override

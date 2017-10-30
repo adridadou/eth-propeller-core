@@ -21,7 +21,13 @@ public class AbstractHandler<T> implements Observable.OnSubscribe<T> {
 
     public void newElement(final T param) {
         removeUnSubscribed();
-        subscribers.forEach(subscriber -> subscriber.onNext(param));
+        subscribers.forEach(subscriber -> {
+            try {
+                subscriber.onNext(param);
+            } catch (Throwable ex) {
+                /*Do nothing. We want to continue so we don't call onError. Should log the error somewhere*/
+            }
+        });
     }
 
     @Override

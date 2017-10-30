@@ -2,13 +2,14 @@ package org.adridadou.ethereum.propeller.values;
 
 import org.spongycastle.util.encoders.Hex;
 
+import java.io.Serializable;
 import java.util.Arrays;
 
 /**
  * Created by davidroon on 19.04.16.
  * This code is released under Apache 2 license
  */
-public final class EthHash {
+public final class EthHash implements Serializable {
     public final byte[] data;
 
     private EthHash(byte[] data) {

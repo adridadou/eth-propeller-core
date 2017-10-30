@@ -10,9 +10,10 @@ import org.ethereum.core.Transaction;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.blockchain.StandaloneBlockchain;
+import org.ethereum.vm.LogInfo;
 
 import java.math.BigInteger;
-import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -29,6 +30,7 @@ public class EthereumTest implements EthereumBackend {
     private final TestConfig testConfig;
     private final BlockingQueue<Transaction> transactions = new ArrayBlockingQueue<>(100);
     private final LocalExecutionService localExecutionService;
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
     public EthereumTest(TestConfig testConfig) {
         this.blockchain = new StandaloneBlockchain();
@@ -41,14 +43,14 @@ public class EthereumTest implements EthereumBackend {
         testConfig.getBalances().forEach((key, value) -> blockchain.withAccountBalance(key.getAddress().address, value.inWei()));
 
         localExecutionService = new LocalExecutionService(blockchain.getBlockchain());
-        ExecutorService executor = Executors.newSingleThreadExecutor();
+
         executor.submit(() -> {
             try {
                 while (true) {
                     blockchain.submitTransaction(transactions.take());
                     blockchain.createBlock();
                 }
-            } catch (InterruptedException e) {
+            } catch (Throwable e) {
                 throw new EthereumApiException("error while polling transactions for test env", e);
             }
         });
@@ -100,13 +102,13 @@ public class EthereumTest implements EthereumBackend {
     }
 
     @Override
-    public BlockInfo getBlock(long blockNumber) {
-        return toBlockInfo(blockchain.getBlockchain().getBlockByNumber(blockNumber));
+    public Optional<BlockInfo> getBlock(long blockNumber) {
+        return Optional.ofNullable(blockchain.getBlockchain().getBlockByNumber(blockNumber)).map(this::toBlockInfo);
     }
 
     @Override
-    public BlockInfo getBlock(EthHash blockNumber) {
-        return toBlockInfo(blockchain.getBlockchain().getBlockByHash(blockNumber.data));
+    public Optional<BlockInfo> getBlock(EthHash blockNumber) {
+        return Optional.ofNullable(blockchain.getBlockchain().getBlockByHash(blockNumber.data)).map(this::toBlockInfo);
     }
 
     @Override
@@ -130,7 +132,7 @@ public class EthereumTest implements EthereumBackend {
         return Optional.ofNullable(blockchain.getBlockchain().getTransactionInfo(hash.data)).map(info -> {
             EthHash blockHash = EthHash.of(info.getBlockHash());
             TransactionStatus status = info.isPending() ? TransactionStatus.Pending : blockHash.isEmpty() ? TransactionStatus.Unknown : TransactionStatus.Executed;
-            return new TransactionInfo(hash, EthJEventListener.toReceipt(info.getReceipt(), blockHash), status);
+            return new TransactionInfo(hash, EthJEventListener.toReceipt(info.getReceipt(), blockHash), status, blockHash);
         });
     }
 
@@ -139,10 +141,21 @@ public class EthereumTest implements EthereumBackend {
     }
 
     BlockInfo toBlockInfo(Block block) {
-        return new BlockInfo(block.getNumber(), block.getTransactionsList().stream().map(tx -> this.toReceipt(tx, EthHash.of(block.getHash()))).collect(Collectors.toList()));
+        return new BlockInfo(block.getNumber(), block.getTransactionsList().stream()
+                .map(tx -> this.toReceipt(tx, EthHash.of(block.getHash()))).collect(Collectors.toList()));
     }
 
     private TransactionReceipt toReceipt(Transaction tx, EthHash blockHash) {
-        return new TransactionReceipt(EthHash.of(tx.getHash()), blockHash, EthAddress.of(tx.getSender()), EthAddress.of(tx.getReceiveAddress()), EthAddress.empty(), "", EthData.empty(), true, Collections.emptyList());
+
+        List<LogInfo> logs = blockchain.getBlockchain().getTransactionInfo(tx.getHash()).getReceipt().getLogInfoList();
+        return new TransactionReceipt(
+                EthHash.of(tx.getHash()),
+                blockHash,
+                EthAddress.of(tx.getSender()),
+                EthAddress.of(tx.getReceiveAddress()),
+                EthAddress.empty(), "",
+                EthData.empty(),
+                true,
+                EthJEventListener.createEventInfoList(EthHash.of(tx.getHash()), logs));
     }
 }

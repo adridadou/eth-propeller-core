@@ -21,20 +21,21 @@ object SolidityConversionHelper {
     .create(new EthereumTest(TestConfig.builder()
       .balance(mainAccount, EthValue.ether(10000000))
       .build()), EthereumConfig.builder().build())
+
   val contract: SolidityContractDetails = SolidityConversionHelper.facade.compile(SoliditySourceFile.from(new File("src/test/resources/conversionContract.sol")))
     .findContract("myContract").get()
+
+  val contractAddress = facade.publishContract(contract, mainAccount).get()
 }
 
 trait SolidityConversionHelper {
 
   def contractObject[T]()(implicit tag: ClassTag[T]): T = {
-    val contractAddress = SolidityConversionHelper.facade.publishContract(SolidityConversionHelper.contract, SolidityConversionHelper.mainAccount).get()
-    SolidityConversionHelper.facade.createContractProxy(SolidityConversionHelper.contract, contractAddress, SolidityConversionHelper.mainAccount, tag.runtimeClass).asInstanceOf[T]
+    SolidityConversionHelper.facade.createContractProxy(SolidityConversionHelper.contract, SolidityConversionHelper.contractAddress, SolidityConversionHelper.mainAccount, tag.runtimeClass).asInstanceOf[T]
   }
 
   def contractObjectWithAddress[T]()(implicit tag: ClassTag[T]): (EthAddress, T) = {
-    val contractAddress = SolidityConversionHelper.facade.publishContract(SolidityConversionHelper.contract, SolidityConversionHelper.mainAccount).get()
-    val result = (contractAddress, SolidityConversionHelper.facade.createContractProxy(SolidityConversionHelper.contract, contractAddress, SolidityConversionHelper.mainAccount, tag.runtimeClass).asInstanceOf[T])
+    val result = (SolidityConversionHelper.contractAddress, SolidityConversionHelper.facade.createContractProxy(SolidityConversionHelper.contract, SolidityConversionHelper.contractAddress, SolidityConversionHelper.mainAccount, tag.runtimeClass).asInstanceOf[T])
 
     result
   }

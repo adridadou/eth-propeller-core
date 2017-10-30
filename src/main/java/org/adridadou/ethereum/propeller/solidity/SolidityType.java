@@ -21,7 +21,6 @@ public enum SolidityType {
 
     SolidityType(boolean isDynamic) {
         this.isDynamic = isDynamic;
-
     }
 
     public static Optional<SolidityType> find(String type) {

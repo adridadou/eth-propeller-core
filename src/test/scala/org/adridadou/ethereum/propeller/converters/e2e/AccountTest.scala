@@ -30,6 +30,26 @@ class AccountTest extends FlatSpec with Matchers with Checkers with SolidityConv
     assertEquals(new BigInteger("55254095649631781209224057814590225966912998986153936485890744796566334537373"), account.getBigIntPrivateKey)
   }
 
+  it should "be able to sign data properly" in {
+    val contract = contractObject[ECREcovery]
+    check(forAll(arbitrary[String])(checkSign(contract, _)))
+  }
+
+  private def checkSign(contract: ECREcovery, str: String) = {
+    val account1 = AccountProvider.fromSeed("account1")
+    val account2 = AccountProvider.fromSeed("account2")
+    val data = EthData.of(str.getBytes)
+
+    val signature = account1.sign(data)
+    signature.ecrecover(data) shouldBe account1.getAddress
+    account1.verify(signature, data) shouldBe true
+    account2.verify(signature, data) shouldBe false
+
+    signature shouldBe EthSignature.of(signature.toData)
+
+    true
+  }
+
   private def checkEncode(contractObject: AccountContract, seed: BigInt) = {
     val account = new EthAccount(seed.bigInteger)
     contractObject.addressFunc(account) shouldEqual account.getAddress
@@ -42,6 +62,12 @@ class AccountTest extends FlatSpec with Matchers with Checkers with SolidityConv
     true
   }
 
+}
+
+trait ECREcovery {
+  def recover(hash: EthData, sig: EthSignature): EthAddress
+
+  def recoverSimple(hash: EthData, v: Byte, r: BigInteger, s: BigInteger): EthAddress
 }
 
 trait AccountContract {

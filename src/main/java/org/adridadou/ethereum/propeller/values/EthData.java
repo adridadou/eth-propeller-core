@@ -1,5 +1,6 @@
 package org.adridadou.ethereum.propeller.values;
 
+import org.adridadou.ethereum.propeller.Crypto;
 import org.apache.commons.lang.ArrayUtils;
 import org.spongycastle.util.encoders.Hex;
 
@@ -13,9 +14,11 @@ import java.util.Arrays;
 public final class EthData {
     public static final int WORD_SIZE = 32;
     public final byte[] data;
+    public final int length;
 
     private EthData(byte[] data) {
         this.data = data;
+        this.length = data.length;
     }
 
     public static EthData of(BigInteger b) {
@@ -80,6 +83,10 @@ public final class EthData {
 
     public int length() {
         return data.length;
+    }
+
+    public Sha3 sha3() {
+        return new Sha3(Crypto.sha3(data));
     }
 
     public EthData word(int index) {

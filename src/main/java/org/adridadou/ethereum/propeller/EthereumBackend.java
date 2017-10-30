@@ -25,9 +25,9 @@ public interface EthereumBackend {
 
     long getCurrentBlockNumber();
 
-    BlockInfo getBlock(long blockNumber);
+    Optional<BlockInfo> getBlock(long blockNumber);
 
-    BlockInfo getBlock(EthHash blockNumber);
+    Optional<BlockInfo> getBlock(EthHash blockNumber);
 
     SmartContractByteCode getCode(EthAddress address);
 
