@@ -4,10 +4,8 @@ import java.io.File
 import java.math.BigInteger
 import java.util.concurrent.CompletableFuture
 
-import org.adridadou.ethereum.propeller.Crypto
 import org.adridadou.ethereum.propeller.keystore.AccountProvider
 import org.adridadou.ethereum.propeller.values._
-import org.ethereum.crypto.ECKey
 import org.junit.Assert.assertEquals
 import org.scalacheck.Arbitrary._
 import org.scalacheck.Prop._
@@ -41,16 +39,12 @@ class AccountTest extends FlatSpec with Matchers with Checkers with SolidityConv
     val account1 = AccountProvider.fromSeed("account1")
     val account2 = AccountProvider.fromSeed("account2")
     val data = EthData.of(str.getBytes)
-    val hash = Crypto.sha3(data)
 
     val signature = account1.sign(data)
     signature.ecrecover(data) shouldBe account1.getAddress
     account1.verify(signature, data) shouldBe true
     account2.verify(signature, data) shouldBe false
 
-    val signatureEthj = ECKey.fromPrivate(account1.getBigIntPrivateKey).sign(hash.data)
-
-    signature.toData shouldBe EthData.of(signatureEthj.toByteArray)
     signature shouldBe EthSignature.of(signature.toData)
 
     true
