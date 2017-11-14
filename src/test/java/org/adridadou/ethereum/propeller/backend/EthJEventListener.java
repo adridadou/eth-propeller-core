@@ -10,6 +10,7 @@ import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.LogInfo;
 
+import java.math.BigInteger;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -39,6 +40,7 @@ public class EthJEventListener extends EthereumListenerAdapter {
 
     static org.adridadou.ethereum.propeller.values.TransactionReceipt toReceipt(TransactionReceipt transactionReceipt, EthHash blockHash) {
         Transaction tx = transactionReceipt.getTransaction();
+        EthValue value = tx.getValue().length == 0 ? EthValue.wei(0) : EthValue.wei(new BigInteger(1, tx.getValue()));
         return new org.adridadou.ethereum.propeller.values.TransactionReceipt(
                 EthHash.of(tx.getHash()),
                 blockHash,
@@ -47,7 +49,7 @@ public class EthJEventListener extends EthereumListenerAdapter {
                 EthAddress.of(tx.getContractAddress()),
                 transactionReceipt.getError(),
                 EthData.of(transactionReceipt.getExecutionResult()),
-                transactionReceipt.isSuccessful() && transactionReceipt.isValid(), createEventInfoList(EthHash.of(tx.getHash()), transactionReceipt.getLogInfoList()));
+                transactionReceipt.isSuccessful() && transactionReceipt.isValid(), createEventInfoList(EthHash.of(tx.getHash()), transactionReceipt.getLogInfoList()), value);
     }
 
     @Override
