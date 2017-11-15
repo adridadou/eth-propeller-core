@@ -16,8 +16,9 @@ public class TransactionReceipt {
     public final EthData executionResult;
     public final boolean isSuccessful;
     public final List<EventData> events;
+    public final EthValue ethValue;
 
-    public TransactionReceipt(EthHash hash, EthHash blockHash, EthAddress sender, EthAddress receiveAddress, EthAddress contractAddress, String error, EthData executionResult, boolean isSuccessful, List<EventData> events) {
+    public TransactionReceipt(EthHash hash, EthHash blockHash, EthAddress sender, EthAddress receiveAddress, EthAddress contractAddress, String error, EthData executionResult, boolean isSuccessful, List<EventData> events, EthValue ethValue) {
         this.hash = hash;
         this.blockHash = blockHash;
         this.sender = sender;
@@ -27,5 +28,6 @@ public class TransactionReceipt {
         this.executionResult = executionResult;
         this.isSuccessful = isSuccessful;
         this.events = events;
+        this.ethValue = ethValue;
     }
 }
