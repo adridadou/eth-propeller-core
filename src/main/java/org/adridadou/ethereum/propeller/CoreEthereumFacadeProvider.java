@@ -46,6 +46,7 @@ public final class CoreEthereumFacadeProvider {
                 .addDecoder(SolidityTypeGroup.Address, new AddressDecoder())
                 .addDecoder(SolidityTypeGroup.Number, new DateDecoder())
                 .addDecoder(SolidityTypeGroup.Number, new EnumDecoder())
+                .addDecoder(SolidityTypeGroup.Number, new EthValueDecoder())
                 .addDecoder(SolidityTypeGroup.Raw, new EthDataDecoder());
     }
 

@@ -146,7 +146,7 @@ public class EthereumTest implements EthereumBackend {
     }
 
     private TransactionReceipt toReceipt(Transaction tx, EthHash blockHash) {
-
+        EthValue value = tx.getValue().length == 0 ? EthValue.wei(0) : EthValue.wei(new BigInteger(1, tx.getValue()));
         List<LogInfo> logs = blockchain.getBlockchain().getTransactionInfo(tx.getHash()).getReceipt().getLogInfoList();
         return new TransactionReceipt(
                 EthHash.of(tx.getHash()),
@@ -156,6 +156,6 @@ public class EthereumTest implements EthereumBackend {
                 EthAddress.empty(), "",
                 EthData.empty(),
                 true,
-                EthJEventListener.createEventInfoList(EthHash.of(tx.getHash()), logs));
+                EthJEventListener.createEventInfoList(EthHash.of(tx.getHash()), logs), value);
     }
 }

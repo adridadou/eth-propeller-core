@@ -193,6 +193,9 @@ class EthereumProxy {
     }
 
     private CompletableFuture<EthHash> submitTransaction(TransactionRequest request) {
+        if (futureMap.containsKey(request)) {
+            return futureMap.get(request);
+        }
         CompletableFuture<EthHash> future = new CompletableFuture<>();
         txLock.lock();
         transactions.add(request);
