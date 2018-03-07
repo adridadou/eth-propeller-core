@@ -280,6 +280,7 @@ public class EthereumFacade {
      * @param abi         The ABI
      * @param eventName   The event name
      * @param eventEntity The entity that will represent the event
+     *  @param <T>         The event entity
      * @return The solidity event definition if found
      */
     public <T> Optional<SolidityEvent<T>> findEventDefinition(EthAbi abi, String eventName, Class<T> eventEntity) {
