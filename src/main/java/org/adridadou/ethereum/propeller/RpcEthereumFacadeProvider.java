@@ -14,7 +14,7 @@ import org.web3j.protocol.http.HttpService;
  * Created by davidroon on 27.04.16.
  * This code is released under Apache 2 license
  */
-public class RpcEthereumFacadeProvider {
+final public class RpcEthereumFacadeProvider {
     public static final ChainId MAIN_CHAIN_ID = ChainId.id(0);
     public static final ChainId ROPSTEN_CHAIN_ID = ChainId.id(3);
     public static final ChainId ETHER_CAMP_CHAIN_ID = ChainId.id(161);

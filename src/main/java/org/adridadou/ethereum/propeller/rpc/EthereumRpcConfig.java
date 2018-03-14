@@ -8,7 +8,7 @@ import java.util.concurrent.TimeUnit;
  * Created by davidroon on 25.04.17.
  * This code is released under Apache 2 license
  */
-public class EthereumRpcConfig extends EthereumConfig {
+public final class EthereumRpcConfig extends EthereumConfig {
     private final boolean pollBlocks;
     private final long pollingFrequence;
 

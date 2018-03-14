@@ -74,6 +74,10 @@ public final class EthAddress {
         return "0x" + this.toString();
     }
 
+    public String normalizedWithLeading0x() {
+        return "0x" + this.normalizedString();
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {

@@ -18,7 +18,8 @@ class EthAddressTest extends FlatSpec with Matchers with Checkers {
     check(forAll(arbitrary[Array[Byte]])(checkSameAddressGenerated))
   }
 
-  private def checkSameAddressGenerated(array: Array[Byte]) = {
+  private def checkSameAddressGenerated(a: Array[Byte]) = {
+    val array: Array[Byte] = a.map(elem => Math.abs(elem).toByte)
     if (EthAddress.trimLeft(array).length > EthAddress.MAX_ADDRESS_SIZE) {
       Try(EthAddress.of(array)) match {
         case Success(_) => fail("should fail")
@@ -27,7 +28,7 @@ class EthAddressTest extends FlatSpec with Matchers with Checkers {
     } else {
       val address = EthAddress.of(array)
       address.normalizedString().length shouldEqual 40
-      address.address should contain theSameElementsAs array
+      address.address should contain theSameElementsAs EthAddress.trimLeft(array)
     }
     true
   }

@@ -112,7 +112,7 @@ public class Web3JFacade {
 
     public EthGetBalance getBalance(EthAddress address) {
         try {
-            return web3j.ethGetBalance(address.withLeading0x(), DefaultBlockParameterName.LATEST).send();
+            return web3j.ethGetBalance(address.normalizedWithLeading0x(), DefaultBlockParameterName.LATEST).send();
         } catch (IOException e) {
             throw new IOError(e);
         }
@@ -127,7 +127,7 @@ public class Web3JFacade {
 
     SmartContractByteCode getCode(EthAddress address) {
         try {
-            return SmartContractByteCode.of(web3j.ethGetCode(address.withLeading0x(), DefaultBlockParameterName.LATEST).send().getCode());
+            return SmartContractByteCode.of(web3j.ethGetCode(address.normalizedWithLeading0x(), DefaultBlockParameterName.LATEST).send().getCode());
         } catch (IOException e) {
             throw new IOError(e);
         }
