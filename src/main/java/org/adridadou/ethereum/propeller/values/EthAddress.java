@@ -57,6 +57,10 @@ public final class EthAddress {
     }
 
     public String toString() {
+        return Hex.toHexString(address);
+    }
+
+    public String normalizedString() {
         String initialValue = Hex.toHexString(address);
         int initialLength = initialValue.length();
         StringBuilder result = new StringBuilder(initialValue);

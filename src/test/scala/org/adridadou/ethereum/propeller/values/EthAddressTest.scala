@@ -25,7 +25,9 @@ class EthAddressTest extends FlatSpec with Matchers with Checkers {
         case Failure(ex) => ex.getMessage shouldEqual "byte array of the address cannot be bigger than 20.value:" + Hex.toHexString(array)
       }
     } else {
-      EthAddress.of(array).toString.length shouldEqual 40
+      val address = EthAddress.of(array)
+      address.normalizedString().length shouldEqual 40
+      address.address should contain theSameElementsAs array
     }
     true
   }

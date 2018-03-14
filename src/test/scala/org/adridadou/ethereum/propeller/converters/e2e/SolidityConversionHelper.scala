@@ -25,13 +25,18 @@ object SolidityConversionHelper {
   val contract: SolidityContractDetails = SolidityConversionHelper.facade.compile(SoliditySourceFile.from(new File("src/test/resources/conversionContract.sol")))
     .findContract("myContract").get()
 
-  val contractAddress = facade.publishContract(contract, mainAccount).get()
+  val contractAddress: EthAddress = facade.publishContract(contract, mainAccount).get()
 }
 
 trait SolidityConversionHelper {
 
   def contractObject[T]()(implicit tag: ClassTag[T]): T = {
-    SolidityConversionHelper.facade.createContractProxy(SolidityConversionHelper.contract, SolidityConversionHelper.contractAddress, SolidityConversionHelper.mainAccount, tag.runtimeClass).asInstanceOf[T]
+    SolidityConversionHelper.facade
+      .createContractProxy(
+        SolidityConversionHelper.contract,
+        SolidityConversionHelper.contractAddress,
+        SolidityConversionHelper.mainAccount,
+        tag.runtimeClass).asInstanceOf[T]
   }
 
   def contractObjectWithAddress[T]()(implicit tag: ClassTag[T]): (EthAddress, T) = {
