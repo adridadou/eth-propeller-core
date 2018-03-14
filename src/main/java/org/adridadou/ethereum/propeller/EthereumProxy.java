@@ -209,7 +209,7 @@ class EthereumProxy {
     }
 
     private CompletableFuture<CallDetails> sendTxInternal(EthValue value, EthData data, EthAccount account, EthAddress toAddress) {
-        return eventHandler.ready().thenCompose((v) -> {
+        return eventHandler.ready().thenCompose(v -> {
             GasUsage gasLimit = estimateGas(value, data, account, toAddress);
             GasPrice gasPrice = ethereum.getGasPrice();
 
