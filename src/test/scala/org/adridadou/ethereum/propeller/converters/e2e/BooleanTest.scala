@@ -10,8 +10,8 @@ import org.scalatest.{FlatSpec, Matchers}
 class BooleanTest extends FlatSpec with Matchers with Checkers with SolidityConversionHelper {
   "boolean type" should "be converted from and to boolean with the same value" in {
     val contract = contractObject[BoolContract]
-    checkEncode(contract, true)
-    checkEncode(contract, false)
+    checkEncode(contract, value = true)
+    checkEncode(contract, value = false)
   }
 
   private def checkEncode(contractObject: BoolContract, value: Boolean) = {

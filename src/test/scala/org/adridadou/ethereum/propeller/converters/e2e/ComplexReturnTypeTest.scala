@@ -20,7 +20,6 @@ class ComplexReturnTypeTest extends FlatSpec with Matchers with Checkers with So
 
   private def checkEncode(contract: ComplexReturnTypeContract, bi1: BigInt, str1: String, bi2: Boolean, str2: String) = {
     contract.complexReturnType(bi1.bigInteger, str1, bi2, str2) shouldEqual new MyReturnType(bi1.bigInteger, str1, bi2, str2)
-
     true
   }
 }
@@ -48,4 +47,7 @@ class MyReturnType(val val1: BigInteger, val val2: String, val val3: Boolean, va
     val state = Seq(val1, val2, val3, val4)
     state.map(_.hashCode()).foldLeft(0)((a, b) => 31 * a + b)
   }
+
+
+  override def toString = s"MyReturnType($val1, $val2, $val3, $val4)"
 }

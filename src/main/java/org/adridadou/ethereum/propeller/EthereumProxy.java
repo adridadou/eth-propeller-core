@@ -65,25 +65,29 @@ class EthereumProxy {
     private void processTransactions() {
         executor.submit(() -> {
             while (true) {
-                try {
-                    TransactionRequest request = transactions.take();
-                    this.processTransactionRequest(request);
-                } catch (Throwable e) {
-                    logger.warn("Interrupted error while waiting for transactions to be submitted:", e);
-                }
+                TransactionRequest request = transactions.take();
+                this.processTransactionRequest(request);
             }
         });
     }
 
     private void processTransactionRequest(TransactionRequest request) {
         Nonce nonce = getNonce(request.getAccount().getAddress());
-        EthHash hash = ethereum.submit(request, nonce);
-        increasePendingTransactionCounter(request.getAccount().getAddress(), hash);
         txLock.lock();
-        Optional.ofNullable(futureMap.get(request))
-                .ifPresent(future -> future.complete(hash));
-        futureMap.remove(request);
-        txLock.unlock();
+        try {
+            EthHash hash = ethereum.submit(request, nonce);
+            increasePendingTransactionCounter(request.getAccount().getAddress(), hash);
+            Optional.ofNullable(futureMap.get(request))
+                    .ifPresent(future -> future.complete(hash));
+            futureMap.remove(request);
+        } catch (Throwable t) {
+            logger.warn("Interrupted error while waiting for transactions to be submitted:", t);
+            Optional.ofNullable(futureMap.get(request))
+                    .ifPresent(future -> future.completeExceptionally(t));
+        } finally {
+            txLock.unlock();
+        }
+
     }
 
     EthereumProxy addVoidClass(Class<?> cls) {
@@ -205,7 +209,7 @@ class EthereumProxy {
     }
 
     private CompletableFuture<CallDetails> sendTxInternal(EthValue value, EthData data, EthAccount account, EthAddress toAddress) {
-        return eventHandler.ready().thenCompose((v) -> {
+        return eventHandler.ready().thenCompose(v -> {
             GasUsage gasLimit = estimateGas(value, data, account, toAddress);
             GasPrice gasPrice = ethereum.getGasPrice();
 
