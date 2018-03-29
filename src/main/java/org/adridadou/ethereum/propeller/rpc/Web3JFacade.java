@@ -56,7 +56,7 @@ public class Web3JFacade {
 
     BigInteger getTransactionCount(EthAddress address) {
         try {
-            return Numeric.decodeQuantity(handleError(web3j.ethGetTransactionCount(address.withLeading0x(), DefaultBlockParameterName.LATEST).send()));
+            return Numeric.decodeQuantity(handleError(web3j.ethGetTransactionCount(address.normalizedWithLeading0x(), DefaultBlockParameterName.LATEST).send()));
         } catch (IOException e) {
             throw new IOError(e);
         }
@@ -87,8 +87,8 @@ public class Web3JFacade {
 
     BigInteger estimateGas(EthAccount account, EthAddress address, EthValue value, EthData data) {
         try {
-            return Numeric.decodeQuantity(handleError(web3j.ethEstimateGas(new Transaction(account.getAddress().withLeading0x(), null, null, null,
-                    address.isEmpty() ? null : address.withLeading0x(), value.inWei(), data.toString())).send()));
+            return Numeric.decodeQuantity(handleError(web3j.ethEstimateGas(new Transaction(account.getAddress().normalizedWithLeading0x(), null, null, null,
+                    address.isEmpty() ? null : address.normalizedWithLeading0x(), value.inWei(), data.toString())).send()));
         } catch (IOException e) {
             throw new IOError(e);
         }
@@ -142,7 +142,7 @@ public class Web3JFacade {
     }
 
     RawTransaction createTransaction(Nonce nonce, GasPrice gasPrice, GasUsage gasLimit, EthAddress address, EthValue value, EthData data) {
-        return RawTransaction.createTransaction(nonce.getValue(), gasPrice.getPrice().inWei(), gasLimit.getUsage(), address.toString(), value.inWei(), data.toString());
+        return RawTransaction.createTransaction(nonce.getValue(), gasPrice.getPrice().inWei(), gasLimit.getUsage(), address.normalizedString(), value.inWei(), data.toString());
     }
 
     TransactionReceipt getReceipt(EthHash hash) {

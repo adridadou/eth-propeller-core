@@ -39,9 +39,9 @@ public final class CastUtil<T> {
         return this;
     }
 
-    public T matches(Class<? extends T> resultcls) {
-        return Optional.ofNullable(classes.get(resultcls))
-                .orElseGet(() -> Optional.ofNullable(classNames.get(resultcls.getTypeName()))
+    public T matches(Class<? extends T> resultCls) {
+        return Optional.ofNullable(classes.get(resultCls))
+                .orElseGet(() -> Optional.ofNullable(classNames.get(resultCls.getTypeName()))
                         .orElseThrow(() -> new EthereumApiException(errorMessage))).get();
     }
 }

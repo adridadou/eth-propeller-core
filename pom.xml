@@ -122,19 +122,19 @@
         <dependency>
             <groupId>org.web3j</groupId>
             <artifactId>core</artifactId>
-            <version>3.3.1</version>
+            <version>3.3.2-SNAPSHOT</version>
         </dependency>
 
         <dependency>
             <groupId>org.web3j</groupId>
             <artifactId>crypto</artifactId>
-            <version>3.3.1</version>
+            <version>3.3.2-SNAPSHOT</version>
         </dependency>
 
         <dependency>
             <groupId>org.web3j</groupId>
             <artifactId>utils</artifactId>
-            <version>3.3.1</version>
+            <version>3.3.2-SNAPSHOT</version>
         </dependency>
 
         <dependency>
@@ -163,9 +163,9 @@
         </dependency>
 
         <dependency>
-            <groupId>org.adridadou</groupId>
-            <artifactId>ethereumj</artifactId>
-            <version>1.5.1</version>
+            <groupId>org.ethereum</groupId>
+            <artifactId>ethereumj-core</artifactId>
+            <version>1.7.0-RELEASE</version>
             <scope>test</scope>
         </dependency>
 

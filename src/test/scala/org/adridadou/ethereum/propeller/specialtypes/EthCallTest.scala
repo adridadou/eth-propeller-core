@@ -23,10 +23,8 @@ class EthCallTest extends FlatSpec with Matchers with Checkers with SolidityConv
     val account = new EthAccount(seed.bigInteger)
     contractObject.addressFunc(account.getAddress).getResult.get() shouldEqual account.getAddress
 
-
     true
   }
-
 }
 
 trait EthCallContract {

@@ -80,6 +80,10 @@ contract myContract {
         return ecrecover(hash, v, bytes32(r), bytes32(s));
     }
 
+    function lstFunc(uint[] arr) public pure returns (uint[]) {
+        return arr;
+    }
+
     function recover(bytes32 hash, bytes sig) public pure returns (address) {
         bytes32 r;
         bytes32 s;

@@ -16,7 +16,12 @@ import static org.adridadou.ethereum.propeller.values.EthData.WORD_SIZE;
  * This code is released under Apache 2 license
  */
 public class SignatureDecoder extends CollectionDecoder {
+
     private final NumberDecoder decoder = new NumberDecoder();
+
+    public SignatureDecoder(List<SolidityTypeDecoder> decoders) {
+        super(decoders);
+    }
 
     public SignatureDecoder(List<SolidityTypeDecoder> decoders, Integer size) {
         super(decoders, size);

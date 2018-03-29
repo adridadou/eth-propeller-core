@@ -12,6 +12,10 @@ import java.util.List;
  */
 public class ArrayDecoder extends CollectionDecoder {
 
+    public ArrayDecoder(List<SolidityTypeDecoder> decoders) {
+        super(decoders);
+    }
+
     public ArrayDecoder(List<SolidityTypeDecoder> decoders, Integer size) {
         super(decoders, size);
     }

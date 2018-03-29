@@ -15,6 +15,10 @@ import java.util.Set;
  */
 public class SetDecoder extends CollectionDecoder {
 
+    public SetDecoder(List<SolidityTypeDecoder> decoders) {
+        super(decoders);
+    }
+
     public SetDecoder(List<SolidityTypeDecoder> decoders, Integer size) {
         super(decoders, size);
     }

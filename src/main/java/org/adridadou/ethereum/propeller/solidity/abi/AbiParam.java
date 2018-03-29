@@ -50,7 +50,7 @@ public class AbiParam {
     }
 
     public Integer getArraySize() {
-        if (!isArray()) {
+        if (!isArray() || isDynamic()) {
             return 0;
         }
         int startIndex = type.indexOf("[");
