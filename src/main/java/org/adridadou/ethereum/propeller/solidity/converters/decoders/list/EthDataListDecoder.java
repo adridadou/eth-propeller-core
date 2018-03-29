@@ -18,6 +18,10 @@ public class EthDataListDecoder extends CollectionDecoder {
 
     private final NumberDecoder decoder = new NumberDecoder();
 
+    public EthDataListDecoder(List<SolidityTypeDecoder> decoders) {
+        super(decoders);
+    }
+
     public EthDataListDecoder(List<SolidityTypeDecoder> decoders, Integer size) {
         super(decoders, size);
     }

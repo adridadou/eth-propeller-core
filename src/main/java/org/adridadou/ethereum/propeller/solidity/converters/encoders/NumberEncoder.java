@@ -32,7 +32,7 @@ public class NumberEncoder implements SolidityTypeEncoder {
             } else if (arg instanceof BigDecimal) {
                 return encode(((BigDecimal) arg).toBigInteger(), solidityType);
             } else if (((Number) arg).longValue() < 0) {
-                throw new EthereumApiException("unsigned type cannot encode negative values");
+                throw new EthereumApiException("unsigned type cannot encode negative values." + ((Number) arg).longValue());
             }
         }
         if (arg instanceof BigInteger) {

@@ -357,9 +357,12 @@ class EthereumProxy {
         if (abiParam.isArray() || type.equals(SolidityType.BYTES)) {
             return listDecoders.stream().map(cls -> {
                 try {
+                    if (abiParam.isDynamic()) {
+                        return cls.getConstructor(List.class).newInstance(decoders.get(typeGroup));
+                    }
                     return cls.getConstructor(List.class, Integer.class).newInstance(decoders.get(typeGroup), abiParam.getArraySize());
                 } catch (InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
-                    throw new EthereumApiException("error while creating a List decoder");
+                    throw new EthereumApiException("error while creating a List decoder", e);
                 }
             }).collect(Collectors.toList());
         }
