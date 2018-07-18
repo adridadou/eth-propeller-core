@@ -153,7 +153,9 @@ public class EthereumTest implements EthereumBackend {
                 blockHash,
                 EthAddress.of(tx.getSender()),
                 EthAddress.of(tx.getReceiveAddress()),
-                EthAddress.empty(), "",
+                EthAddress.empty(),
+                EthData.of(tx.getData()),
+                "",
                 EthData.empty(),
                 true,
                 EthJEventListener.createEventInfoList(EthHash.of(tx.getHash()), logs), value);

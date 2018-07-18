@@ -5,7 +5,7 @@ contract ContractConstructor {
 
     string public value;
 
-    function ContractConstructor (string _value) public {
+    constructor (string _value) public {
         value = _value;
     }
 }

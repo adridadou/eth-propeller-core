@@ -12,18 +12,20 @@ public class TransactionReceipt {
     public final EthAddress sender;
     public final EthAddress receiveAddress;
     public final EthAddress contractAddress;
+    public final EthData callData;
     public final String error;
     public final EthData executionResult;
     public final boolean isSuccessful;
     public final List<EventData> events;
     public final EthValue ethValue;
 
-    public TransactionReceipt(EthHash hash, EthHash blockHash, EthAddress sender, EthAddress receiveAddress, EthAddress contractAddress, String error, EthData executionResult, boolean isSuccessful, List<EventData> events, EthValue ethValue) {
+    public TransactionReceipt(EthHash hash, EthHash blockHash, EthAddress sender, EthAddress receiveAddress, EthAddress contractAddress, EthData callData, String error, EthData executionResult, boolean isSuccessful, List<EventData> events, EthValue ethValue) {
         this.hash = hash;
         this.blockHash = blockHash;
         this.sender = sender;
         this.receiveAddress = receiveAddress;
         this.contractAddress = contractAddress;
+        this.callData = callData;
         this.error = error;
         this.executionResult = executionResult;
         this.isSuccessful = isSuccessful;
