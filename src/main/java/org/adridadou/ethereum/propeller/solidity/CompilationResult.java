@@ -32,6 +32,6 @@ public interface CompilationResult {
 
     }
 
-    Optional<? extends SolidityContractDetails> findContract(final String name);
+    Optional<? extends SolidityContractDetails> findContract(String name);
     Collection<? extends SolidityContractDetails> getContracts() ;
 }
