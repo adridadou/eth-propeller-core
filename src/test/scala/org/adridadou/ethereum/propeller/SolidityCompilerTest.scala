@@ -1,11 +1,13 @@
 package org.adridadou.ethereum.propeller
 
-import java.io.File
+import java.io.{File, FileInputStream}
+import java.nio.charset.StandardCharsets
 
 import junit.framework.TestCase.{assertEquals, assertTrue}
 import org.adridadou.ethereum.propeller.exception.EthereumApiException
-import org.adridadou.ethereum.propeller.solidity.SolidityCompiler
+import org.adridadou.ethereum.propeller.solidity.{CompilationResult, SolidityCompiler}
 import org.adridadou.ethereum.propeller.values.SoliditySource
+import org.apache.commons.io.IOUtils
 import org.scalatest.check.Checkers
 import org.scalatest.{FlatSpec, Matchers}
 
@@ -24,14 +26,20 @@ class SolidityCompilerTest extends FlatSpec with Matchers with Checkers {
   it should "compile a smart contract from a single file" in {
     val result = solidityCompiler.compileSrc(SoliditySource.from(new File("src/test/resources/contract2.sol")))
     val details = result.findContract("myContract2").orElseThrow(() => new EthereumApiException("myContract2 not found"))
-    val entries = details.parseAbi
+    val entries = details.getAbi
     assertEquals(6, entries.size)
   }
 
   it should "compile a smart contract from multiple files with import" in {
     val result = solidityCompiler.compileSrc(SoliditySource.from(new File("src/test/resources/c1.sol")))
     val details = result.findContract("c1").orElseThrow(() => new EthereumApiException("c1 not found"))
-    val entries = details.parseAbi
+    val entries = details.getAbi
     assertEquals(3, entries.size)
+  }
+
+  it should "parse the result from truffle too" in {
+    val result = CompilationResult.parse(IOUtils.toString(new FileInputStream("src/test/resources/SmartToken.json"), StandardCharsets.UTF_8))
+    val contract = result.findContract("default").orElseThrow(() => new EthereumApiException("default contract not found!"))
+    contract.getAbi()
   }
 }

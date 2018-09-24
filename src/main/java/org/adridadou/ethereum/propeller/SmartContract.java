@@ -38,14 +38,14 @@ public class SmartContract {
     }
 
     public List<SolidityFunction> getFunctions() {
-        return contract.parseAbi().stream()
+        return contract.getAbi().stream()
                 .filter(entry -> "function".equals(entry.getType()))
                 .map(this::buildFunction)
                 .collect(Collectors.toList());
     }
 
     public List<SolidityFunction> getConstructors() {
-        return contract.parseAbi().stream()
+        return contract.getAbi().stream()
                 .filter(entry -> "constructor".equals(entry.getType()))
                 .map(this::buildFunction)
                 .collect(Collectors.toList());

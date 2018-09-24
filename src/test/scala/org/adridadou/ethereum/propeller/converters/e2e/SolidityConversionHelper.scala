@@ -9,6 +9,7 @@ import org.adridadou.ethereum.propeller.values.{EthAccount, EthAddress, EthValue
 import org.adridadou.ethereum.propeller.{CoreEthereumFacadeProvider, EthereumConfig, EthereumFacade}
 
 import scala.reflect.ClassTag
+import scala.util.{Failure, Success, Try}
 
 /**
   * Created by davidroon on 13.04.17.
@@ -31,12 +32,17 @@ object SolidityConversionHelper {
 trait SolidityConversionHelper {
 
   def contractObject[T]()(implicit tag: ClassTag[T]): T = {
-    SolidityConversionHelper.facade
+    Try(SolidityConversionHelper.facade
       .createContractProxy(
         SolidityConversionHelper.contract,
         SolidityConversionHelper.contractAddress,
         SolidityConversionHelper.mainAccount,
-        tag.runtimeClass).asInstanceOf[T]
+        tag.runtimeClass).asInstanceOf[T]) match {
+      case Success(result) => result
+      case Failure(ex) =>
+        ex.printStackTrace()
+        throw ex
+    }
   }
 
   def contractObjectWithAddress[T]()(implicit tag: ClassTag[T]): (EthAddress, T) = {

@@ -30,20 +30,22 @@ public class AbiEntry {
     private final Boolean payable;
     private final String stateMutability;
     private final String name;
+    private final String signature;
     private final List<AbiParam> inputs;
     private final List<AbiParam> outputs;
     private final String type;
 
     public AbiEntry() {
-        this(null, null, null, null, null, null, null, null);
+        this(null, null, null, null, null, null, null, null, null);
     }
 
-    private AbiEntry(Boolean anonymous, Boolean constant, Boolean payable, String stateMutability, String name, List<AbiParam> inputs, List<AbiParam> outputs, String type) {
+    private AbiEntry(Boolean anonymous, Boolean constant, Boolean payable, String stateMutability, String name, String signature, List<AbiParam> inputs, List<AbiParam> outputs, String type) {
         this.anonymous = anonymous;
         this.constant = constant;
         this.payable = payable;
         this.stateMutability = stateMutability;
         this.name = name;
+        this.signature = signature;
         this.inputs = inputs;
         this.outputs = outputs;
         this.type = type;
@@ -51,8 +53,7 @@ public class AbiEntry {
 
     public static List<AbiEntry> parse(final String json) {
         try {
-            return new ObjectMapper().readValue(json, new TypeReference<List<AbiEntry>>() {
-            });
+            return new ObjectMapper().readValue(json, new TypeReference<List<AbiEntry>>() {});
         } catch (IOException e) {
             throw new EthereumApiException("error while deserialising ABI", e);
         }
@@ -76,6 +77,10 @@ public class AbiEntry {
 
     public String getName() {
         return name;
+    }
+
+    public String getSignature() {
+        return signature;
     }
 
     public List<AbiParam> getInputs() {

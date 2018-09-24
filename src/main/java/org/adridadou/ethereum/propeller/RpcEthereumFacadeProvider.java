@@ -17,7 +17,6 @@ import org.web3j.protocol.http.HttpService;
 public final class RpcEthereumFacadeProvider {
     public static final ChainId MAIN_CHAIN_ID = ChainId.id(0);
     public static final ChainId ROPSTEN_CHAIN_ID = ChainId.id(3);
-    public static final ChainId ETHER_CAMP_CHAIN_ID = ChainId.id(161);
     public static final ChainId KOVAN_CHAIN_ID = ChainId.id(42);
     public static final ChainId RINKEBY_CHAIN_ID = ChainId.id(4);
 
@@ -55,19 +54,19 @@ public final class RpcEthereumFacadeProvider {
         }
 
         public EthereumFacade createMain() {
-            return forRemoteNode("https://mainnet.infura.io/" + key.key, RpcEthereumFacadeProvider.MAIN_CHAIN_ID, config);
+            return forRemoteNode("https://rinkeby.infura.io/v3/" + key.key, RpcEthereumFacadeProvider.MAIN_CHAIN_ID, config);
         }
 
         public EthereumFacade createRopsten() {
-            return forRemoteNode("https://ropsten.infura.io/" + key.key, RpcEthereumFacadeProvider.ROPSTEN_CHAIN_ID, config);
+            return forRemoteNode("https://ropsten.infura.io/v3/" + key.key, RpcEthereumFacadeProvider.ROPSTEN_CHAIN_ID, config);
         }
 
         public EthereumFacade createKovan() {
-            return forRemoteNode("https://kovan.infura.io/" + key.key, RpcEthereumFacadeProvider.KOVAN_CHAIN_ID, config);
+            return forRemoteNode("https://kovan.infura.io/v3/" + key.key, RpcEthereumFacadeProvider.KOVAN_CHAIN_ID, config);
         }
 
         public EthereumFacade createRinkeby() {
-            return forRemoteNode("https://rinkeby.infura.io/" + key.key, RpcEthereumFacadeProvider.RINKEBY_CHAIN_ID, config);
+            return forRemoteNode("https://rinkeby.infura.io/v3/" + key.key, RpcEthereumFacadeProvider.RINKEBY_CHAIN_ID, config);
         }
     }
 }

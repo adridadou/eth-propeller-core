@@ -88,7 +88,7 @@ public class EthereumFacade {
     }
 
     public SmartContract createSmartContract(EthAbi abi, EthAddress address, EthAccount account) {
-        return createSmartContract(new SolidityContractDetails(abi.getAbi(), null, null), address, account);
+        return createSmartContract(new SolcSolidityContractDetails(abi.getAbi(), null, null), address, account);
     }
 
     /**
@@ -102,7 +102,7 @@ public class EthereumFacade {
      */
     public <T> T createContractProxy(EthAbi abi, EthAddress address, EthAccount account, Class<T> contractInterface) {
         T proxy = (T) newProxyInstance(contractInterface.getClassLoader(), new Class[]{contractInterface}, handler);
-        handler.register(proxy, contractInterface, new SolidityContractDetails(abi.getAbi(), null, null), address, account);
+        handler.register(proxy, contractInterface, new SolcSolidityContractDetails(abi.getAbi(), null, null), address, account);
         return proxy;
     }
 
@@ -260,7 +260,7 @@ public class EthereumFacade {
      * @return The solidity event definition if found
      */
     public <T> Optional<SolidityEvent<T>> findEventDefinition(SolidityContractDetails contract, String eventName, Class<T> eventEntity) {
-        return contract.parseAbi().stream()
+        return contract.getAbi().stream()
                 .filter(entry -> entry.getType().equals("event"))
                 .filter(entry -> entry.getName().equals(eventName))
                 .filter(entry -> {
@@ -284,7 +284,7 @@ public class EthereumFacade {
      * @return The solidity event definition if found
      */
     public <T> Optional<SolidityEvent<T>> findEventDefinition(EthAbi abi, String eventName, Class<T> eventEntity) {
-        return findEventDefinition(new SolidityContractDetails(abi.getAbi(), "", ""), eventName, eventEntity);
+        return findEventDefinition(new SolcSolidityContractDetails(abi.getAbi(), "", ""), eventName, eventEntity);
     }
 
     /**
@@ -451,6 +451,6 @@ public class EthereumFacade {
     private SolidityContractDetails getDetails(final EthAddress address) {
         SmartContractByteCode code = ethereumProxy.getCode(address);
         SmartContractMetadata metadata = getMetadata(code.getMetadaLink().orElseThrow(() -> new EthereumApiException("no metadata link found for smart contract on address " + address.toString())));
-        return new SolidityContractDetails(metadata.getAbi(), "", "");
+        return new SolcSolidityContractDetails(metadata.getAbi(), "", "");
     }
 }
