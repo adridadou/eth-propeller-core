@@ -37,7 +37,7 @@ public final class RpcEthereumFacadeProvider {
     }
 
     public static InfuraBuilder forInfura(final InfuraKey key) {
-        return new InfuraBuilder(key, EthereumRpcConfig.builder().build());
+        return new InfuraBuilder(key, EthereumRpcConfig.builder().pollBlocks(true).build());
     }
 
     public static InfuraBuilder forInfura(final InfuraKey key, EthereumRpcConfig config) {
