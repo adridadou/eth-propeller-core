@@ -6,6 +6,8 @@ import org.scalacheck.Prop._
 import org.scalatest.check.Checkers
 import org.scalatest.{Matchers, _}
 
+import scala.util.{Failure, Success, Try}
+
 /**
   * Created by davidroon on 26.03.17.
   * This code is released under Apache 2 license
@@ -17,13 +19,23 @@ class EthAccountTest extends FlatSpec with Matchers with Checkers {
   }
 
   private def checkSameAddressGenerated(seed: BigInt) = {
-    val ethjVersion = ECKey.fromPrivate(seed.bigInteger)
-    val propellerVersion = new EthAccount(seed.bigInteger)
-    val ethjAddress = EthAddress.of(ethjVersion.getAddress)
+    if(seed === 0 ){
+      Try(ECKey.fromPrivate(seed.bigInteger)) match {
+        case Success(_) =>
+          throw new RuntimeException("it should not be possible to create a private key from int 0")
+        case Failure(ex) =>
+          ex.getMessage shouldEqual ""
+          true
+      }
+    } else {
+      val ethjVersion = ECKey.fromPrivate(seed.bigInteger)
+      val propellerVersion = new EthAccount(seed.bigInteger)
+      val ethjAddress = EthAddress.of(ethjVersion.getAddress)
 
-    ethjVersion.getPubKeyPoint shouldEqual propellerVersion.getPublicKey
-    ethjAddress shouldEqual propellerVersion.getAddress
-    true
+      ethjVersion.getPubKeyPoint shouldEqual propellerVersion.getPublicKey
+      ethjAddress shouldEqual propellerVersion.getAddress
+      true
+    }
   }
 
 }
