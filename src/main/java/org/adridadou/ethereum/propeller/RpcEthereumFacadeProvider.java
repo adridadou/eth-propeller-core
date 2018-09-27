@@ -6,8 +6,14 @@ import org.adridadou.ethereum.propeller.rpc.EthereumRpcConfig;
 import org.adridadou.ethereum.propeller.rpc.Web3JFacade;
 import org.adridadou.ethereum.propeller.values.ChainId;
 import org.adridadou.ethereum.propeller.values.config.InfuraKey;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.web3j.protocol.Web3j;
+import org.web3j.protocol.Web3jService;
 import org.web3j.protocol.http.HttpService;
+import org.web3j.protocol.websocket.WebSocketService;
+
+import java.net.ConnectException;
 
 
 /**
@@ -15,6 +21,8 @@ import org.web3j.protocol.http.HttpService;
  * This code is released under Apache 2 license
  */
 public final class RpcEthereumFacadeProvider {
+    private static final Logger logger = LoggerFactory.getLogger(RpcEthereumFacadeProvider.class);
+
     public static final ChainId MAIN_CHAIN_ID = ChainId.id(0);
     public static final ChainId ROPSTEN_CHAIN_ID = ChainId.id(3);
     public static final ChainId KOVAN_CHAIN_ID = ChainId.id(42);
@@ -28,7 +36,11 @@ public final class RpcEthereumFacadeProvider {
     }
 
     public static EthereumFacade forRemoteNode(final String url, final ChainId chainId, EthereumRpcConfig config) {
-        Web3j w3j = Web3j.build(new HttpService(url));
+        return forRemoteNode(new HttpService(url), chainId, config);
+    }
+
+    private static EthereumFacade forRemoteNode(Web3jService web3jService, final ChainId chainId, EthereumRpcConfig config) {
+        Web3j w3j = Web3j.build(web3jService);
         Web3JFacade web3j = new Web3JFacade(w3j);
         EthereumRpc ethRpc = new EthereumRpc(web3j, chainId, config);
         EthereumEventHandler eventHandler = new EthereumEventHandler();
@@ -46,7 +58,7 @@ public final class RpcEthereumFacadeProvider {
 
     public static class InfuraBuilder {
         private final InfuraKey key;
-        private final EthereumRpcConfig config;
+        private EthereumRpcConfig config;
 
         public InfuraBuilder(InfuraKey key, EthereumRpcConfig config) {
             this.key = key;
@@ -54,19 +66,33 @@ public final class RpcEthereumFacadeProvider {
         }
 
         public EthereumFacade createMain() {
-            return forRemoteNode("https://rinkeby.infura.io/v3/" + key.key, RpcEthereumFacadeProvider.MAIN_CHAIN_ID, config);
+            return forRemoteNode(createW3JService("mainnet.infura.io"), RpcEthereumFacadeProvider.MAIN_CHAIN_ID, config);
         }
 
         public EthereumFacade createRopsten() {
-            return forRemoteNode("https://ropsten.infura.io/v3/" + key.key, RpcEthereumFacadeProvider.ROPSTEN_CHAIN_ID, config);
+            return forRemoteNode(createW3JService("ropsten.infura.io"), RpcEthereumFacadeProvider.ROPSTEN_CHAIN_ID, config);
         }
 
         public EthereumFacade createKovan() {
-            return forRemoteNode("https://kovan.infura.io/v3/" + key.key, RpcEthereumFacadeProvider.KOVAN_CHAIN_ID, config);
+            return forRemoteNode(createW3JService("kovan.infura.io"), RpcEthereumFacadeProvider.KOVAN_CHAIN_ID, config);
         }
 
         public EthereumFacade createRinkeby() {
-            return forRemoteNode("https://rinkeby.infura.io/v3/" + key.key, RpcEthereumFacadeProvider.RINKEBY_CHAIN_ID, config);
+            return forRemoteNode(createW3JService("rinkeby.infura.io"), RpcEthereumFacadeProvider.RINKEBY_CHAIN_ID, config);
+        }
+
+        private Web3jService createW3JService(String url) {
+            if (!config.isPollBlocks()) {
+                try {
+                    WebSocketService webSocketService = new WebSocketService("wss://" + url + "/ws", true);
+                    webSocketService.connect();
+                    return webSocketService;
+                } catch (ConnectException ex) {
+                    logger.error("Unable to connect to Infura websocket", ex);
+                    config = EthereumRpcConfig.builder().pollBlocks(true).build();
+                }
+            }
+            return new HttpService("https://" + url + "/v3/" + key.key);
         }
     }
 }
