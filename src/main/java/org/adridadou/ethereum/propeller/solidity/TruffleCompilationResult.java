@@ -9,6 +9,10 @@ public class TruffleCompilationResult implements CompilationResult {
 
   private final TruffleSolidityContractDetails contractDetails;
 
+  public TruffleCompilationResult() {
+    this(null);
+  }
+
   public TruffleCompilationResult(TruffleSolidityContractDetails contractDetails) {
     this.contractDetails = contractDetails;
   }
