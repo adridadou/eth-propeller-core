@@ -1,5 +1,6 @@
 package org.adridadou.ethereum.propeller.values
 
+import org.adridadou.ethereum.propeller.keystore.AccountProvider
 import org.ethereum.crypto.ECKey
 import org.scalacheck.Arbitrary._
 import org.scalacheck.Prop._
@@ -18,8 +19,16 @@ class EthAccountTest extends FlatSpec with Matchers with Checkers {
     check(forAll(arbitrary[BigInt])(checkSameAddressGenerated))
   }
 
+  it should "be able to generate and then recover from a random account" in {
+    val account = AccountProvider.random()
+    val data = account.getDataPrivateKey
+    val account2 = AccountProvider.fromPrivateKey(data)
+
+    account.getAddress shouldEqual account2.getAddress
+  }
+
   private def checkSameAddressGenerated(seed: BigInt) = {
-    if(seed.toInt === 0 ){
+    if(seed === 0 ){
       Try(ECKey.fromPrivate(seed.bigInteger)) match {
         case Success(_) =>
           throw new RuntimeException("it should not be possible to create a private key from int 0")

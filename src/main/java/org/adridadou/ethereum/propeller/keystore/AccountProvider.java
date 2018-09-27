@@ -3,6 +3,7 @@ package org.adridadou.ethereum.propeller.keystore;
 import org.adridadou.ethereum.propeller.EthereumFacade;
 import org.adridadou.ethereum.propeller.exception.EthereumApiException;
 import org.adridadou.ethereum.propeller.values.EthAccount;
+import org.adridadou.ethereum.propeller.values.EthData;
 import org.spongycastle.crypto.digests.SHA3Digest;
 import org.spongycastle.jcajce.provider.asymmetric.ec.BCECPrivateKey;
 import org.spongycastle.jce.provider.BouncyCastleProvider;
@@ -31,6 +32,10 @@ public final class AccountProvider {
     }
 
     private AccountProvider() {
+    }
+
+    public static EthAccount fromPrivateKey(final EthData privateKey) {
+        return fromPrivateKey(privateKey.data);
     }
 
     public static EthAccount fromPrivateKey(final byte[] privateKey) {
