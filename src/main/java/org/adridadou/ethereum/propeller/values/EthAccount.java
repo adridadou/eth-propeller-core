@@ -2,6 +2,8 @@ package org.adridadou.ethereum.propeller.values;
 
 import org.adridadou.ethereum.propeller.Crypto;
 import org.adridadou.ethereum.propeller.exception.EthereumApiException;
+import org.adridadou.ethereum.propeller.solidity.SolidityType;
+import org.adridadou.ethereum.propeller.solidity.converters.encoders.NumberEncoder;
 import org.spongycastle.asn1.sec.SECNamedCurves;
 import org.spongycastle.asn1.x9.X9ECParameters;
 import org.spongycastle.crypto.digests.SHA256Digest;
@@ -35,6 +37,7 @@ public class EthAccount {
     static final ECCurve.Fp CURVE;
     private static final KeyFactory keyFactory;
     private static final ECParameterSpec CURVE_SPEC;
+    private static final NumberEncoder numberEncoder = new NumberEncoder();
 
     static {
         try {
@@ -69,6 +72,10 @@ public class EthAccount {
 
     public BigInteger getBigIntPrivateKey() {
         return bigIntPrivateKey;
+    }
+
+    public EthData getDataPrivateKey() {
+        return numberEncoder.encode(bigIntPrivateKey, SolidityType.UINT);
     }
 
     public boolean verify(EthSignature signature, EthData data) {

@@ -71,7 +71,7 @@ public class Web3JFacade {
             while (true) {
                 try {
                     BigInteger currentBlockNumber = web3j.ethBlockNumber().send().getBlockNumber();
-                    while (this.lastBlockNumber.equals(BigInteger.ZERO) || currentBlockNumber.compareTo(this.lastBlockNumber) < 0) {
+                    while (this.lastBlockNumber.equals(BigInteger.ZERO) || currentBlockNumber.compareTo(this.lastBlockNumber) > 0) {
                         EthBlock currentBlock = web3j.ethGetBlockByNumber(DefaultBlockParameter.valueOf(this.lastBlockNumber.add(BigInteger.ONE)), true).send();
                         this.lastBlockNumber = currentBlockNumber;
                         blockEventHandler.newElement(currentBlock);
