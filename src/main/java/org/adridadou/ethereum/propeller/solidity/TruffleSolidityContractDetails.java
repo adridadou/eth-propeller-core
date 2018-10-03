@@ -1,10 +1,10 @@
 package org.adridadou.ethereum.propeller.solidity;
 
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.adridadou.ethereum.propeller.solidity.abi.AbiEntry;
 import org.adridadou.ethereum.propeller.values.EthData;
-
-import java.util.List;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class TruffleSolidityContractDetails implements SolidityContractDetails {
@@ -36,5 +36,9 @@ public class TruffleSolidityContractDetails implements SolidityContractDetails {
   @Override
   public EthData getBinary() {
     return EthData.of(bytecode);
+  }
+
+  public String getBytecode() {
+    return bytecode;
   }
 }
