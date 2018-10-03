@@ -1,7 +1,21 @@
 package org.adridadou.ethereum.propeller.rpc;
 
+import java.io.IOError;
+import java.io.IOException;
+import java.math.BigInteger;
+import java.util.Optional;
+import java.util.concurrent.Executors;
+
 import org.adridadou.ethereum.propeller.exception.EthereumApiException;
-import org.adridadou.ethereum.propeller.values.*;
+import org.adridadou.ethereum.propeller.values.EthAccount;
+import org.adridadou.ethereum.propeller.values.EthAddress;
+import org.adridadou.ethereum.propeller.values.EthData;
+import org.adridadou.ethereum.propeller.values.EthHash;
+import org.adridadou.ethereum.propeller.values.EthValue;
+import org.adridadou.ethereum.propeller.values.GasPrice;
+import org.adridadou.ethereum.propeller.values.GasUsage;
+import org.adridadou.ethereum.propeller.values.Nonce;
+import org.adridadou.ethereum.propeller.values.SmartContractByteCode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.web3j.crypto.RawTransaction;
@@ -16,12 +30,6 @@ import org.web3j.protocol.core.methods.response.EthGetBalance;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.utils.Numeric;
 import rx.Observable;
-
-import java.io.IOError;
-import java.io.IOException;
-import java.math.BigInteger;
-import java.util.Optional;
-import java.util.concurrent.Executors;
 
 /**
  * Created by davidroon on 19.11.16.
@@ -142,7 +150,7 @@ public class Web3JFacade {
     }
 
     RawTransaction createTransaction(Nonce nonce, GasPrice gasPrice, GasUsage gasLimit, EthAddress address, EthValue value, EthData data) {
-        return RawTransaction.createTransaction(nonce.getValue(), gasPrice.getPrice().inWei(), gasLimit.getUsage(), address.normalizedString(), value.inWei(), data.toString());
+        return RawTransaction.createTransaction(nonce.getValue(), gasPrice.getPrice().inWei(), gasLimit.getUsage(), address.toString(), value.inWei(), data.toString());
     }
 
     TransactionReceipt getReceipt(EthHash hash) {
