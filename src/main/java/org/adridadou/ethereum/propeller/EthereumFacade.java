@@ -204,10 +204,8 @@ public class EthereumFacade {
      * @param value The value to send
      * @return The future execution result
      */
-    public CompletableFuture<EthExecutionResult> sendEther(EthAccount fromAccount, EthAddress to, EthValue value) {
-        return ethereumProxy.sendTx(value, EthData.empty(), fromAccount, to)
-                .thenCompose(CallDetails::getResult)
-                .thenApply(result -> new EthExecutionResult(result.executionResult));
+    public CompletableFuture<CallDetails> sendEther(EthAccount fromAccount, EthAddress to, EthValue value) {
+        return ethereumProxy.sendTx(value, EthData.empty(), fromAccount, to);
     }
 
     /**

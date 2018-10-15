@@ -49,7 +49,7 @@ class EthereumProxy {
     private final List<Class<? extends CollectionDecoder>> listDecoders = new ArrayList<>();
     private final List<Class<? extends CollectionEncoder>> listEncoders = new ArrayList<>();
     private final Set<Class<?>> voidClasses = new HashSet<>();
-    private final ExecutorService executor = Executors.newCachedThreadPool();
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private final ReentrantLock nonceLock = new ReentrantLock();
     private final ReentrantLock txLock = new ReentrantLock();
 
@@ -72,8 +72,8 @@ class EthereumProxy {
     }
 
     private void processTransactionRequest(TransactionRequest request) {
-        Nonce nonce = getNonce(request.getAccount().getAddress());
         txLock.lock();
+        Nonce nonce = getNonce(request.getAccount().getAddress());
         try {
             EthHash hash = ethereum.submit(request, nonce);
             increasePendingTransactionCounter(request.getAccount().getAddress(), hash);
