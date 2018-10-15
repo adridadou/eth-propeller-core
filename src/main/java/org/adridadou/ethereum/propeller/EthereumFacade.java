@@ -190,6 +190,7 @@ public class EthereumFacade {
     }
 
     /**
+    /**
      * Returns the current best block number
      * @return The best block number
      */
@@ -202,12 +203,10 @@ public class EthereumFacade {
      * @param fromAccount The account that sends ether
      * @param to The target address
      * @param value The value to send
-     * @return The future execution result
+     * @return The future details of the call
      */
-    public CompletableFuture<EthExecutionResult> sendEther(EthAccount fromAccount, EthAddress to, EthValue value) {
-        return ethereumProxy.sendTx(value, EthData.empty(), fromAccount, to)
-                .thenCompose(CallDetails::getResult)
-                .thenApply(result -> new EthExecutionResult(result.executionResult));
+    public CompletableFuture<CallDetails> sendEther(EthAccount fromAccount, EthAddress to, EthValue value) {
+        return ethereumProxy.sendTx(value, EthData.empty(), fromAccount, to);
     }
 
     /**
