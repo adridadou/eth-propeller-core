@@ -36,7 +36,7 @@ import rx.Observable;
  * This code is released under Apache 2 license
  */
 public class Web3JFacade {
-    private static final BigInteger GAS_LIMIT_FOR_CONSTANT_CALLS = BigInteger.valueOf(1_000_000_000);
+    private static final BigInteger GAS_LIMIT_FOR_CONSTANT_CALLS = BigInteger.valueOf(90_000);
     private static final Logger logger = LoggerFactory.getLogger(Web3JFacade.class);
     private final Web3j web3j;
     private final Web3jBlockHandler blockEventHandler = new Web3jBlockHandler();
@@ -50,9 +50,9 @@ public class Web3JFacade {
         try {
             return EthData.of(handleError(web3j.ethCall(new Transaction(
                     account.getAddress().withLeading0x(),
-                    BigInteger.ZERO,
-                    BigInteger.ZERO,
-                    GAS_LIMIT_FOR_CONSTANT_CALLS,
+                    null,
+                    null,
+                    null,
                     address.withLeading0x(),
                     BigInteger.ZERO,
                     data.toString()
