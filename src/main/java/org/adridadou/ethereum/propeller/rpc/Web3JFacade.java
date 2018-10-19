@@ -36,7 +36,6 @@ import rx.Observable;
  * This code is released under Apache 2 license
  */
 public class Web3JFacade {
-    private static final BigInteger GAS_LIMIT_FOR_CONSTANT_CALLS = BigInteger.valueOf(90_000);
     private static final Logger logger = LoggerFactory.getLogger(Web3JFacade.class);
     private final Web3j web3j;
     private final Web3jBlockHandler blockEventHandler = new Web3jBlockHandler();
@@ -78,9 +77,10 @@ public class Web3JFacade {
         Executors.newCachedThreadPool().submit(() -> {
             while (true) {
                 try {
-                    BigInteger currentBlockNumber = web3j.ethBlockNumber().send().getBlockNumber();
-                    while (this.lastBlockNumber.equals(BigInteger.ZERO) || currentBlockNumber.compareTo(this.lastBlockNumber) > 0) {
-                        EthBlock currentBlock = web3j.ethGetBlockByNumber(DefaultBlockParameter.valueOf(this.lastBlockNumber.add(BigInteger.ONE)), true).send();
+                    EthBlock currentBlock = web3j
+                            .ethGetBlockByNumber(DefaultBlockParameter.valueOf(DefaultBlockParameterName.LATEST.name()), true).send();
+                    BigInteger currentBlockNumber = currentBlock.getBlock().getNumber();
+                    if (this.lastBlockNumber.equals(BigInteger.ZERO) || currentBlockNumber.compareTo(this.lastBlockNumber) > 0) {
                         this.lastBlockNumber = currentBlockNumber;
                         blockEventHandler.newElement(currentBlock);
                     }
