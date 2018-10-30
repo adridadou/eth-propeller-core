@@ -99,4 +99,8 @@ public final class EthAddress {
     public boolean isEmpty() {
         return Arrays.equals(this.address, EMPTY_ARRAY);
     }
+
+    public EthData toData() {
+        return EthData.of(address);
+    }
 }
