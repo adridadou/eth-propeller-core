@@ -2,6 +2,8 @@ package org.adridadou.ethereum.propeller;
 
 import org.adridadou.ethereum.propeller.event.BlockInfo;
 import org.adridadou.ethereum.propeller.event.EthereumEventHandler;
+import org.adridadou.ethereum.propeller.solidity.SolidityType;
+import org.adridadou.ethereum.propeller.solidity.converters.encoders.NumberEncoder;
 import org.adridadou.ethereum.propeller.values.*;
 
 import java.util.Optional;
@@ -36,4 +38,21 @@ public interface EthereumBackend {
     void register(EthereumEventHandler eventHandler);
 
     Optional<TransactionInfo> getTransactionInfo(EthHash hash);
+
+    default EthSignature signTransaction(Nonce nonce, GasPrice gasPrice, TransactionRequest request, ChainId chainId) {
+
+        NumberEncoder numberEncoder = new NumberEncoder();
+        EthData rawData = numberEncoder.encode(nonce.getValue(), SolidityType.UINT)
+                .merge(numberEncoder.encode(gasPrice.getPrice().inWei(), SolidityType.UINT))
+                .merge(numberEncoder.encode(request.getGasLimit().getUsage(), SolidityType.UINT))
+                .merge(request.getAddress().toData())
+                .merge(numberEncoder.encode(request.getValue().inWei(), SolidityType.UINT))
+                .merge(request.getData())
+                .merge(numberEncoder.encode(chainId.id, SolidityType.UINT))
+                .merge(EthData.emptyWord())
+                .merge(EthData.emptyWord());
+
+
+        return request.getAccount().sign(rawData);
+    }
 }
