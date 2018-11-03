@@ -1,5 +1,6 @@
 package org.adridadou.ethereum.propeller;
 
+import okhttp3.*;
 import org.adridadou.ethereum.propeller.event.EthereumEventHandler;
 import org.adridadou.ethereum.propeller.rpc.EthereumRpc;
 import org.adridadou.ethereum.propeller.rpc.EthereumRpcConfig;
@@ -37,6 +38,25 @@ public final class RpcEthereumFacadeProvider {
 
     public static EthereumFacade forRemoteNode(final String url, final ChainId chainId, EthereumRpcConfig config) {
         return forRemoteNode(new HttpService(url), chainId, config);
+    }
+
+    private static HttpService createHttpService(final String url, EthereumRpcConfig config) {
+        switch(config.getAuthType()) {
+            case BasicAuth:
+                return createHttpServiceForBasicAuth(url, config);
+            default:
+                return new HttpService(url);
+        }
+    }
+
+    private static HttpService createHttpServiceForBasicAuth(final String url, EthereumRpcConfig config) {
+        OkHttpClient.Builder clientBuilder = new OkHttpClient.Builder();
+        clientBuilder.authenticator((route, response) -> {
+            String credential = Credentials.basic(config.getUserName(), config.getPassword());
+            return response.request().newBuilder().header("Authorization", credential).build();
+        });
+
+        return new HttpService(url, clientBuilder.build(), false);
     }
 
     private static EthereumFacade forRemoteNode(Web3jService web3jService, final ChainId chainId, EthereumRpcConfig config) {
