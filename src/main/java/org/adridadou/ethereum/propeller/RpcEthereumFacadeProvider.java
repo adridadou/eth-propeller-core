@@ -37,7 +37,7 @@ public final class RpcEthereumFacadeProvider {
     }
 
     public static EthereumFacade forRemoteNode(final String url, final ChainId chainId, EthereumRpcConfig config) {
-        return forRemoteNode(new HttpService(url), chainId, config);
+        return forRemoteNode(createHttpService(url, config), chainId, config);
     }
 
     private static HttpService createHttpService(final String url, EthereumRpcConfig config) {
