@@ -231,21 +231,15 @@ class EthereumProxy {
                 .map(params -> null);
 
         Observable<TransactionInfo> blockTxs = eventHandler.observeBlocks()
-                .flatMap(params -> Observable.from(params.receipts))
-                .filter(receipt -> Objects.equals(receipt.hash, txHash))
-                .map(this::createTransactionParameters);
-
-        Observable<TransactionInfo> observeTx = Observable.interval(0, 10, TimeUnit.SECONDS)
-                .map(x -> getTransactionInfo(txHash))
-                .filter(tx -> tx
-                        .map(TransactionInfo::getStatus)
-                        .map(TransactionStatus.Executed::equals).orElse(false))
+                .map(block -> ethereum.getTransactionInfo(txHash))
+                .map(optInfo -> optInfo.flatMap(TransactionInfo::getReceipt))
                 .filter(Optional::isPresent)
-                .map(Optional::get);
+                .map(Optional::get)
+                .map(this::createTransactionParameters);
 
         CompletableFuture<TransactionReceipt> futureResult = new CompletableFuture<>();
 
-        Observable.merge(droppedTxs, blockTxs, timeoutBlock, observeTx).map(params -> {
+        Observable.merge(droppedTxs, blockTxs, timeoutBlock).map(params -> {
             if (params == null) {
                 throw new EthereumApiException("the transaction has not been included in the last " + config.blockWaitLimit() + " blocks");
             }

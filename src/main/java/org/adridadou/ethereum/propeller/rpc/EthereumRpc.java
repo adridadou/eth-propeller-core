@@ -12,6 +12,7 @@ import org.web3j.protocol.core.methods.response.EthBlock;
 import org.web3j.protocol.core.methods.response.Log;
 import org.web3j.protocol.core.methods.response.Transaction;
 
+import java.math.BigInteger;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -56,13 +57,20 @@ public class EthereumRpc implements EthereumBackend {
     }
 
     private org.ethereum.core.Transaction createTransaction(Nonce nonce, GasPrice gasPrice, TransactionRequest request) {
-        byte[] nonceBytes = ByteUtil.bigIntegerToBytes(nonce.getValue());
-        byte[] gasPriceBytes = ByteUtil.bigIntegerToBytes(gasPrice.getPrice().inWei());
-        byte[] gasBytes = ByteUtil.bigIntegerToBytes(request.getGasLimit().getUsage());
-        byte[] valueBytes = ByteUtil.bigIntegerToBytes(request.getValue().inWei());
+        byte[] nonceBytes = encodeBigInt(nonce.getValue());
+        byte[] gasPriceBytes = encodeBigInt(gasPrice.getPrice().inWei());
+        byte[] gasBytes = encodeBigInt(request.getGasLimit().getUsage());
+        byte[] valueBytes = encodeBigInt(request.getValue().inWei());
 
         return new org.ethereum.core.Transaction(nonceBytes, gasPriceBytes, gasBytes,
                 request.getAddress().address, valueBytes, request.getData().data, chainId.id);
+    }
+
+    private byte[] encodeBigInt(BigInteger value) {
+        if(BigInteger.ZERO.equals(value)){
+            return ByteUtil.EMPTY_BYTE_ARRAY;
+        }
+        return ByteUtil.bigIntegerToBytes(value);
     }
 
     @Override
@@ -107,10 +115,12 @@ public class EthereumRpc implements EthereumBackend {
 
     @Override
     public Optional<TransactionInfo> getTransactionInfo(EthHash hash) {
+        System.out.println("getting info for " + hash.withLeading0x());
         return Optional.ofNullable(web3JFacade.getReceipt(hash)).flatMap(web3jReceipt -> Optional.ofNullable(web3JFacade.getTransaction(hash))
                 .map(transaction -> {
                     TransactionReceipt receipt = toReceipt(transaction, web3jReceipt);
                     TransactionStatus status = transaction.getBlockHash().isEmpty() ? TransactionStatus.Unknown : TransactionStatus.Executed;
+                    System.out.println("getting receipt " + receipt.isSuccessful + ":" + receipt.error + ":" + status.name());
                     return new TransactionInfo(hash, receipt, status, EthHash.of(transaction.getBlockHash()));
                 })
         );
