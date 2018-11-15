@@ -28,7 +28,11 @@ class EthAddressTest extends FlatSpec with Matchers with Checkers {
     } else {
       val address = EthAddress.of(array)
       address.normalizedString().length shouldEqual 40
+      address.toData.data.length shouldEqual 20
+      address.toData.toString shouldEqual address.normalizedString()
+      EthAddress.trimLeft(address.toData.data) shouldEqual EthAddress.trimLeft(address.address)
       address.address should contain theSameElementsAs EthAddress.trimLeft(array)
+
     }
     true
   }

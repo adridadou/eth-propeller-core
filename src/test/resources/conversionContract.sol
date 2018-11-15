@@ -1,8 +1,8 @@
-pragma solidity ^0.4.10;
+pragma solidity ^0.5.0;
 
 
 contract myContract {
-    function strFunc(string str)  public pure returns(string) {
+    function strFunc(string memory str)  public pure returns(string memory) {
         return str;
     }
 
@@ -34,23 +34,23 @@ contract myContract {
         return boolValue;
     }
 
-    function arrayFunc(int[10] value)  public pure  returns (int[10]) {
+    function arrayFunc(int[10] memory value)  public pure  returns (int[10] memory) {
         return value;
     }
 
-    function dynArrayFunc(int[] value) public  pure  returns (int) {
+    function dynArrayFunc(int[] memory value) public  pure  returns (int) {
         if (value.length > 3) return value[3];
         return 0;
     }
 
-    function mixWithStringFunc(int test1, string test2, bool test3, string test4) public pure  returns (string) {
+    function mixWithStringFunc(int test1, string memory test2, bool test3, string memory test4) public pure  returns (string memory) {
         if (test1 > 0 && test3 && bytes(test2).length > 23) {
 
         }
         return test4;
     }
 
-    function complexReturnType(int test1, string test2, bool test3, string test4)  public  pure returns (int, string, bool, string) {
+    function complexReturnType(int test1, string memory test2, bool test3, string memory test4)  public  pure returns (int, string memory, bool, string memory) {
         return (test1, test2, test3, test4);
     }
 
@@ -58,16 +58,16 @@ contract myContract {
         return value;
     }
 
-    function bytesFunc(bytes value) public pure returns (bytes) {
+    function bytesFunc(bytes memory value) public pure returns (bytes memory) {
         return value;
     }
 
-    function signatureFunc(bytes value) public pure returns (bytes) {
+    function signatureFunc(bytes memory value) public pure returns (bytes memory) {
         return value;
     }
 
-    function mixStringAddressFunc(string str, address addr) public pure returns (string) {
-        if (addr == 0x0) {
+    function mixStringAddressFunc(string memory str, address addr) public pure returns (string memory) {
+        if (addr == address(0x0)) {
 
         }
         return str;
@@ -80,18 +80,18 @@ contract myContract {
         return ecrecover(hash, v, bytes32(r), bytes32(s));
     }
 
-    function lstFunc(uint[] arr) public pure returns (uint[]) {
+    function lstFunc(uint[] memory arr) public pure returns (uint[] memory) {
         return arr;
     }
 
-    function recover(bytes32 hash, bytes sig) public pure returns (address) {
+    function recover(bytes32 hash, bytes memory sig) public pure returns (address) {
         bytes32 r;
         bytes32 s;
         uint8 v;
 
         //Check the signature length
         if (sig.length != 65) {
-            return 0x0;
+            return address(0x0);
         }
 
         // Divide the signature in r, s and v variables
@@ -108,7 +108,7 @@ contract myContract {
 
         // If the version is correct return the signer address
         if (v != 27 && v != 28) {
-            return 0x0;
+            return address(0x0);
         }
         else {
             return ecrecover(hash, v, r, s);

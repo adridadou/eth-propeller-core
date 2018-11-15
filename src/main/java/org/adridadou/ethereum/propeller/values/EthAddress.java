@@ -14,7 +14,6 @@ public final class EthAddress {
     private static final byte[] EMPTY_ARRAY = new byte[0];
     public final byte[] address;
 
-
     private EthAddress(byte[] address) {
         if (address.length > MAX_ADDRESS_SIZE) {
             throw new EthereumApiException("byte array of the address cannot be bigger than 20.value:" + Hex.toHexString(address));
@@ -61,13 +60,7 @@ public final class EthAddress {
     }
 
     public String normalizedString() {
-        String initialValue = Hex.toHexString(address);
-        int initialLength = initialValue.length();
-        StringBuilder result = new StringBuilder(initialValue);
-        for (int i = 0; i < MAX_ADDRESS_SIZE * 2 - initialLength; i++) {
-            result.insert(0, "0");
-        }
-        return result.toString();
+        return toData().toString();
     }
 
     public String withLeading0x() {
@@ -75,7 +68,7 @@ public final class EthAddress {
     }
 
     public String normalizedWithLeading0x() {
-        return "0x" + this.normalizedString();
+        return this.toData().withLeading0x();
     }
 
     @Override
@@ -101,6 +94,12 @@ public final class EthAddress {
     }
 
     public EthData toData() {
-        return EthData.of(address);
+        return EthData.of(normalize(address));
+    }
+
+    private byte[] normalize(byte[] data) {
+        byte[] normalizedData = new byte[20];
+        System.arraycopy(data, 0, normalizedData, normalizedData.length - data.length, data.length);
+        return normalizedData;
     }
 }

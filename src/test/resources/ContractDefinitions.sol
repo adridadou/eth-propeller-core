@@ -1,19 +1,19 @@
-pragma solidity ^0.4.4;
+pragma solidity ^0.5.0;
 
 
 contract owned {
-    address owner;
+    address payable owner;
 
     modifier ownerOnly() {
         if (msg.sender != owner) revert();
         _;
     }
 
-    function owned() public {
+    constructor() public {
         owner = msg.sender;
     }
 
-    function getOwner() constant public returns (address) {
+    function getOwner() view public returns (address) {
         return owner;
     }
 }
@@ -28,7 +28,7 @@ contract mortal is owned {
 
 contract PriceCalculator {
     function getWarrantyPrice(/*string productId,*/ uint startDate, uint endDate, uint productPrice)  public pure returns (uint) {
-        uint yrs = (endDate - startDate) / 1 years;
+        uint yrs = (endDate - startDate) / 365 days;
         /*the price is allways 5% per year*/
         return productPrice * yrs / 20;
     }
@@ -77,11 +77,11 @@ contract InsuranceManager is owned, related {
     InsuranceStatus status
     );
 
-    function isInsurance(address insurance) constant public returns (bool) {
+    function isInsurance(address insurance) view public returns (bool) {
         return insurances[insurance].status != InsuranceStatus.Undefined;
     }
 
-    function createInsurance(string name, address priceCalculator) public {
+    function createInsurance(string memory name, address priceCalculator) public {
         Insurance storage insurance = insurances[msg.sender];
         InsuranceStatus previousStatus = insurance.status;
         insurance.status = InsuranceStatus.Requested;
@@ -91,7 +91,7 @@ contract InsuranceManager is owned, related {
         insurance.priceCalculator = PriceCalculator(priceCalculator);
         insuranceList[insuranceCount++] = msg.sender;
 
-        InsuranceStatusChanged(msg.sender, InsuranceStatus.Requested);
+        emit InsuranceStatusChanged(msg.sender, InsuranceStatus.Requested);
     }
 
     function setInsuranceState(address insuranceAddress, InsuranceStatus status) public ownerOnly {
@@ -101,27 +101,27 @@ contract InsuranceManager is owned, related {
         insurance.status = status;
     }
 
-    function getInsurance(uint index) constant public returns (string name, address, InsuranceStatus) {
+    function getInsurance(uint index) view public returns (string memory name, address, InsuranceStatus) {
         Insurance  storage insurance = insurances[insuranceList[index]];
         return (insurance.name, insuranceList[index], insurance.status);
     }
 
-    function getInsuranceByAddress(address insuranceAddress) constant public returns (string name, address, InsuranceStatus) {
+    function getInsuranceByAddress(address insuranceAddress) view public returns (string memory name, address, InsuranceStatus) {
         Insurance  storage insurance = insurances[insuranceAddress];
         return (insurance.name, insuranceAddress, insurance.status);
     }
 
-    function getInsuranceStatus(address insuranceAddress) constant public returns (InsuranceStatus) {
+    function getInsuranceStatus(address insuranceAddress) view public returns (InsuranceStatus) {
         return insurances[insuranceAddress].status;
     }
 
-    function getWarrantyPrice(address insuranceAddress, uint startDate, uint endDate, uint productPrice) constant public returns (uint) {
+    function getWarrantyPrice(address insuranceAddress, uint startDate, uint endDate, uint productPrice) view public returns (uint) {
         Insurance storage  insurance = insurances[insuranceAddress];
         if (insurance.status != InsuranceStatus.Active) revert();
         return insurance.priceCalculator.getWarrantyPrice(startDate, endDate, productPrice);
     }
 
-    function getInsuranceBalance(address insuranceAddress) constant public returns (uint, uint, uint) {
+    function getInsuranceBalance(address insuranceAddress) view public returns (uint, uint, uint) {
         Insurance  storage insurance = insurances[insuranceAddress];
         return (insurance.sales, insurance.payments, insurance.claims);
     }
@@ -155,7 +155,7 @@ contract InsuranceManager is owned, related {
 contract RetailerManager is owned, related {
     InsuranceManager insuranceManager;
 
-    function RetailerManager(address _insuranceManager) public {
+    constructor(address _insuranceManager) public {
         insuranceManager = InsuranceManager(_insuranceManager);
     }
 
@@ -168,7 +168,7 @@ contract RetailerManager is owned, related {
         _;
     }
 
-    function isInsurance(address insurance) constant public returns (bool) {
+    function isInsurance(address insurance) view public returns (bool) {
         return insuranceManager.getInsuranceStatus(insurance) != InsuranceStatus.Undefined;
     }
 
@@ -204,7 +204,7 @@ contract RetailerManager is owned, related {
     /**
     the retailer send a transaction to request registration with an insurer
     */
-    function requestRegistration(string companyName, address insurance) public {
+    function requestRegistration(string memory companyName, address insurance) public {
         Retailer storage  retailer = retailers[msg.sender];
         retailer.companyName = companyName;
         /*make sure the insurance company exists*/
@@ -223,14 +223,14 @@ contract RetailerManager is owned, related {
         retailer.partnerRelations[insurance].status = RetailerStatus.Requested;
         retailer.insurances[retailer.insuranceCount++] = insurance;
         retailer.status = RetailerStatus.Accepted;
-        RetailerRequest(companyName, msg.sender, insurance);
+        emit RetailerRequest(companyName, msg.sender, insurance);
     }
 
-    function getInsurance(address retailer, uint idx) constant public returns (address) {
+    function getInsurance(address retailer, uint idx) view public returns (address) {
         return retailers[retailer].insurances[idx];
     }
 
-    function getRequestState(address retailer, address insurance) constant public returns (RetailerStatus) {
+    function getRequestState(address retailer, address insurance) view public returns (RetailerStatus) {
         return retailers[retailer].partnerRelations[insurance].status;
     }
 
@@ -240,7 +240,7 @@ contract RetailerManager is owned, related {
     */
     function setRequestState(address retailer, RetailerStatus status) public insuranceOnly {
         retailers[retailer].partnerRelations[msg.sender].status = status;
-        RetailerStatusChanged(retailer, msg.sender, status);
+        emit RetailerStatusChanged(retailer, msg.sender, status);
     }
 
     function getRetailerStatus(address retailer, address insurance) public view returns (RetailerStatus){
@@ -254,23 +254,23 @@ contract RetailerManager is owned, related {
     /**
     get the nth retailer in the list
     */
-    function getRetailer(uint index, address insuranceAddress) constant public returns (address, string, RetailerStatus, RetailerStatus) {
+    function getRetailer(uint index, address insuranceAddress) view public returns (address, string memory, RetailerStatus, RetailerStatus) {
         address retailerAddress = retailerList[index];
         Retailer  storage retailer = retailers[retailerAddress];
         return (retailerAddress, retailer.companyName, retailer.status, retailer.partnerRelations[insuranceAddress].status);
     }
 
-    function getRetailerByAddress(address retailerAddress, address insuranceAddress) constant public returns (address, string, RetailerStatus, RetailerStatus) {
+    function getRetailerByAddress(address retailerAddress, address insuranceAddress) view public returns (address, string memory, RetailerStatus, RetailerStatus) {
         Retailer  storage retailer = retailers[retailerAddress];
         return (retailerAddress, retailer.companyName, retailer.status, retailer.partnerRelations[insuranceAddress].status);
     }
 
-    function getRetailerBalances(address retailer, address insurance) constant public returns (uint, uint, uint) {
+    function getRetailerBalances(address retailer, address insurance) view public returns (uint, uint, uint) {
         PartnerRelations  storage  partnerRelation = retailers[retailer].partnerRelations[insurance];
         return (partnerRelation.sales, partnerRelation.payments, partnerRelation.claims);
     }
 
-    function getRetailerTotalBalances(address retailerAddress) constant public returns (uint, uint, uint) {
+    function getRetailerTotalBalances(address retailerAddress) view public returns (uint, uint, uint) {
         Retailer storage  retailer = retailers[retailerAddress];
         return (retailer.sales, retailer.payments, retailer.claims);
     }
@@ -312,7 +312,7 @@ contract Insurechain is mortal, stateful {
 
     RetailerManager retailerManager;
 
-    function Insurechain(address _insuranceManager, address _retailerManager) public {
+    constructor(address _insuranceManager, address _retailerManager) public {
         insuranceManager = InsuranceManager(_insuranceManager);
         retailerManager = RetailerManager(_retailerManager);
     }
@@ -352,7 +352,7 @@ contract Insurechain is mortal, stateful {
         _;
     }
 
-    function isInsurance(address insurance) constant public returns (bool) {
+    function isInsurance(address insurance) view public returns (bool) {
         return insuranceManager.getInsuranceStatus(insurance) != InsuranceStatus.Undefined;
     }
 
@@ -361,11 +361,11 @@ contract Insurechain is mortal, stateful {
         _;
     }
 
-    function isRegisteredRetailer(address insurance, address retailer) constant public returns (bool) {
+    function isRegisteredRetailer(address insurance, address retailer) view public returns (bool) {
         return isInsurance(insurance) && retailerManager.getRequestState(retailer, insurance) == RetailerStatus.Accepted;
     }
 
-    function getRole(address user) constant public returns (UserRole) {
+    function getRole(address user) view public returns (UserRole) {
         if (user == owner) return UserRole.Owner;
         if (retailerManager.getRetailerStatus(user) == RetailerStatus.Accepted) return UserRole.Retailer;
         if (insuranceManager.getInsuranceStatus(user) == InsuranceStatus.Active) return UserRole.Insurance;
@@ -374,7 +374,7 @@ contract Insurechain is mortal, stateful {
     }
 
     function getWarrantyQuote(/*string productId, */address insurance, uint startDate, uint endDate, uint productPrice)
-    constant public returns (uint warrantyPrice) {
+    public view returns (uint warrantyPrice) {
         return insuranceManager.getWarrantyPrice(insurance, startDate, endDate, productPrice);
     }
 
@@ -387,7 +387,7 @@ contract Insurechain is mortal, stateful {
         endDate: start date of the extended warranty
         price: the price in cents
     */
-    function createWarranty(string productId, string serialNumber, address insurance, uint startDate, uint endDate, uint productPrice) public registeredRetailerOnly(insurance) {
+    function createWarranty(string memory productId, string memory serialNumber, address insurance, uint startDate, uint endDate, uint productPrice) public registeredRetailerOnly(insurance) {
         uint idx = warranties[insurance][productId][serialNumber];
         Warranty  storage warranty = warrantyList[idx];
         if (warranty.status != WarrantyStatus.Undefined) revert();
@@ -410,7 +410,7 @@ contract Insurechain is mortal, stateful {
         serialNumber: the particular product serial number
         policyNumber: the policy number of the warranty
     */
-    function confirmWarranty(string productId, string serialNumber, string policyNumber) public insuranceOnly {
+    function confirmWarranty(string memory productId, string memory serialNumber, string memory policyNumber) public insuranceOnly {
         uint idx = warranties[msg.sender][productId][serialNumber];
         Warranty  storage warranty = warrantyList[idx];
         if (warranty.status != WarrantyStatus.Created) revert();
@@ -425,7 +425,7 @@ contract Insurechain is mortal, stateful {
         serialNumber: the particular product serial number
         policyNumber: the policy number of the warranty
     */
-    function cancelWarranty(string productId, string serialNumber, address insuranceAddress) public registeredRetailerOnly(insuranceAddress) {
+    function cancelWarranty(string memory productId, string memory serialNumber, address insuranceAddress) public registeredRetailerOnly(insuranceAddress) {
         uint idx = warranties[insuranceAddress][productId][serialNumber];
         Warranty  storage warranty = warrantyList[idx];
         /*a warranty can only be canceled if it exists and no claims have been made*/
@@ -436,18 +436,18 @@ contract Insurechain is mortal, stateful {
         insuranceManager.decreaseSalesBalance(insuranceAddress, warranty.warrantyPrice);
     }
 
-    function getWarranty(string productId, string serialNumber, address insurance) constant public returns (uint startDate, uint endDate, WarrantyStatus status,
-    string policyNumber, uint warrantyPrice, uint claimCount) {
+    function getWarranty(string memory productId, string memory serialNumber, address insurance) view public returns (uint startDate, uint endDate, WarrantyStatus status,
+    string memory policyNumber, uint warrantyPrice, uint claimCount) {
         return getWarrantyByIndex(warranties[insurance][productId][serialNumber]);
     }
 
-    function getWarrantyByIndex(uint idx) constant public returns (uint startDate, uint endDate, WarrantyStatus status,
-    string policyNumber, uint warrantyPrice, uint claimCount) {
+    function getWarrantyByIndex(uint idx) view public returns (uint startDate, uint endDate, WarrantyStatus status,
+    string memory policyNumber, uint warrantyPrice, uint claimCount) {
         Warranty storage  warranty = warrantyList[idx];
         return (warranty.startDate, warranty.endDate, warranty.status, warranty.policyNumber, warranty.warrantyPrice, warranty.claimCount);
     }
 
-    function isWarrantyValid(address insurance, string productId, string serialNumber) constant public returns (bool) {
+    function isWarrantyValid(address insurance, string memory productId, string memory serialNumber) view public returns (bool) {
         uint idx = warranties[insurance][productId][serialNumber];
         /*the index can not be zero based because else the first warranty would be the default but I don't want to make it 1 based for the user*/
         Warranty storage  warranty = warrantyList[idx];
@@ -459,7 +459,7 @@ contract Insurechain is mortal, stateful {
         productId: The EAN13 that identifies the product
         serialNumber: the particular product serial number
     */
-    function createClaim(string productId, string serialNumber, address insurance, uint amount, string description) public registeredRetailerOnly(insurance) {
+    function createClaim(string memory productId, string memory serialNumber, address insurance, uint amount, string memory description) public registeredRetailerOnly(insurance) {
         /*create only works for existing and valid warranties*/
         if (!isWarrantyValid(insurance, productId, serialNumber)) revert();
 
@@ -476,7 +476,7 @@ contract Insurechain is mortal, stateful {
         insuranceManager.increaseClaimsBalance(insurance, amount);
     }
 
-    function getClaim(string productId, string serialNumber, address insurance, uint idx) constant public returns (address retailer, uint amount, string description) {
+    function getClaim(string memory productId, string memory serialNumber, address insurance, uint idx) view public returns (address retailer, uint amount, string memory description) {
         uint wIdx = warranties[insurance][productId][serialNumber];
         Claim  storage claim = warrantyList[idx].claims[wIdx];
         return (claim.retailer, claim.amount, claim.description);

@@ -3,6 +3,7 @@ package org.adridadou.ethereum.propeller;
 import org.adridadou.ethereum.propeller.exception.EthereumApiException;
 import org.adridadou.ethereum.propeller.solidity.SolidityContractDetails;
 import org.adridadou.ethereum.propeller.solidity.SolidityFunction;
+import org.adridadou.ethereum.propeller.solidity.SolidityType;
 import org.adridadou.ethereum.propeller.solidity.abi.AbiEntry;
 import org.adridadou.ethereum.propeller.solidity.converters.decoders.SolidityTypeDecoder;
 import org.adridadou.ethereum.propeller.solidity.converters.encoders.SolidityTypeEncoder;
@@ -52,7 +53,10 @@ public class SmartContract {
     }
 
     private SolidityFunction buildFunction(AbiEntry entry) {
-        return new SolidityFunction(entry, getEncoders(entry), getDecoders(entry));
+        List<SolidityType> parameters = entry.getInputs().stream()
+                .map(abiParam -> SolidityType.find(abiParam.getType()).orElseThrow(() -> new EthereumApiException("unknown type " + abiParam.getType()))).collect(Collectors.toList());
+
+        return new SolidityFunction(entry, parameters, getEncoders(entry), getDecoders(entry));
     }
 
     private List<List<SolidityTypeDecoder>> getDecoders(AbiEntry entry) {
@@ -82,7 +86,8 @@ public class SmartContract {
     }
 
     public CompletableFuture<?> callFunction(EthValue value, Method method, Object... args) {
-        return callFunctionAndGetDetails(value, method, args).thenCompose(callDetails -> this.transformDetailsToResult(callDetails, method));
+        return callFunctionAndGetDetails(value, method, args)
+                .thenCompose(callDetails -> this.transformDetailsToResult(callDetails, method));
     }
 
     private SolidityFunction getFunctionOrThrow(Method method) {
@@ -103,7 +108,9 @@ public class SmartContract {
     }
 
     public CompletableFuture<CallDetails> callFunctionAndGetDetails(EthValue value, Method method, Object... args) {
-        return getFunction(method).map(func -> callFunctionAndGetDetails(value, func, args)).orElseThrow(() -> new EthereumApiException("function " + method.getName() + " cannot be found. available:" + getAvailableFunctions()));
+        return getFunction(method)
+                .map(func -> callFunctionAndGetDetails(value, func, args))
+                .orElseThrow(() -> new EthereumApiException("function " + method.getName() + " cannot be found. available:" + getAvailableFunctions()));
     }
 
     public CompletableFuture<CallDetails> callFunctionAndGetDetails(EthValue value, SolidityFunction func, Object... args) {
