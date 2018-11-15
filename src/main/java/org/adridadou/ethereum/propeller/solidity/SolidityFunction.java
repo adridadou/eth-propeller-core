@@ -22,17 +22,23 @@ import static org.adridadou.ethereum.propeller.values.EthData.WORD_SIZE;
 public class SolidityFunction {
     private final NumberEncoder numberEncoder = new NumberEncoder();
     private final AbiEntry description;
+    private final List<SolidityType> parameters;
     private final List<List<SolidityTypeEncoder>> encoders;
     private final List<List<SolidityTypeDecoder>> decoders;
 
-    public SolidityFunction(AbiEntry abiEntry, List<List<SolidityTypeEncoder>> encoders, List<List<SolidityTypeDecoder>> decoders) {
+    public SolidityFunction(AbiEntry abiEntry, List<SolidityType> parameters, List<List<SolidityTypeEncoder>> encoders, List<List<SolidityTypeDecoder>> decoders) {
         this.description = abiEntry;
         this.encoders = encoders;
         this.decoders = decoders;
+        this.parameters = parameters;
     }
 
     public String getName() {
         return description.getName();
+    }
+
+    public List<SolidityType> getParameters() {
+        return parameters;
     }
 
     public boolean matchParams(Object[] args) {

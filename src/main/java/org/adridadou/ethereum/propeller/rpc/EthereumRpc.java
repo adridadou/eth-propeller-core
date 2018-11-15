@@ -63,7 +63,7 @@ public class EthereumRpc implements EthereumBackend {
         byte[] valueBytes = encodeBigInt(request.getValue().inWei());
 
         return new org.ethereum.core.Transaction(nonceBytes, gasPriceBytes, gasBytes,
-                request.getAddress().address, valueBytes, request.getData().data, chainId.id);
+                request.getAddress().toData().data, valueBytes, request.getData().data, chainId.id);
     }
 
     private byte[] encodeBigInt(BigInteger value) {
