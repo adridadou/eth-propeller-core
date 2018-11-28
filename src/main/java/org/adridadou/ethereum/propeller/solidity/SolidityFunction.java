@@ -69,8 +69,11 @@ public class SolidityFunction {
 
     public EthData encode(Object... args) {
         EthData result = description.signature();
-        Integer dynamicIndex = args.length * WORD_SIZE;
+        int dynamicIndex = args.length * WORD_SIZE;
         List<EthData> dynamicData = new ArrayList<>();
+        if(args.length != encoders.size()) {
+            throw new EthereumApiException("wrong number of arguments. you provided " + args.length + " arguments but should be " + encoders.size());
+        }
         for (int i = 0; i < args.length; i++) {
             final Object arg = args[i];
             if (arg != null) {
