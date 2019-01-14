@@ -139,7 +139,6 @@ public class EthereumRpc implements EthereumBackend {
                 .map(transaction -> {
                     TransactionReceipt receipt = toReceipt(transaction, web3jReceipt);
                     TransactionStatus status = transaction.getBlockHash().isEmpty() ? TransactionStatus.Unknown : TransactionStatus.Executed;
-                    System.out.println("getting receipt " + receipt.isSuccessful + ":" + receipt.error + ":" + status.name());
                     return new TransactionInfo(hash, receipt, status, EthHash.of(transaction.getBlockHash()));
                 })
         );
