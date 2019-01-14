@@ -1,9 +1,31 @@
 package org.adridadou.ethereum.propeller.rpc;
 
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
 import org.adridadou.ethereum.propeller.EthereumBackend;
 import org.adridadou.ethereum.propeller.event.BlockInfo;
 import org.adridadou.ethereum.propeller.event.EthereumEventHandler;
-import org.adridadou.ethereum.propeller.values.*;
+import org.adridadou.ethereum.propeller.values.ChainId;
+import org.adridadou.ethereum.propeller.values.EthAccount;
+import org.adridadou.ethereum.propeller.values.EthAddress;
+import org.adridadou.ethereum.propeller.values.EthData;
+import org.adridadou.ethereum.propeller.values.EthHash;
+import org.adridadou.ethereum.propeller.values.EthValue;
+import org.adridadou.ethereum.propeller.values.EventData;
+import org.adridadou.ethereum.propeller.values.GasPrice;
+import org.adridadou.ethereum.propeller.values.GasUsage;
+import org.adridadou.ethereum.propeller.values.Nonce;
+import org.adridadou.ethereum.propeller.values.SmartContractByteCode;
+import org.adridadou.ethereum.propeller.values.TransactionInfo;
+import org.adridadou.ethereum.propeller.values.TransactionReceipt;
+import org.adridadou.ethereum.propeller.values.TransactionRequest;
+import org.adridadou.ethereum.propeller.values.TransactionStatus;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.util.ByteUtil;
 import org.slf4j.Logger;
@@ -11,10 +33,6 @@ import org.slf4j.LoggerFactory;
 import org.web3j.protocol.core.methods.response.EthBlock;
 import org.web3j.protocol.core.methods.response.Log;
 import org.web3j.protocol.core.methods.response.Transaction;
-
-import java.math.BigInteger;
-import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Created by davidroon on 20.01.17.
@@ -115,12 +133,12 @@ public class EthereumRpc implements EthereumBackend {
 
     @Override
     public Optional<TransactionInfo> getTransactionInfo(EthHash hash) {
-        System.out.println("getting info for " + hash.withLeading0x());
-        return Optional.ofNullable(web3JFacade.getReceipt(hash)).flatMap(web3jReceipt -> Optional.ofNullable(web3JFacade.getTransaction(hash))
+        return Optional.ofNullable(web3JFacade.getReceipt(hash))
+                .filter(web3jReceipt -> web3jReceipt.getBlockHash() != null) //Parity gives receipt even if not included yet
+                .flatMap(web3jReceipt -> Optional.ofNullable(web3JFacade.getTransaction(hash))
                 .map(transaction -> {
                     TransactionReceipt receipt = toReceipt(transaction, web3jReceipt);
                     TransactionStatus status = transaction.getBlockHash().isEmpty() ? TransactionStatus.Unknown : TransactionStatus.Executed;
-                    System.out.println("getting receipt " + receipt.isSuccessful + ":" + receipt.error + ":" + status.name());
                     return new TransactionInfo(hash, receipt, status, EthHash.of(transaction.getBlockHash()));
                 })
         );
@@ -136,6 +154,7 @@ public class EthereumRpc implements EthereumBackend {
                         .map(tx -> Optional.ofNullable(web3JFacade.getReceipt(EthHash.of(tx.getHash()))))
                         .filter(Optional::isPresent)
                         .map(Optional::get)
+                        .filter(web3jReceipt -> web3jReceipt.getBlockHash() != null) //Parity gives receipt even if not included yet
                         .collect(Collectors.toMap(org.web3j.protocol.core.methods.response.TransactionReceipt::getTransactionHash, e -> e));
 
                 List<TransactionReceipt> receiptList = receipts.entrySet().stream()
