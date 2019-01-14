@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.adridadou.ethereum.propeller.Crypto;
 import org.adridadou.ethereum.propeller.EthereumBackend;
 import org.adridadou.ethereum.propeller.event.BlockInfo;
 import org.adridadou.ethereum.propeller.event.EthereumEventHandler;
@@ -30,9 +31,13 @@ import org.ethereum.crypto.ECKey;
 import org.ethereum.util.ByteUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.web3j.crypto.Credentials;
+import org.web3j.crypto.RawTransaction;
+import org.web3j.crypto.TransactionEncoder;
 import org.web3j.protocol.core.methods.response.EthBlock;
 import org.web3j.protocol.core.methods.response.Log;
 import org.web3j.protocol.core.methods.response.Transaction;
+import org.web3j.utils.Numeric;
 
 /**
  * Created by davidroon on 20.01.17.
@@ -68,10 +73,19 @@ public class EthereumRpc implements EthereumBackend {
 
     @Override
     public EthHash submit(TransactionRequest request, Nonce nonce) {
-        org.ethereum.core.Transaction transaction = createTransaction(nonce, getGasPrice(), request);
-        transaction.sign(ECKey.fromPrivate(request.getAccount().getBigIntPrivateKey()));
-        web3JFacade.sendTransaction(EthData.of(transaction.getEncoded()));
-        return EthHash.of(transaction.getHash());
+        //TODO: fix that once web3j handle any chainId
+        if(chainId.id > 127 || chainId.id < 0) {
+            org.ethereum.core.Transaction transaction = createTransaction(nonce, getGasPrice(), request);
+            transaction.sign(ECKey.fromPrivate(request.getAccount().getBigIntPrivateKey()));
+            web3JFacade.sendTransaction(EthData.of(transaction.getEncoded()));
+            return EthHash.of(transaction.getHash());
+        } else {
+            RawTransaction tx = web3JFacade.createTransaction(nonce, getGasPrice(), request.getGasLimit(), request.getAddress(), request.getValue(), request.getData());
+            EthData signedMessage = EthData.of(TransactionEncoder.signMessage(tx, (byte) chainId.id, Credentials.create(Numeric.toHexStringNoPrefix(request.getAccount().getBigIntPrivateKey()))));
+            web3JFacade.sendTransaction(signedMessage);
+
+            return EthHash.of(Crypto.sha3(signedMessage).data);
+        }
     }
 
     private org.ethereum.core.Transaction createTransaction(Nonce nonce, GasPrice gasPrice, TransactionRequest request) {

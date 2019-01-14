@@ -40,7 +40,6 @@ trait SolidityConversionHelper {
         tag.runtimeClass).asInstanceOf[T]) match {
       case Success(result) => result
       case Failure(ex) =>
-        ex.printStackTrace()
         throw ex
     }
   }

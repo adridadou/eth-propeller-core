@@ -8,6 +8,7 @@ import org.spongycastle.math.ec.ECPoint;
 
 import java.io.Serializable;
 import java.math.BigInteger;
+import java.util.Objects;
 import java.util.Optional;
 
 import static java.util.Arrays.copyOfRange;
@@ -133,10 +134,10 @@ public class EthSignature implements Serializable {
         if (recId != that.recId) {
             return false;
         }
-        if (r != null ? !r.equals(that.r) : that.r != null) {
+        if (!Objects.equals(r, that.r)) {
             return false;
         }
-        return s != null ? s.equals(that.s) : that.s == null;
+        return Objects.equals(s, that.s);
     }
 
     @Override

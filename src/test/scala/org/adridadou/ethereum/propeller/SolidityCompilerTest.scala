@@ -40,6 +40,6 @@ class SolidityCompilerTest extends FlatSpec with Matchers with Checkers {
   it should "parse the result from truffle too" in {
     val result = CompilationResult.parse(IOUtils.toString(new FileInputStream("src/test/resources/SmartToken.json"), StandardCharsets.UTF_8))
     val contract = result.findContract("default").orElseThrow(() => new EthereumApiException("default contract not found!"))
-    contract.getAbi()
+    contract.getAbi
   }
 }
