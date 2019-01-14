@@ -20,7 +20,7 @@ The main concepts behind Ethereum propeller are:
 This is the core library for Ethereum Propeller.
 You still need to decide which backend you want to use. There are two possibilities right now:
 * If you want to use Ethereumj with a embedded full node, go to eth-propeller-ethj
-* If you want to use web3j to connect to a remote RPC API, go to eth-propeller-web3j
+* If you want to use web3j to connect to a remote RPC API, go to eth-propeller-core
 
 #getting started
 
@@ -28,7 +28,7 @@ You still need to decide which backend you want to use. There are two possibilit
 ```
 <dependency>
     <groupId>org.adridadou</groupId>
-    <artifactId>eth-propeller-{ethj or web3j}</artifactId>
+    <artifactId>eth-propeller-{ethj or core}</artifactId>
     <version>{latest version}</version>
 </dependency>
 ```
