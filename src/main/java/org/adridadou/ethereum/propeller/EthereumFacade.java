@@ -210,6 +210,18 @@ public class EthereumFacade {
     }
 
     /**
+     * Sends the transaction
+     * @param value The value to send
+     * @param data The data to send
+     * @param account The account that sends ether
+     * @param address The target address
+     * @return The future details of the call
+     */
+    public CompletableFuture<CallDetails> sendTx(EthValue value, EthData data, EthAccount account, EthAddress address) {
+        return ethereumProxy.sendTx(value, data, account, address);
+    }
+
+    /**
      * Returns the current Nonce of an address.
      * It takes into account pending transactions as well
      * @param address The address from which we want the Nonce

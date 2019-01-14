@@ -4,7 +4,7 @@
 
     <groupId>org.adridadou</groupId>
     <artifactId>eth-propeller-core</artifactId>
-    <version>0.33-SNAPSHOT</version>
+    <version>0.40-SNAPSHOT</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -149,6 +149,13 @@
             <version>4.5.6</version>
         </dependency>
 
+        <!-- PUT BACK AS TEST -->
+        <dependency>
+            <groupId>org.ethereum</groupId>
+            <artifactId>ethereumj-core</artifactId>
+            <version>1.9.0-RELEASE</version>
+        </dependency>
+
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
@@ -159,13 +166,6 @@
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
             <version>2.23.0</version>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.ethereum</groupId>
-            <artifactId>ethereumj-core</artifactId>
-            <version>1.8.2-RELEASE</version>
             <scope>test</scope>
         </dependency>
 
@@ -207,7 +207,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.2</version>
+                <version>3.8.0</version>
                 <configuration>
                     <source>1.8</source>
                     <target>1.8</target>
@@ -242,40 +242,10 @@
                 </configuration>
             </plugin>
             <plugin>
-                <groupId>org.jacoco</groupId>
-                <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.8.1</version>
-                <configuration>
-                    <excludes>
-                        <exclude>**/*Test.*</exclude>
-                        <exclude>**/*Exception.*</exclude>
-                    </excludes>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>prepare-agent</id>
-                        <goals>
-                            <goal>prepare-agent</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <plugin>
                 <groupId>net.alchim31.maven</groupId>
                 <artifactId>scala-maven-plugin</artifactId>
                 <version>3.3.1</version>
                 <executions>
-                    <!--
-                    <execution>
-                        <id>scala-compile-first</id>
-                        <phase>process-resources</phase>
-                        <goals>
-                            <goal>add-source</goal>
-                            <goal>compile</goal>
-                        </goals>
-                    </execution>
-                    -->
                     <execution>
                         <id>scala-test-compile</id>
                         <phase>process-test-resources</phase>
@@ -284,34 +254,6 @@
                         </goals>
                     </execution>
                 </executions>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.3</version>
-                <configuration>
-                    <compilerId>javac-with-errorprone</compilerId>
-                    <forceJavacCompilerUse>true</forceJavacCompilerUse>
-                    <!-- maven-compiler-plugin defaults to targeting Java 5, but our javac
-                         only supports >=6 -->
-                    <source>8</source>
-                    <target>8</target>
-                </configuration>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.codehaus.plexus</groupId>
-                        <artifactId>plexus-compiler-javac-errorprone</artifactId>
-                        <version>2.8.3</version>
-                    </dependency>
-                    <!-- override plexus-compiler-javac-errorprone's dependency on
-                         Error Prone with the latest version -->
-                    <dependency>
-                        <groupId>com.google.errorprone</groupId>
-                        <artifactId>error_prone_core</artifactId>
-                        <version>2.3.1</version>
-                    </dependency>
-                </dependencies>
             </plugin>
 
             <!-- disable surefire -->

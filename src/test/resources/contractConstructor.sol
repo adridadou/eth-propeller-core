@@ -1,11 +1,11 @@
-pragma solidity ^0.4.7;
+pragma solidity ^0.5.0;
 
 
 contract ContractConstructor {
 
     string public value;
 
-    constructor (string _value) public {
+    constructor (string memory _value) public {
         value = _value;
     }
 }

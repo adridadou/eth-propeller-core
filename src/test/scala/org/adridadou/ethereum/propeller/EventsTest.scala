@@ -32,7 +32,7 @@ class EventsTest extends FlatSpec with Matchers with Checkers {
 
       myContract.createEvent("my event is here and it is much longer than anticipated")
       val result = observeEventWithInfo.first().toBlocking.first
-      result.getTransactionHash shouldBe EthHash.of("a3fc39d2ab89584a822da603d170b58739c7db7cbde9af06565073177814e723")
+      result.getTransactionHash shouldBe EthHash.of("16a483684071817f67b4375becca013d17b969afaa8c431c0426b561e83d7bf0")
       result.getResult.value shouldBe "my event is here and it is much longer than anticipated"
 
       val events = ethereum.getEventsAtBlock(ethereum.getTransactionInfo(result.getTransactionHash).get().getBlockHash, solidityEvent, address)

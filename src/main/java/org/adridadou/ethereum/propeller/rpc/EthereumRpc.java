@@ -1,5 +1,6 @@
 package org.adridadou.ethereum.propeller.rpc;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -7,7 +8,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.adridadou.ethereum.propeller.Crypto;
 import org.adridadou.ethereum.propeller.EthereumBackend;
 import org.adridadou.ethereum.propeller.event.BlockInfo;
 import org.adridadou.ethereum.propeller.event.EthereumEventHandler;
@@ -26,15 +26,13 @@ import org.adridadou.ethereum.propeller.values.TransactionInfo;
 import org.adridadou.ethereum.propeller.values.TransactionReceipt;
 import org.adridadou.ethereum.propeller.values.TransactionRequest;
 import org.adridadou.ethereum.propeller.values.TransactionStatus;
+import org.ethereum.crypto.ECKey;
+import org.ethereum.util.ByteUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.web3j.crypto.Credentials;
-import org.web3j.crypto.RawTransaction;
-import org.web3j.crypto.TransactionEncoder;
 import org.web3j.protocol.core.methods.response.EthBlock;
 import org.web3j.protocol.core.methods.response.Log;
 import org.web3j.protocol.core.methods.response.Transaction;
-import org.web3j.utils.Numeric;
 
 /**
  * Created by davidroon on 20.01.17.
@@ -70,11 +68,27 @@ public class EthereumRpc implements EthereumBackend {
 
     @Override
     public EthHash submit(TransactionRequest request, Nonce nonce) {
-        RawTransaction tx = web3JFacade.createTransaction(nonce, getGasPrice(), request.getGasLimit(), request.getAddress(), request.getValue(), request.getData());
-        EthData signedMessage = EthData.of(TransactionEncoder.signMessage(tx, (byte) chainId.id, Credentials.create(Numeric.toHexStringNoPrefix(request.getAccount().getBigIntPrivateKey()))));
-        web3JFacade.sendTransaction(signedMessage);
+        org.ethereum.core.Transaction transaction = createTransaction(nonce, getGasPrice(), request);
+        transaction.sign(ECKey.fromPrivate(request.getAccount().getBigIntPrivateKey()));
+        web3JFacade.sendTransaction(EthData.of(transaction.getEncoded()));
+        return EthHash.of(transaction.getHash());
+    }
 
-        return EthHash.of(Crypto.sha3(signedMessage).data);
+    private org.ethereum.core.Transaction createTransaction(Nonce nonce, GasPrice gasPrice, TransactionRequest request) {
+        byte[] nonceBytes = encodeBigInt(nonce.getValue());
+        byte[] gasPriceBytes = encodeBigInt(gasPrice.getPrice().inWei());
+        byte[] gasBytes = encodeBigInt(request.getGasLimit().getUsage());
+        byte[] valueBytes = encodeBigInt(request.getValue().inWei());
+
+        return new org.ethereum.core.Transaction(nonceBytes, gasPriceBytes, gasBytes,
+                request.getAddress().toData().data, valueBytes, request.getData().data, chainId.id);
+    }
+
+    private byte[] encodeBigInt(BigInteger value) {
+        if(BigInteger.ZERO.equals(value)){
+            return ByteUtil.EMPTY_BYTE_ARRAY;
+        }
+        return ByteUtil.bigIntegerToBytes(value);
     }
 
     @Override
@@ -125,6 +139,7 @@ public class EthereumRpc implements EthereumBackend {
                 .map(transaction -> {
                     TransactionReceipt receipt = toReceipt(transaction, web3jReceipt);
                     TransactionStatus status = transaction.getBlockHash().isEmpty() ? TransactionStatus.Unknown : TransactionStatus.Executed;
+                    System.out.println("getting receipt " + receipt.isSuccessful + ":" + receipt.error + ":" + status.name());
                     return new TransactionInfo(hash, receipt, status, EthHash.of(transaction.getBlockHash()));
                 })
         );
