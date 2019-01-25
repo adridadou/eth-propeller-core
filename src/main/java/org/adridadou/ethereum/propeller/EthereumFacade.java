@@ -232,6 +232,19 @@ public class EthereumFacade {
     }
 
     /**
+     * Returns the GasUsage of the transaction data.
+     * It takes into account additional gas usage for contract creation
+     * @param value The value to send
+     * @param data The data to send
+     * @param account The account that sends ether
+     * @param address The target address
+     * @return The GasUsage
+     */
+    public GasUsage estimateGas(EthValue value, EthData data, EthAccount account, EthAddress address) {
+        return ethereumProxy.estimateGas(value, data, account, address);
+    }
+
+    /**
      * Returns the binary code from a deployed smart contract
      * @param address The smart contract's address
      * @return The code
