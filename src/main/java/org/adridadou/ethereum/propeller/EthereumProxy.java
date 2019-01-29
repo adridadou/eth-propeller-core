@@ -254,7 +254,7 @@ class EthereumProxy {
         return futureResult;
     }
 
-    private GasUsage estimateGas(EthValue value, EthData data, EthAccount account, EthAddress toAddress) {
+    public GasUsage estimateGas(EthValue value, EthData data, EthAccount account, EthAddress toAddress) {
         GasUsage gasLimit = ethereum.estimateGas(account, toAddress, value, data);
         //if it is a contract creation
         if (toAddress.isEmpty()) {
