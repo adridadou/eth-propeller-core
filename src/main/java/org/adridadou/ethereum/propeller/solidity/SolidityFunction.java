@@ -11,6 +11,7 @@ import org.adridadou.ethereum.propeller.values.EthData;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static org.adridadou.ethereum.propeller.values.EthData.WORD_SIZE;
@@ -65,6 +66,13 @@ public class SolidityFunction {
             }
         }
         return true;
+    }
+
+    public Optional<String> matchParam(Class<?> classType, int paramIndex) {
+        if (encoders.get(paramIndex).stream().noneMatch(encoder -> encoder.canConvert(classType))) {
+            return Optional.of("no encoder found for converting type " + classType.getSimpleName() + " to solidity type " + parameters.get(paramIndex).name());
+        }
+        return Optional.empty();
     }
 
     public EthData encode(Object... args) {
