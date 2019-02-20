@@ -11,7 +11,7 @@ import org.adridadou.ethereum.propeller.solidity.converters.encoders.SolidityTyp
 import org.adridadou.ethereum.propeller.swarm.SwarmHash;
 import org.adridadou.ethereum.propeller.swarm.SwarmService;
 import org.adridadou.ethereum.propeller.values.*;
-import rx.Observable;
+import io.reactivex.Observable;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
