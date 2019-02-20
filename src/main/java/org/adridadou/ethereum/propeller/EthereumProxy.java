@@ -1,6 +1,8 @@
 package org.adridadou.ethereum.propeller;
 
+import io.reactivex.Flowable;
 import io.reactivex.Observable;
+import io.reactivex.subjects.ReplaySubject;
 import org.adridadou.ethereum.propeller.event.BlockInfo;
 import org.adridadou.ethereum.propeller.event.EthereumEventHandler;
 import org.adridadou.ethereum.propeller.exception.EthereumApiException;
@@ -21,7 +23,10 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
@@ -36,8 +41,10 @@ class EthereumProxy {
     private static final int ADDITIONAL_GAS_DIRTY_FIX = 200_000;
     private static final Logger logger = LoggerFactory.getLogger(EthereumProxy.class);
 
-    private final BlockingQueue<TransactionRequest> transactions = new ArrayBlockingQueue<>(10000);
-    private final Map<TransactionRequest, CompletableFuture<EthHash>> futureMap = new LinkedHashMap<>();
+    private final ReplaySubject<TransactionRequest> transactionPublisher = ReplaySubject.createWithSize(10000);
+    private final Observable<TransactionRequest> transactionObservable = Observable.empty();
+
+    private final Map<TransactionRequest, CompletableFuture<EthHash>> futureMap = new ConcurrentHashMap<>();
 
     private final EthereumBackend ethereum;
     private final EthereumEventHandler eventHandler;
@@ -63,31 +70,30 @@ class EthereumProxy {
     }
 
     private void processTransactions() {
-        executor.submit(() -> {
-            while (true) {
-                TransactionRequest request = transactions.take();
-                this.processTransactionRequest(request);
-            }
-        });
+        transactionObservable.mergeWith(transactionPublisher)
+                .forEach(txRequest -> {
+                    logger.info("New transaction event: " + txRequest.hashCode());
+                    executor.submit(() -> process(txRequest));
+                });
     }
 
-    private void processTransactionRequest(TransactionRequest request) {
-        txLock.lock();
-        Nonce nonce = getNonce(request.getAccount().getAddress());
+    private void process(TransactionRequest txRequest) {
+        logger.info("Executing new transaction: " + txRequest.hashCode());
         try {
-            EthHash hash = ethereum.submit(request, nonce);
-            increasePendingTransactionCounter(request.getAccount().getAddress(), hash);
-            Optional.ofNullable(futureMap.get(request))
+            txLock.lock();
+            Nonce nonce = getNonce(txRequest.getAccount().getAddress());
+            EthHash hash = ethereum.submit(txRequest, nonce);
+            increasePendingTransactionCounter(txRequest.getAccount().getAddress(), hash);
+            Optional.ofNullable(futureMap.get(txRequest))
                     .ifPresent(future -> future.complete(hash));
-            futureMap.remove(request);
+            futureMap.remove(txRequest);
         } catch (Throwable t) {
             logger.warn("Interrupted error while waiting for transactions to be submitted:", t);
-            Optional.ofNullable(futureMap.get(request))
+            Optional.ofNullable(futureMap.get(txRequest))
                     .ifPresent(future -> future.completeExceptionally(t));
         } finally {
             txLock.unlock();
         }
-
     }
 
     EthereumProxy addVoidClass(Class<?> cls) {
@@ -195,15 +201,14 @@ class EthereumProxy {
         }).reduce((a, b) -> a + ", " + b).orElse("[no args]");
     }
 
-    private CompletableFuture<EthHash> submitTransaction(TransactionRequest request) {
-        if (futureMap.containsKey(request)) {
-            return futureMap.get(request);
+    private CompletableFuture<EthHash> submitTransaction(TransactionRequest txRequest) {
+        if (futureMap.containsKey(txRequest)) {
+            return futureMap.get(txRequest);
         }
         CompletableFuture<EthHash> future = new CompletableFuture<>();
-        txLock.lock();
-        transactions.add(request);
-        futureMap.put(request, future);
-        txLock.unlock();
+        logger.info("Accepted transaction " + txRequest.hashCode());
+        transactionPublisher.onNext(txRequest);
+        futureMap.put(txRequest, future);
         return future;
     }
 
