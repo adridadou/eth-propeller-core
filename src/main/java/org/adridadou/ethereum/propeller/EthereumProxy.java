@@ -1,6 +1,5 @@
 package org.adridadou.ethereum.propeller;
 
-import io.reactivex.Flowable;
 import io.reactivex.Observable;
 import io.reactivex.subjects.ReplaySubject;
 import org.adridadou.ethereum.propeller.event.BlockInfo;
@@ -72,13 +71,13 @@ class EthereumProxy {
     private void processTransactions() {
         transactionObservable.mergeWith(transactionPublisher)
                 .forEach(txRequest -> {
-                    logger.info("New transaction event: " + txRequest.hashCode());
+                    logger.debug("New transaction event: " + txRequest.hashCode());
                     executor.submit(() -> process(txRequest));
                 });
     }
 
     private void process(TransactionRequest txRequest) {
-        logger.info("Executing new transaction: " + txRequest.hashCode());
+        logger.debug("Executing new transaction: " + txRequest.hashCode());
         try {
             txLock.lock();
             Nonce nonce = getNonce(txRequest.getAccount().getAddress());
@@ -206,7 +205,7 @@ class EthereumProxy {
             return futureMap.get(txRequest);
         }
         CompletableFuture<EthHash> future = new CompletableFuture<>();
-        logger.info("Accepted transaction " + txRequest.hashCode());
+        logger.debug("Accepted transaction " + txRequest.hashCode());
         transactionPublisher.onNext(txRequest);
         futureMap.put(txRequest, future);
         return future;
@@ -254,7 +253,7 @@ class EthereumProxy {
                         throw new EthereumApiException("the transaction has been dropped! - " + receipt.error);
                     }
                     Optional<TransactionReceipt> result = checkForErrors(receipt);
-                    return result.orElseThrow(() -> new EthereumApiException("error with the transaction " + receipt.hash + ". error:" + receipt.error));
+                    return result.<EthereumApiException>orElseThrow(() -> new EthereumApiException("error with the transaction " + receipt.hash + ". error:" + receipt.error));
                 })
                 .first(new EmptyTransactionReceipt())
                 .subscribe(futureResult::complete);

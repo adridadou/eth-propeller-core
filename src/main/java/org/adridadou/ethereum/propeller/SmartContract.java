@@ -54,7 +54,7 @@ public class SmartContract {
 
     private SolidityFunction buildFunction(AbiEntry entry) {
         List<SolidityType> parameters = entry.getInputs().stream()
-                .map(abiParam -> SolidityType.find(abiParam.getType()).orElseThrow(() -> new EthereumApiException("unknown type " + abiParam.getType()))).collect(Collectors.toList());
+                .map(abiParam -> SolidityType.find(abiParam.getType()).<EthereumApiException>orElseThrow(() -> new EthereumApiException("unknown type " + abiParam.getType()))).collect(Collectors.toList());
 
         return new SolidityFunction(entry, parameters, getEncoders(entry), getDecoders(entry));
     }
