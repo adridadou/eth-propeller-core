@@ -36,7 +36,6 @@ public class AbstractHandler<T> implements ObservableOnSubscribe<T> {
             try {
                 emitter.onNext(param);
             } catch (Throwable ex) {
-                // TODO add logs
                 /*Do nothing. We want to continue so we don't call onError. Should log the error somewhere*/
             }
         });

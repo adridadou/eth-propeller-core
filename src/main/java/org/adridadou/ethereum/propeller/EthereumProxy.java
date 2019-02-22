@@ -1,6 +1,9 @@
 package org.adridadou.ethereum.propeller;
 
+import io.reactivex.BackpressureStrategy;
+import io.reactivex.Flowable;
 import io.reactivex.Observable;
+import io.reactivex.schedulers.Schedulers;
 import io.reactivex.subjects.ReplaySubject;
 import org.adridadou.ethereum.propeller.event.BlockInfo;
 import org.adridadou.ethereum.propeller.event.EthereumEventHandler;
@@ -22,10 +25,7 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
@@ -40,8 +40,9 @@ class EthereumProxy {
     private static final int ADDITIONAL_GAS_DIRTY_FIX = 200_000;
     private static final Logger logger = LoggerFactory.getLogger(EthereumProxy.class);
 
-    private final ReplaySubject<TransactionRequest> transactionPublisher = ReplaySubject.createWithSize(10000);
-    private final Observable<TransactionRequest> transactionObservable = Observable.empty();
+    private final ReplaySubject<TransactionRequest> transactionPublisher = ReplaySubject.create(10);
+    private final Flowable<TransactionRequest> transactionObservable = transactionPublisher
+            .toFlowable(BackpressureStrategy.BUFFER);
 
     private final Map<TransactionRequest, CompletableFuture<EthHash>> futureMap = new ConcurrentHashMap<>();
 
@@ -49,7 +50,7 @@ class EthereumProxy {
     private final EthereumEventHandler eventHandler;
     private final EthereumConfig config;
     private final Map<EthAddress, Set<EthHash>> pendingTransactions = new HashMap<>();
-    private final Map<EthAddress, Nonce> nonces = new HashMap<>();
+    private final Map<EthAddress, Nonce> nonces = new ConcurrentHashMap<>();
     private final Map<SolidityTypeGroup, List<SolidityTypeEncoder>> encoders = new HashMap<>();
     private final Map<SolidityTypeGroup, List<SolidityTypeDecoder>> decoders = new HashMap<>();
     private final List<Class<? extends CollectionDecoder>> listDecoders = new ArrayList<>();
@@ -69,25 +70,22 @@ class EthereumProxy {
     }
 
     private void processTransactions() {
-        transactionObservable.mergeWith(transactionPublisher)
-                .forEach(txRequest -> {
-                    logger.debug("New transaction event: " + txRequest.hashCode());
-                    executor.submit(() -> process(txRequest));
-                });
+        transactionObservable
+                .subscribeOn(Schedulers.computation())
+                .subscribe(txRequest -> executor.submit(() -> process(txRequest)));
     }
 
     private void process(TransactionRequest txRequest) {
-        logger.debug("Executing new transaction: " + txRequest.hashCode());
         try {
+            logger.debug("Executing new transaction: " + txRequest.hashCode());
             txLock.lock();
-            Nonce nonce = getNonce(txRequest.getAccount().getAddress());
-            EthHash hash = ethereum.submit(txRequest, nonce);
+            EthHash hash = ethereum.submit(txRequest, getNonce(txRequest.getAccount().getAddress()));
             increasePendingTransactionCounter(txRequest.getAccount().getAddress(), hash);
             Optional.ofNullable(futureMap.get(txRequest))
                     .ifPresent(future -> future.complete(hash));
             futureMap.remove(txRequest);
         } catch (Throwable t) {
-            logger.warn("Interrupted error while waiting for transactions to be submitted:", t);
+            logger.error("Interrupted error while waiting for transactions to be submitted:", t);
             Optional.ofNullable(futureMap.get(txRequest))
                     .ifPresent(future -> future.completeExceptionally(t));
         } finally {
@@ -131,12 +129,18 @@ class EthereumProxy {
     }
 
     Nonce getNonce(final EthAddress address) {
-        nonceLock.lock();
-        nonces.computeIfAbsent(address, ethereum::getNonce);
+        nonces.computeIfAbsent(address, this::computeNonce);
         Integer offset = Optional.ofNullable(pendingTransactions.get(address)).map(Set::size).orElse(0);
-        Nonce nonce = nonces.get(address).add(offset);
-        nonceLock.unlock();
-        return nonce;
+        return nonces.get(address).add(offset);
+    }
+
+    private Nonce computeNonce(EthAddress address) {
+        try {
+            nonceLock.lock();
+            return ethereum.getNonce(address);
+        } finally {
+            nonceLock.unlock();
+        }
     }
 
     SmartContractByteCode getCode(EthAddress address) {
@@ -225,15 +229,18 @@ class EthereumProxy {
         Objects.requireNonNull(txHash);
         long currentBlock = eventHandler.getCurrentBlockNumber();
 
-        Observable<TransactionInfo> droppedTxs = eventHandler.observeTransactions()
+        Flowable<TransactionInfo> droppedTxs = eventHandler.observeTransactions()
+                .toFlowable(BackpressureStrategy.BUFFER)
                 .filter(params -> params.getReceipt().map(receipt -> Objects.equals(receipt.hash, txHash))
                         .orElse(false) && params.getStatus() == TransactionStatus.Dropped);
 
-        Observable<TransactionInfo> timeoutBlock = eventHandler.observeBlocks()
+        Flowable<TransactionInfo> timeoutBlock = eventHandler.observeBlocks()
+                .toFlowable(BackpressureStrategy.BUFFER)
                 .filter(blockParams -> blockParams.blockNumber > currentBlock + config.blockWaitLimit())
-                .map(params -> null);
+                .map(blockInfo -> new EmptyTransactionInfo());
 
-        Observable<TransactionInfo> blockTxs = eventHandler.observeBlocks()
+        Flowable<TransactionInfo> blockTxs = eventHandler.observeBlocks()
+                .toFlowable(BackpressureStrategy.BUFFER)
                 .map(block -> ethereum.getTransactionInfo(txHash))
                 .map(optInfo -> optInfo.flatMap(TransactionInfo::getReceipt))
                 .filter(Optional::isPresent)
@@ -242,8 +249,10 @@ class EthereumProxy {
 
         CompletableFuture<TransactionReceipt> futureResult = new CompletableFuture<>();
 
-        Observable
+        Observable.empty()
+                .toFlowable(BackpressureStrategy.BUFFER)
                 .merge(droppedTxs, blockTxs, timeoutBlock)
+                .filter(txInfo -> !(txInfo instanceof EmptyTransactionInfo))
                 .map(params -> {
                     if (params == null) {
                         throw new EthereumApiException("the transaction has not been included in the last " + config.blockWaitLimit() + " blocks");
@@ -256,7 +265,7 @@ class EthereumProxy {
                     return result.<EthereumApiException>orElseThrow(() -> new EthereumApiException("error with the transaction " + receipt.hash + ". error:" + receipt.error));
                 })
                 .first(new EmptyTransactionReceipt())
-                .subscribe(futureResult::complete);
+                .subscribe(txInfo -> futureResult.complete(txInfo), err -> futureResult.completeExceptionally(err));
 
         return futureResult;
     }
@@ -285,7 +294,7 @@ class EthereumProxy {
     private void updateNonce() {
         eventHandler.observeTransactions()
                 .filter(tx -> tx.getStatus() == TransactionStatus.Dropped)
-                .forEach(params -> {
+                .subscribe(params -> {
                     TransactionReceipt receipt = params.getReceipt().orElseThrow(() -> new EthereumApiException("no Transaction receipt found!"));
                     EthAddress currentAddress = receipt.sender;
                     EthHash hash = receipt.hash;
@@ -297,7 +306,7 @@ class EthereumProxy {
                     nonceLock.unlock();
                 });
         eventHandler.observeBlocks()
-                .forEach(params -> {
+                .subscribe(params -> {
                     nonceLock.lock();
                     params.receipts
                             .forEach(receipt -> Optional.ofNullable(pendingTransactions.get(receipt.sender))
