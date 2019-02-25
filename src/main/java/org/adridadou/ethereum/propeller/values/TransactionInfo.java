@@ -7,16 +7,19 @@ public class TransactionInfo {
     private final EthHash transactionHash;
     private final TransactionReceipt receipt;
     private final TransactionStatus status;
-    private final boolean contractCreation;
     private final EthHash blockHash;
+    private final boolean contractCreation;
 
-
-    public TransactionInfo(EthHash transactionHash, TransactionReceipt receipt, TransactionStatus status, EthHash blockHash) {
+    public TransactionInfo(EthHash transactionHash, TransactionReceipt receipt, TransactionStatus status, EthHash blockHash, boolean contractCreation) {
         this.transactionHash = transactionHash;
         this.receipt = receipt;
         this.status = status;
-        this.contractCreation = this.receipt != null && Optional.ofNullable(receipt).map(r -> r.receiveAddress.isEmpty()).orElse(false);
         this.blockHash = blockHash;
+        this.contractCreation = contractCreation;
+    }
+
+    public TransactionInfo(EthHash transactionHash, TransactionReceipt receipt, TransactionStatus status, EthHash blockHash) {
+        this(transactionHash, receipt, status, blockHash, receipt != null && Optional.ofNullable(receipt).map(r -> r.receiveAddress.isEmpty()).orElse(false));
     }
 
     public Optional<TransactionReceipt> getReceipt() {

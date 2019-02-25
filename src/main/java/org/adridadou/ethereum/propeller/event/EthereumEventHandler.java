@@ -1,7 +1,7 @@
 package org.adridadou.ethereum.propeller.event;
 
 import org.adridadou.ethereum.propeller.values.TransactionInfo;
-import rx.Observable;
+import io.reactivex.Observable;
 
 import java.util.concurrent.CompletableFuture;
 

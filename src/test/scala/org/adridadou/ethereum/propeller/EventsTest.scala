@@ -31,7 +31,7 @@ class EventsTest extends FlatSpec with Matchers with Checkers {
       val observeEventWithInfo = ethereum.observeEventsWithInfo(solidityEvent, address)
 
       myContract.createEvent("my event is here and it is much longer than anticipated")
-      val result = observeEventWithInfo.first().toBlocking.first
+      val result = observeEventWithInfo.first(new EventInfo(EthHash.empty(), new EmptyEvent())).toFuture.get()
       result.getTransactionHash shouldBe EthHash.of("90d8b78789e8cfadac95132974bf5cd119a4d51465e940f01ac08cf7332062e7")
       result.getResult.value shouldBe "my event is here and it is much longer than anticipated"
 
@@ -53,3 +53,5 @@ trait ContractEvents {
 }
 
 case class MyEvent(from: EthAddress, to: EthAddress, value: String, ethData: EthData, signature: EthSignature)
+
+class EmptyEvent() extends MyEvent(EthAddress.empty(), EthAddress.empty(), "", EthData.empty(), EthSignature.of(EthData.empty()))
