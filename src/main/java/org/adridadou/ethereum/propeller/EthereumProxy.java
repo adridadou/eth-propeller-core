@@ -40,9 +40,8 @@ class EthereumProxy {
     private static final int ADDITIONAL_GAS_DIRTY_FIX = 200_000;
     private static final Logger logger = LoggerFactory.getLogger(EthereumProxy.class);
 
-    private final ReplaySubject<TransactionRequest> transactionPublisher = ReplaySubject.create(10);
-    private final Flowable<TransactionRequest> transactionObservable = transactionPublisher
-            .toFlowable(BackpressureStrategy.BUFFER);
+    private final ReplaySubject<TransactionRequest> transactionPublisher = ReplaySubject.create(100);
+    private final Flowable<TransactionRequest> transactionObservable = transactionPublisher.toFlowable(BackpressureStrategy.BUFFER);
 
     private final Map<TransactionRequest, CompletableFuture<EthHash>> futureMap = new ConcurrentHashMap<>();
 
@@ -56,7 +55,7 @@ class EthereumProxy {
     private final List<Class<? extends CollectionDecoder>> listDecoders = new ArrayList<>();
     private final List<Class<? extends CollectionEncoder>> listEncoders = new ArrayList<>();
     private final Set<Class<?>> voidClasses = new HashSet<>();
-    private final ExecutorService executor = Executors.newSingleThreadExecutor();
+    private final ExecutorService txExecutor = Executors.newSingleThreadExecutor();
     private final ReentrantLock nonceLock = new ReentrantLock();
     private final ReentrantLock txLock = new ReentrantLock();
 
@@ -71,8 +70,9 @@ class EthereumProxy {
 
     private void processTransactions() {
         transactionObservable
-                .subscribeOn(Schedulers.computation())
-                .subscribe(txRequest -> executor.submit(() -> process(txRequest)));
+                .doOnError(err -> logger.error("Error while processing transactions: " + err.getMessage(), err))
+                .subscribeOn(Schedulers.from(txExecutor))
+                .subscribe(txRequest -> txExecutor.submit(() -> process(txRequest)));
     }
 
     private void process(TransactionRequest txRequest) {
@@ -129,15 +129,11 @@ class EthereumProxy {
     }
 
     Nonce getNonce(final EthAddress address) {
-        nonces.computeIfAbsent(address, this::computeNonce);
-        Integer offset = Optional.ofNullable(pendingTransactions.get(address)).map(Set::size).orElse(0);
-        return nonces.get(address).add(offset);
-    }
-
-    private Nonce computeNonce(EthAddress address) {
         try {
             nonceLock.lock();
-            return ethereum.getNonce(address);
+            nonces.computeIfAbsent(address, ethereum::getNonce);
+            Integer offset = Optional.ofNullable(pendingTransactions.get(address)).map(Set::size).orElse(0);
+            return nonces.get(address).add(offset);
         } finally {
             nonceLock.unlock();
         }
