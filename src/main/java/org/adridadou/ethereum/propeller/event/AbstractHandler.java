@@ -36,6 +36,7 @@ public class AbstractHandler<T> implements ObservableOnSubscribe<T> {
             try {
                 if (emitter.isDisposed()) {
                     emitter.onComplete();
+                    emitters.remove(emitter);
                 } else {
                     emitter.onNext(param);
                 }
