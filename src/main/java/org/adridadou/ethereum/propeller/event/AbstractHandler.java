@@ -34,9 +34,13 @@ public class AbstractHandler<T> implements ObservableOnSubscribe<T> {
         removeDisposed();
         emitters.forEach(emitter -> {
             try {
-                emitter.onNext(param);
+                if (emitter.isDisposed()) {
+                    emitter.onComplete();
+                } else {
+                    emitter.onNext(param);
+                }
             } catch (Throwable ex) {
-                /*Do nothing. We want to continue so we don't call onError. Should log the error somewhere*/
+                emitter.onError(ex);
             }
         });
     }

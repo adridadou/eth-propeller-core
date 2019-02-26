@@ -23,7 +23,8 @@ object SolidityConversionHelper {
       .balance(mainAccount, EthValue.ether(10000000))
       .build()), EthereumConfig.builder().build())
 
-  val contract: SolidityContractDetails = SolidityConversionHelper.facade.compile(SoliditySourceFile.from(new File("src/test/resources/conversionContract.sol")))
+  val contract: SolidityContractDetails = SolidityConversionHelper.facade
+    .compile(SoliditySourceFile.from(new File(getClass.getResource("/conversionContract.sol").getFile)))
     .findContract("myContract").get()
 
   val contractAddress: EthAddress = facade.publishContract(contract, mainAccount).get()
@@ -38,15 +39,19 @@ trait SolidityConversionHelper {
         SolidityConversionHelper.contractAddress,
         SolidityConversionHelper.mainAccount,
         tag.runtimeClass).asInstanceOf[T]) match {
-      case Success(result) => result
+      case Success(result) =>
+        result
       case Failure(ex) =>
         throw ex
     }
   }
 
   def contractObjectWithAddress[T]()(implicit tag: ClassTag[T]): (EthAddress, T) = {
-    val result = (SolidityConversionHelper.contractAddress, SolidityConversionHelper.facade.createContractProxy(SolidityConversionHelper.contract, SolidityConversionHelper.contractAddress, SolidityConversionHelper.mainAccount, tag.runtimeClass).asInstanceOf[T])
-
-    result
+    (SolidityConversionHelper.contractAddress,
+      SolidityConversionHelper.facade.createContractProxy(
+        SolidityConversionHelper.contract,
+        SolidityConversionHelper.contractAddress,
+        SolidityConversionHelper.mainAccount,
+        tag.runtimeClass).asInstanceOf[T])
   }
 }
