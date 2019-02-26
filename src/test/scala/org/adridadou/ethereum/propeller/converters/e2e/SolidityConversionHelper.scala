@@ -5,6 +5,7 @@ import java.io.File
 import org.adridadou.ethereum.propeller.backend.{EthereumTest, TestConfig}
 import org.adridadou.ethereum.propeller.keystore.AccountProvider
 import org.adridadou.ethereum.propeller.solidity.SolidityContractDetails
+import org.adridadou.ethereum.propeller.values.EthValue.ether
 import org.adridadou.ethereum.propeller.values.{EthAccount, EthAddress, EthValue, SoliditySourceFile}
 import org.adridadou.ethereum.propeller.{CoreEthereumFacadeProvider, EthereumConfig, EthereumFacade}
 
@@ -17,13 +18,11 @@ import scala.util.{Failure, Success, Try}
   */
 
 object SolidityConversionHelper {
-  val mainAccount: EthAccount = AccountProvider.fromSeed("test")
+  val mainAccount: EthAccount = AccountProvider.fromSeed("test account seed")
   val facade: EthereumFacade = CoreEthereumFacadeProvider
-    .create(new EthereumTest(TestConfig.builder()
-      .balance(mainAccount, EthValue.ether(10000000))
-      .build()), EthereumConfig.builder().build())
+    .create(new EthereumTest(TestConfig.builder.balance(mainAccount, ether(1000)).build), EthereumConfig.builder().build())
 
-  val contract: SolidityContractDetails = SolidityConversionHelper.facade
+  val contract: SolidityContractDetails = facade
     .compile(SoliditySourceFile.from(new File(getClass.getResource("/conversionContract.sol").getFile)))
     .findContract("myContract").get()
 

@@ -178,7 +178,8 @@ class EthereumProxy {
     }
 
     private CompletableFuture<EthAddress> createContractWithValue(SolidityContractDetails contract, EthAccount account, EthValue value, Object... constructorArgs) {
-        EthData argsEncoded = new SmartContract(contract, account, EthAddress.empty(), this, ethereum).getConstructor(constructorArgs)
+        EthData argsEncoded = new SmartContract(contract, account, EthAddress.empty(), this, ethereum)
+                .getConstructor(constructorArgs)
                 .map(constructor -> constructor.encode(constructorArgs))
                 .orElseGet(() -> {
                     if (constructorArgs.length > 0) {
@@ -288,7 +289,14 @@ class EthereumProxy {
     }
 
     private void updateNonce() {
+        observeTransactions();
+        observeBlocks();
+    }
+
+    private void observeTransactions() {
         eventHandler.observeTransactions()
+                .toFlowable(BackpressureStrategy.BUFFER)
+                .subscribeOn(Schedulers.trampoline())
                 .filter(tx -> tx.getStatus() == TransactionStatus.Dropped)
                 .subscribe(params -> {
                     TransactionReceipt receipt = params.getReceipt().orElseThrow(() -> new EthereumApiException("no Transaction receipt found!"));
@@ -300,8 +308,13 @@ class EthereumProxy {
                         nonces.put(currentAddress, ethereum.getNonce(currentAddress));
                     });
                     nonceLock.unlock();
-                });
+                }, err -> logger.error("Error while observing transactions: " + err.getMessage(), err));
+    }
+
+    private void observeBlocks() {
         eventHandler.observeBlocks()
+                .toFlowable(BackpressureStrategy.BUFFER)
+                .subscribeOn(Schedulers.trampoline())
                 .subscribe(params -> {
                     nonceLock.lock();
                     params.receipts
@@ -311,7 +324,7 @@ class EthereumProxy {
                                         nonces.put(receipt.sender, ethereum.getNonce(receipt.sender));
                                     }));
                     nonceLock.unlock();
-                });
+                }, err -> logger.error("Error while observing blocks: " + err.getMessage(), err));
     }
 
     EthereumEventHandler events() {

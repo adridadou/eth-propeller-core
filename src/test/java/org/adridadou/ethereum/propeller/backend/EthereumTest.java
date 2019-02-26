@@ -57,6 +57,7 @@ public class EthereumTest implements EthereumBackend {
     private void processTransactions() {
         transactionObservable
                 .doOnError(err -> logger.error(err.getMessage(), err))
+                .doOnNext(next -> logger.debug("New transaction to process"))
                 .subscribeOn(Schedulers.from(executor))
                 .subscribe(tx -> executor.submit(() -> process(tx)));
     }
