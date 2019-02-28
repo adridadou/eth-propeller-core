@@ -6,6 +6,7 @@ import java.math.BigInteger;
 import java.util.Optional;
 import java.util.concurrent.Executors;
 
+import io.reactivex.Flowable;
 import org.adridadou.ethereum.propeller.exception.EthereumApiException;
 import org.adridadou.ethereum.propeller.values.EthAccount;
 import org.adridadou.ethereum.propeller.values.EthAddress;
@@ -29,7 +30,7 @@ import org.web3j.protocol.core.methods.response.EthBlock;
 import org.web3j.protocol.core.methods.response.EthGetBalance;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.utils.Numeric;
-import rx.Observable;
+import io.reactivex.Observable;
 
 /**
  * Created by davidroon on 19.11.16.
@@ -69,8 +70,8 @@ public class Web3JFacade {
         }
     }
 
-    Observable<EthBlock> observeBlocks() {
-        return web3j.blockObservable(true);
+    Flowable<EthBlock> observeBlocks() {
+        return web3j.blockFlowable(true);
     }
 
     Observable<EthBlock> observeBlocksPolling(long pollingFrequence) {
