@@ -155,7 +155,13 @@ class EthereumProxy {
                 .flatMap(params -> {
                     List<EventData> events = params.getReceipt().map(receipt -> receipt.events).get();
                     return Observable.fromIterable(events.stream().filter(eventDefinition::match)
-                            .map(data -> new EventInfo<>(params.getTransactionHash(), eventDefinition.parseEvent(data, eventDefinition.getEntityClass()))).collect(Collectors.toList()));
+                            .map(data -> {
+                                if(eventDefinition.rawDefinition()) {
+                                    return new EventInfo<T>(params.getTransactionHash(), (T) eventDefinition.parseParameters(data));
+                                } else {
+                                    return new EventInfo<>(params.getTransactionHash(), eventDefinition.parseEvent(data, eventDefinition.getEntityClass()));
+                                }
+                            }).collect(Collectors.toList()));
                 });
     }
 
@@ -421,7 +427,14 @@ class EthereumProxy {
                 .filter(params -> address.equals(params.receiveAddress))
                 .flatMap(params -> params.events.stream())
                 .filter(eventDefinition::match)
-                .map(data -> new EventInfo<>(data.getTransactionHash(), (T) eventDefinition.parseEvent(data, cls))).collect(Collectors.toList());
+                .map(data -> {
+                    if(eventDefinition.rawDefinition()) {
+                        return new EventInfo<>(data.getTransactionHash(), (T) eventDefinition.parseParameters(data));
+                    } else {
+                        return new EventInfo<>(data.getTransactionHash(), (T) eventDefinition.parseEvent(data, cls));
+                    }
+
+                }).collect(Collectors.toList());
     }
 
 
@@ -434,7 +447,13 @@ class EthereumProxy {
         TransactionReceipt receipt = ethereum.getTransactionInfo(transactionHash).flatMap(TransactionInfo::getReceipt).orElseThrow(() -> new EthereumApiException("no Transaction receipt found!"));
         if (address.equals(receipt.receiveAddress)) {
             return receipt.events.stream().filter(eventDefinition::match)
-                    .map(data -> new EventInfo<>(data.getTransactionHash(), (T) eventDefinition.parseEvent(data, cls)))
+                    .map(data -> {
+                        if(eventDefinition.rawDefinition()) {
+                            return new EventInfo<>(data.getTransactionHash(), (T) eventDefinition.parseParameters(data));
+                        } else {
+                            return new EventInfo<>(data.getTransactionHash(), (T) eventDefinition.parseEvent(data, cls));
+                        }
+                    })
                     .collect(Collectors.toList());
         }
 
