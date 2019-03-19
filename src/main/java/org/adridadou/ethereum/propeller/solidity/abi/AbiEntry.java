@@ -135,6 +135,36 @@ public class AbiEntry {
                 }).orElseThrow(() -> new EthereumApiException("could not find decoder for " + resultCls.getTypeName()));
     }
 
+    public List<Object> decodeParameters(EventData eventData, List<List<SolidityTypeDecoder>> decoders, List<Class<?>> eventParams) {
+        Object[] decodeResult = new Object[decoders.size()];
+
+        int indexed = 0;
+        int unindexed = 0;
+
+        for (int i = 0; i < decoders.size(); i++) {
+            AbiParam param = inputs.get(i);
+
+            Class<?> inputCls = eventParams.get(i);
+
+            SolidityTypeDecoder decoder = decoders.get(i).stream()
+                    .filter(encoder -> encoder.canDecode(inputCls))
+                    .findFirst().orElseThrow(() -> new EthereumApiException("could not find decoder for " + inputCls.getTypeName() + " serious bug detected!"));
+
+            if (param.isIndexed()) {
+                if (param.isDynamic()) {
+                    decodeResult[i] = decoder.decode(0, EthData.empty(), inputCls);
+                } else {
+                    decodeResult[i] = decoder.decode(0, eventData.getIndexedArguments().get(indexed), inputCls);
+                }
+                indexed++;
+            } else {
+                decodeResult[i] = decoder.decode(unindexed++, eventData.getEventArguments(), inputCls);
+            }
+        }
+
+        return Arrays.asList(decodeResult);
+    }
+
     public Object decode(EthData data, List<List<SolidityTypeDecoder>> decoders, Type resultType) {
         final Class<?> resultCls = resultType instanceof Class ? (Class) resultType : (Class) ((ParameterizedType) resultType).getRawType();
 

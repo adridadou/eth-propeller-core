@@ -294,8 +294,38 @@ public class EthereumFacade {
                 .map(entry -> {
                     List<List<SolidityTypeDecoder>> decoders = entry.getInputs().stream().map(ethereumProxy::getDecoders).collect(Collectors.toList());
                     return new SolidityEvent<>(entry, decoders, eventEntity);
+                }).findFirst();
+    }
+
+    /**
+     * Search an event definition from the ABI
+     * @param contract The compiled contract
+     * @param eventName The event name
+     * @return The solidity event definition if found
+     */
+    public Optional<SolidityEvent<List<?>>> findEventDefinitionForParameters(SolidityContractDetails contract, String eventName, List<Class<?>> eventParams) {
+        return contract.getAbi().stream()
+                .filter(entry -> entry.getType().equals("event"))
+                .filter(entry -> entry.getName().equals(eventName))
+                .filter(entry -> {
+                    List<List<SolidityTypeDecoder>> decoders = entry.getInputs().stream().map(ethereumProxy::getDecoders).collect(Collectors.toList());
+                    if(decoders.size() != eventParams.size()) {
+                        System.out.println("******* not the same size!! " + decoders.size() + ":" + eventParams.size());
+                        return false;
+                    }
+
+                    for(int i = 0; i < decoders.size(); i++) {
+                        Class<?> cls = eventParams.get(i);
+                        if (decoders.get(i).stream().noneMatch(decoder -> decoder.canDecode(cls))) {
+                            return false;
+                        }
+                    }
+                    return true;
                 })
-                .findFirst();
+                .map(entry -> {
+                    List<List<SolidityTypeDecoder>> decoders = entry.getInputs().stream().map(ethereumProxy::getDecoders).collect(Collectors.toList());
+                    return new SolidityEvent<List<?>>(entry, decoders, eventParams);
+                }).findFirst();
     }
 
     /**
