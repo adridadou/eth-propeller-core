@@ -7,6 +7,7 @@ import com.google.common.collect.Lists
 import org.adridadou.ethereum.propeller.backend.{EthereumTest, TestConfig}
 import org.adridadou.ethereum.propeller.exception.EthereumApiException
 import org.adridadou.ethereum.propeller.keystore.AccountProvider
+import org.adridadou.ethereum.propeller.solidity.SolidityContractDetails
 import org.adridadou.ethereum.propeller.values.EthValue.ether
 import org.adridadou.ethereum.propeller.values._
 import org.scalatest.check.Checkers
@@ -42,7 +43,7 @@ class EventsTest extends FlatSpec with Matchers with Checkers {
   }
 
   it should "work with a generic list as well" in {
-    (for (compiledContract <- ethereum.compile(contractSource).findContract("contractEvents").asScala;
+    (for (compiledContract:SolidityContractDetails <- ethereum.compile(contractSource).findContract("contractEvents").asScala;
           solidityEvent    <- ethereum.findEventDefinitionForParameters(compiledContract, "MyEvent", Lists.newArrayList(classOf[EthAddress], classOf[EthAddress], classOf[String], classOf[EthData], classOf[EthSignature])).asScala) yield {
 
       val myContract = ethereum.createContractProxy(compiledContract, address, mainAccount, classOf[ContractEvents])
