@@ -283,7 +283,7 @@ public class EthereumFacade {
      * @param <T> The event entity tpye
      * @return The solidity event definition if found
      */
-    public <T> Optional<SolidityEvent<T>> findEventDefinition(SolidityContractDetails contract, String eventName, Class<T> eventEntity) {
+    public <T> Optional<TypedSolidityEvent<T>> findEventDefinition(SolidityContractDetails contract, String eventName, Class<T> eventEntity) {
         return contract.getAbi().stream()
                 .filter(entry -> entry.getType().equals("event"))
                 .filter(entry -> entry.getName().equals(eventName))
@@ -293,7 +293,7 @@ public class EthereumFacade {
                 })
                 .map(entry -> {
                     List<List<SolidityTypeDecoder>> decoders = entry.getInputs().stream().map(ethereumProxy::getDecoders).collect(Collectors.toList());
-                    return new SolidityEvent<>(entry, decoders, eventEntity);
+                    return new TypedSolidityEvent<>(entry, decoders, eventEntity);
                 }).findFirst();
     }
 
@@ -303,14 +303,13 @@ public class EthereumFacade {
      * @param eventName The event name
      * @return The solidity event definition if found
      */
-    public Optional<SolidityEvent<List<?>>> findEventDefinitionForParameters(SolidityContractDetails contract, String eventName, List<Class<?>> eventParams) {
+    public Optional<RawSolidityEvent> findEventDefinitionForParameters(SolidityContractDetails contract, String eventName, List<Class<?>> eventParams) {
         return contract.getAbi().stream()
                 .filter(entry -> entry.getType().equals("event"))
                 .filter(entry -> entry.getName().equals(eventName))
                 .filter(entry -> {
                     List<List<SolidityTypeDecoder>> decoders = entry.getInputs().stream().map(ethereumProxy::getDecoders).collect(Collectors.toList());
                     if(decoders.size() != eventParams.size()) {
-                        System.out.println("******* not the same size!! " + decoders.size() + ":" + eventParams.size());
                         return false;
                     }
 
@@ -324,8 +323,19 @@ public class EthereumFacade {
                 })
                 .map(entry -> {
                     List<List<SolidityTypeDecoder>> decoders = entry.getInputs().stream().map(ethereumProxy::getDecoders).collect(Collectors.toList());
-                    return new SolidityEvent<List<?>>(entry, decoders, eventParams);
+                    return new RawSolidityEvent(entry, decoders, eventParams);
                 }).findFirst();
+    }
+
+    /**
+     * Search an event definition from the ABI
+     *
+     * @param abi         The ABI
+     * @param eventName   The event name
+     * @return The solidity event definition if found
+     */
+    public Optional<RawSolidityEvent> findEventDefinitionForParametersByAbi(EthAbi abi, String eventName, List<Class<?>> eventParameters) {
+        return findEventDefinitionForParameters(new SolcSolidityContractDetails(abi.getAbi(), "", ""), eventName, eventParameters);
     }
 
     /**
@@ -337,7 +347,7 @@ public class EthereumFacade {
      *  @param <T>         The event entity
      * @return The solidity event definition if found
      */
-    public <T> Optional<SolidityEvent<T>> findEventDefinition(EthAbi abi, String eventName, Class<T> eventEntity) {
+    public <T> Optional<TypedSolidityEvent<T>> findEventDefinition(EthAbi abi, String eventName, Class<T> eventEntity) {
         return findEventDefinition(new SolcSolidityContractDetails(abi.getAbi(), "", ""), eventName, eventEntity);
     }
 
@@ -374,7 +384,7 @@ public class EthereumFacade {
      * @return The list of events
      */
     public <T> List<T> getEventsAtBlock(Long blockNumber, SolidityEvent<T> eventDefinition, EthAddress address) {
-        return ethereumProxy.getEventsAtBlock(eventDefinition, address, eventDefinition.getEntityClass(), blockNumber);
+        return ethereumProxy.getEventsAtBlock(eventDefinition, address, blockNumber);
     }
 
     /**
@@ -387,7 +397,7 @@ public class EthereumFacade {
      * @return The list of events
      */
     public <T> List<T> getEventsAtBlock(EthHash blockHash, SolidityEvent<T> eventDefinition, EthAddress address) {
-        return ethereumProxy.getEventsAtBlock(eventDefinition, address, eventDefinition.getEntityClass(), blockHash);
+        return ethereumProxy.getEventsAtBlock(eventDefinition, address, blockHash);
     }
 
     /**
@@ -400,7 +410,7 @@ public class EthereumFacade {
      * @return The list of events
      */
     public <T> List<T> getEventsAtTransaction(EthHash transactionHash, SolidityEvent<T> eventDefinition, EthAddress address) {
-        return ethereumProxy.getEventsAtTransaction(eventDefinition, address, eventDefinition.getEntityClass(), transactionHash);
+        return ethereumProxy.getEventsAtTransaction(eventDefinition, address, transactionHash);
     }
 
     /**
@@ -413,7 +423,7 @@ public class EthereumFacade {
      * @return The list of events
      */
     public <T> List<EventInfo<T>> getEventsAtBlockWithInfo(Long blockNumber, SolidityEvent<T> eventDefinition, EthAddress address) {
-        return ethereumProxy.getEventsAtBlockWithInfo(eventDefinition, address, eventDefinition.getEntityClass(), blockNumber);
+        return ethereumProxy.getEventsAtBlockWithInfo(eventDefinition, address, blockNumber);
     }
 
     /**
@@ -426,7 +436,7 @@ public class EthereumFacade {
      * @return The list of events
      */
     public <T> List<EventInfo<T>> getEventsAtBlockWithInfo(EthHash blockHash, SolidityEvent<T> eventDefinition, EthAddress address) {
-        return ethereumProxy.getEventsAtBlockWithInfo(eventDefinition, address, eventDefinition.getEntityClass(), blockHash);
+        return ethereumProxy.getEventsAtBlockWithInfo(eventDefinition, address, blockHash);
     }
 
     /**
@@ -439,7 +449,7 @@ public class EthereumFacade {
      * @return The list of events
      */
     public <T> List<EventInfo<T>> getEventsAtTransactionWithInfo(EthHash transactionHash, SolidityEvent<T> eventDefinition, EthAddress address) {
-        return ethereumProxy.getEventsAtTransactionWithInfo(eventDefinition, address, eventDefinition.getEntityClass(), transactionHash);
+        return ethereumProxy.getEventsAtTransactionWithInfo(eventDefinition, address, transactionHash);
     }
 
     /**

@@ -10,6 +10,7 @@ import org.adridadou.ethereum.propeller.event.EthereumEventHandler;
 import org.adridadou.ethereum.propeller.exception.EthereumApiException;
 import org.adridadou.ethereum.propeller.solidity.SolidityContractDetails;
 import org.adridadou.ethereum.propeller.solidity.SolidityEvent;
+import org.adridadou.ethereum.propeller.solidity.TypedSolidityEvent;
 import org.adridadou.ethereum.propeller.solidity.SolidityType;
 import org.adridadou.ethereum.propeller.solidity.abi.AbiParam;
 import org.adridadou.ethereum.propeller.solidity.converters.SolidityTypeGroup;
@@ -155,13 +156,8 @@ class EthereumProxy {
                 .flatMap(params -> {
                     List<EventData> events = params.getReceipt().map(receipt -> receipt.events).get();
                     return Observable.fromIterable(events.stream().filter(eventDefinition::match)
-                            .map(data -> {
-                                if(eventDefinition.rawDefinition()) {
-                                    return new EventInfo<T>(params.getTransactionHash(), (T) eventDefinition.parseParameters(data));
-                                } else {
-                                    return new EventInfo<>(params.getTransactionHash(), eventDefinition.parseEvent(data, eventDefinition.getEntityClass()));
-                                }
-                            }).collect(Collectors.toList()));
+                            .map(data -> new EventInfo<>(params.getTransactionHash(), eventDefinition.parseEvent(data)))
+                            .collect(Collectors.toList()));
                 });
     }
 
@@ -400,60 +396,48 @@ class EthereumProxy {
         return voidClasses.contains(cls);
     }
 
-    public <T> List<T> getEventsAtBlock(SolidityEvent eventDefinition, EthAddress address, Class<T> cls, Long blockNumber) {
-        return ethereum.getBlock(blockNumber).map(block -> getEventsAtBlock(eventDefinition, address, cls, block)).orElseGet(ArrayList::new);
+    public <T> List<T> getEventsAtBlock(SolidityEvent<T> eventDefinition, EthAddress address, Long blockNumber) {
+        return ethereum.getBlock(blockNumber).map(block -> getEventsAtBlock(eventDefinition, address, block)).orElseGet(ArrayList::new);
     }
 
-    public <T> List<T> getEventsAtBlock(SolidityEvent eventDefinition, EthAddress address, Class<T> cls, EthHash blockHash) {
-        return ethereum.getBlock(blockHash).map(block -> getEventsAtBlock(eventDefinition, address, cls, block)).orElseGet(ArrayList::new);
+    public <T> List<T> getEventsAtBlock(SolidityEvent<T> eventDefinition, EthAddress address, EthHash blockHash) {
+        return ethereum.getBlock(blockHash).map(block -> getEventsAtBlock(eventDefinition, address, block)).orElseGet(ArrayList::new);
     }
 
-    private <T> List<T> getEventsAtBlock(SolidityEvent eventDefinition, EthAddress address, Class<T> cls, BlockInfo blockInfo) {
-        return getEventsAtBlockWithInfo(eventDefinition, address, cls, blockInfo).stream()
+    private <T> List<T> getEventsAtBlock(SolidityEvent<T> eventDefinition, EthAddress address, BlockInfo blockInfo) {
+        return getEventsAtBlockWithInfo(eventDefinition, address, blockInfo).stream()
                 .map(EventInfo::getResult)
                 .collect(Collectors.toList());
     }
 
-    public <T> List<EventInfo<T>> getEventsAtBlockWithInfo(SolidityEvent eventDefinition, EthAddress address, Class<T> cls, Long blockNumber) {
-        return ethereum.getBlock(blockNumber).map(block -> getEventsAtBlockWithInfo(eventDefinition, address, cls, block)).orElseGet(ArrayList::new);
+    public <T> List<EventInfo<T>> getEventsAtBlockWithInfo(SolidityEvent<T> eventDefinition, EthAddress address, Long blockNumber) {
+        return ethereum.getBlock(blockNumber).map(block -> getEventsAtBlockWithInfo(eventDefinition, address, block)).orElseGet(ArrayList::new);
     }
 
-    public <T> List<EventInfo<T>> getEventsAtBlockWithInfo(SolidityEvent eventDefinition, EthAddress address, Class<T> cls, EthHash blockHash) {
-        return ethereum.getBlock(blockHash).map(block -> getEventsAtBlockWithInfo(eventDefinition, address, cls, block)).orElseGet(ArrayList::new);
+    public <T> List<EventInfo<T>> getEventsAtBlockWithInfo(SolidityEvent<T> eventDefinition, EthAddress address, EthHash blockHash) {
+        return ethereum.getBlock(blockHash).map(block -> getEventsAtBlockWithInfo(eventDefinition, address, block)).orElseGet(ArrayList::new);
     }
 
-    private <T> List<EventInfo<T>> getEventsAtBlockWithInfo(SolidityEvent eventDefinition, EthAddress address, Class<T> cls, BlockInfo blockInfo) {
+    private <T> List<EventInfo<T>> getEventsAtBlockWithInfo(SolidityEvent<T> eventDefinition, EthAddress address, BlockInfo blockInfo) {
         return blockInfo.receipts.stream()
                 .filter(params -> address.equals(params.receiveAddress))
                 .flatMap(params -> params.events.stream())
                 .filter(eventDefinition::match)
-                .map(data -> {
-                    if(eventDefinition.rawDefinition()) {
-                        return new EventInfo<>(data.getTransactionHash(), (T) eventDefinition.parseParameters(data));
-                    } else {
-                        return new EventInfo<>(data.getTransactionHash(), (T) eventDefinition.parseEvent(data, cls));
-                    }
-
-                }).collect(Collectors.toList());
+                .map(data -> new EventInfo<>(data.getTransactionHash(), eventDefinition.parseEvent(data)))
+                .collect(Collectors.toList());
     }
 
 
-    public <T> List<T> getEventsAtTransaction(SolidityEvent eventDefinition, EthAddress address, Class<T> cls, EthHash transactionHash) {
-        return getEventsAtTransactionWithInfo(eventDefinition, address, cls, transactionHash).stream()
+    public <T> List<T> getEventsAtTransaction(SolidityEvent<T> eventDefinition, EthAddress address, EthHash transactionHash) {
+        return getEventsAtTransactionWithInfo(eventDefinition, address, transactionHash).stream()
                 .map(EventInfo::getResult).collect(Collectors.toList());
     }
 
-    public <T> List<EventInfo<T>> getEventsAtTransactionWithInfo(SolidityEvent eventDefinition, EthAddress address, Class<T> cls, EthHash transactionHash) {
+    public <T> List<EventInfo<T>> getEventsAtTransactionWithInfo(SolidityEvent<T> eventDefinition, EthAddress address, EthHash transactionHash) {
         TransactionReceipt receipt = ethereum.getTransactionInfo(transactionHash).flatMap(TransactionInfo::getReceipt).orElseThrow(() -> new EthereumApiException("no Transaction receipt found!"));
         if (address.equals(receipt.receiveAddress)) {
             return receipt.events.stream().filter(eventDefinition::match)
-                    .map(data -> {
-                        if(eventDefinition.rawDefinition()) {
-                            return new EventInfo<>(data.getTransactionHash(), (T) eventDefinition.parseParameters(data));
-                        } else {
-                            return new EventInfo<>(data.getTransactionHash(), (T) eventDefinition.parseEvent(data, cls));
-                        }
-                    })
+                    .map(data -> new EventInfo<>(data.getTransactionHash(), eventDefinition.parseEvent(data)))
                     .collect(Collectors.toList());
         }
 
