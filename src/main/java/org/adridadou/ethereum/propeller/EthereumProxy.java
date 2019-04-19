@@ -10,7 +10,6 @@ import org.adridadou.ethereum.propeller.event.EthereumEventHandler;
 import org.adridadou.ethereum.propeller.exception.EthereumApiException;
 import org.adridadou.ethereum.propeller.solidity.SolidityContractDetails;
 import org.adridadou.ethereum.propeller.solidity.SolidityEvent;
-import org.adridadou.ethereum.propeller.solidity.TypedSolidityEvent;
 import org.adridadou.ethereum.propeller.solidity.SolidityType;
 import org.adridadou.ethereum.propeller.solidity.abi.AbiParam;
 import org.adridadou.ethereum.propeller.solidity.converters.SolidityTypeGroup;
@@ -42,7 +41,7 @@ class EthereumProxy {
     private static final Logger logger = LoggerFactory.getLogger(EthereumProxy.class);
 
     private final ReplaySubject<TransactionRequest> transactionPublisher = ReplaySubject.create(100);
-    private final Flowable<TransactionRequest> transactionObservable = transactionPublisher.toFlowable(BackpressureStrategy.BUFFER);
+    private final Flowable<TransactionRequest> pendingTransactionObservable = transactionPublisher.toFlowable(BackpressureStrategy.BUFFER);
 
     private final Map<TransactionRequest, CompletableFuture<EthHash>> futureMap = new ConcurrentHashMap<>();
 
@@ -70,7 +69,7 @@ class EthereumProxy {
     }
 
     private void processTransactions() {
-        transactionObservable
+        pendingTransactionObservable
                 .doOnError(err -> logger.error("Error while processing transactions: " + err.getMessage(), err))
                 .subscribeOn(Schedulers.from(txExecutor))
                 .subscribe(txRequest -> txExecutor.submit(() -> process(txRequest)));
@@ -101,23 +100,23 @@ class EthereumProxy {
 
     EthereumProxy addEncoder(final SolidityTypeGroup typeGroup, final SolidityTypeEncoder encoder) {
         List<SolidityTypeEncoder> encoderList = encoders.computeIfAbsent(typeGroup, key -> new ArrayList<>());
-        encoderList.add(encoder);
+        encoderList.add(0, encoder);
         return this;
     }
 
     EthereumProxy addListDecoder(final Class<? extends CollectionDecoder> decoder) {
-        listDecoders.add(decoder);
+        listDecoders.add(0, decoder);
         return this;
     }
 
     EthereumProxy addListEncoder(final Class<? extends CollectionEncoder> decoder) {
-        listEncoders.add(decoder);
+        listEncoders.add(0, decoder);
         return this;
     }
 
     EthereumProxy addDecoder(final SolidityTypeGroup typeGroup, final SolidityTypeDecoder decoder) {
         List<SolidityTypeDecoder> decoderList = decoders.computeIfAbsent(typeGroup, key -> new ArrayList<>());
-        decoderList.add(decoder);
+        decoderList.add(0, decoder);
         return this;
     }
 
@@ -151,12 +150,12 @@ class EthereumProxy {
     <T> Observable<EventInfo<T>> observeEventsWithInfo(SolidityEvent<T> eventDefinition, EthAddress contractAddress) {
         Asserts.check(eventDefinition != null, "event definition cannot be null!");
         Asserts.check(contractAddress != null, "contract address cannot be null!");
-        return eventHandler.observeTransactions()
-                .filter(params -> params.getReceipt().map(receipt -> contractAddress.equals(receipt.receiveAddress)).orElse(false))
-                .flatMap(params -> {
-                    List<EventData> events = params.getReceipt().map(receipt -> receipt.events).get();
+        return eventHandler.observeBlocks().flatMapIterable(block -> block.receipts)
+                .filter(receipt -> contractAddress.equals(receipt.receiveAddress))
+                .flatMap(receipt -> {
+                    List<EventData> events = receipt.events;
                     return Observable.fromIterable(events.stream().filter(eventDefinition::match)
-                            .map(data -> new EventInfo<>(params.getTransactionHash(), eventDefinition.parseEvent(data)))
+                            .map(data -> new EventInfo<>(receipt.hash, eventDefinition.parseEvent(data)))
                             .collect(Collectors.toList()));
                 });
     }
@@ -248,8 +247,7 @@ class EthereumProxy {
 
         CompletableFuture<TransactionReceipt> futureResult = new CompletableFuture<>();
 
-        Observable.empty()
-                .toFlowable(BackpressureStrategy.BUFFER)
+        Flowable
                 .merge(droppedTxs, blockTxs, timeoutBlock)
                 .filter(txInfo -> !(txInfo instanceof EmptyTransactionInfo))
                 .map(params -> {
@@ -261,10 +259,10 @@ class EthereumProxy {
                         throw new EthereumApiException("the transaction has been dropped! - " + receipt.error);
                     }
                     Optional<TransactionReceipt> result = checkForErrors(receipt);
-                    return result.<EthereumApiException>orElseThrow(() -> new EthereumApiException("error with the transaction " + receipt.hash + ". error:" + receipt.error));
+                    return result.orElseThrow(() -> new EthereumApiException("error with the transaction " + receipt.hash + ". error:" + receipt.error));
                 })
                 .first(new EmptyTransactionReceipt())
-                .subscribe(txInfo -> futureResult.complete(txInfo), err -> futureResult.completeExceptionally(err));
+                .subscribe(futureResult::complete, futureResult::completeExceptionally);
 
         return futureResult;
     }
@@ -366,7 +364,8 @@ class EthereumProxy {
     }
 
     private List<SolidityTypeEncoder> getEncoders(final SolidityType type, AbiParam abiParam) {
-        return Optional.ofNullable(encoders.get(SolidityTypeGroup.resolveGroup(type))).orElseThrow(() -> new EthereumApiException("no encoder found for solidity type " + abiParam.getType()));
+        return Optional.ofNullable(encoders.get(SolidityTypeGroup.resolveGroup(type)))
+                .orElseThrow(() -> new EthereumApiException("no encoder found for solidity type " + abiParam.getType()));
     }
 
     List<SolidityTypeDecoder> getDecoders(AbiParam abiParam) {
