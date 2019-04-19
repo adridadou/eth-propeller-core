@@ -100,23 +100,23 @@ class EthereumProxy {
 
     EthereumProxy addEncoder(final SolidityTypeGroup typeGroup, final SolidityTypeEncoder encoder) {
         List<SolidityTypeEncoder> encoderList = encoders.computeIfAbsent(typeGroup, key -> new ArrayList<>());
-        encoderList.add(encoder);
+        encoderList.add(0, encoder);
         return this;
     }
 
     EthereumProxy addListDecoder(final Class<? extends CollectionDecoder> decoder) {
-        listDecoders.add(decoder);
+        listDecoders.add(0, decoder);
         return this;
     }
 
     EthereumProxy addListEncoder(final Class<? extends CollectionEncoder> decoder) {
-        listEncoders.add(decoder);
+        listEncoders.add(0, decoder);
         return this;
     }
 
     EthereumProxy addDecoder(final SolidityTypeGroup typeGroup, final SolidityTypeDecoder decoder) {
         List<SolidityTypeDecoder> decoderList = decoders.computeIfAbsent(typeGroup, key -> new ArrayList<>());
-        decoderList.add(decoder);
+        decoderList.add(0, decoder);
         return this;
     }
 
@@ -364,7 +364,8 @@ class EthereumProxy {
     }
 
     private List<SolidityTypeEncoder> getEncoders(final SolidityType type, AbiParam abiParam) {
-        return Optional.ofNullable(encoders.get(SolidityTypeGroup.resolveGroup(type))).orElseThrow(() -> new EthereumApiException("no encoder found for solidity type " + abiParam.getType()));
+        return Optional.ofNullable(encoders.get(SolidityTypeGroup.resolveGroup(type)))
+                .orElseThrow(() -> new EthereumApiException("no encoder found for solidity type " + abiParam.getType()));
     }
 
     List<SolidityTypeDecoder> getDecoders(AbiParam abiParam) {
