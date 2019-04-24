@@ -5,7 +5,7 @@ import java.nio.charset.StandardCharsets
 
 import junit.framework.TestCase.{assertEquals, assertTrue}
 import org.adridadou.ethereum.propeller.exception.EthereumApiException
-import org.adridadou.ethereum.propeller.solidity.{CompilationResult, SolidityCompiler}
+import org.adridadou.ethereum.propeller.solidity.{CompilationResult, EvmVersion, SolidityCompiler}
 import org.adridadou.ethereum.propeller.values.SoliditySource
 import org.apache.commons.io.IOUtils
 import org.scalatest.check.Checkers
@@ -24,14 +24,14 @@ class SolidityCompilerTest extends FlatSpec with Matchers with Checkers {
   }
 
   it should "compile a smart contract from a single file" in {
-    val result = solidityCompiler.compileSrc(SoliditySource.from(new File("src/test/resources/contract2.sol")))
+    val result = solidityCompiler.compileSrc(SoliditySource.from(new File("src/test/resources/contract2.sol")), new EvmVersion("byzantium"))
     val details = result.findContract("myContract2").orElseThrow(() => new EthereumApiException("myContract2 not found"))
     val entries = details.getAbi
     assertEquals(6, entries.size)
   }
 
   it should "compile a smart contract from multiple files with import" in {
-    val result = solidityCompiler.compileSrc(SoliditySource.from(new File("src/test/resources/c1.sol")))
+    val result = solidityCompiler.compileSrc(SoliditySource.from(new File("src/test/resources/c1.sol")), new EvmVersion("byzantium"))
     val details = result.findContract("c1").orElseThrow(() => new EthereumApiException("c1 not found"))
     val entries = details.getAbi
     assertEquals(3, entries.size)

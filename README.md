@@ -50,6 +50,9 @@ EthereumFacade is your interface to Ethereum. This is how you interact with it:
 
 
 #Testing
+
+To run the project tests, install maven and then run `mvn clean test.`
+
 In order to run unit tests on a mocked Ethereum network, please use eth-propeller-ethj and create a test
 
 

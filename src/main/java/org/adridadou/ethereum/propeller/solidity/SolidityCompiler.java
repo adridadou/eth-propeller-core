@@ -29,8 +29,8 @@ public class SolidityCompiler {
         return compiler;
     }
 
-    public CompilationResult compileSrc(SoliditySourceFile source) {
-        List<String> commandParts = prepareCommandOptions(BIN, ABI, AST, INTERFACE, METADATA);
+    public CompilationResult compileSrc(SoliditySourceFile source, EvmVersion evmVersion) {
+        List<String> commandParts = prepareCommandOptions(evmVersion, BIN, ABI, AST, INTERFACE, METADATA);
         commandParts.add(source.getSource().getAbsolutePath());
 
         try {
@@ -61,11 +61,12 @@ public class SolidityCompiler {
         }
     }
 
-    private List<String> prepareCommandOptions(SolidityCompilerOptions... options) {
+    private List<String> prepareCommandOptions(EvmVersion evmVersion, SolidityCompilerOptions... options) {
         List<String> commandParts = new ArrayList<>();
         commandParts.add("solc");
         commandParts.add("--optimize");
         commandParts.add("--combined-json");
+        commandParts.add("--" + evmVersion.version);
         commandParts.add(Arrays.stream(options)
                 .map(SolidityCompilerOptions::getName)
                 .collect(Collectors.joining(",")));

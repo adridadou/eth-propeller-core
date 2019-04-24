@@ -4,7 +4,7 @@ import java.io.File
 
 import org.adridadou.ethereum.propeller.backend.{EthereumTest, TestConfig}
 import org.adridadou.ethereum.propeller.keystore.AccountProvider
-import org.adridadou.ethereum.propeller.solidity.SolidityContractDetails
+import org.adridadou.ethereum.propeller.solidity.{EvmVersion, SolidityContractDetails}
 import org.adridadou.ethereum.propeller.values.EthValue.ether
 import org.adridadou.ethereum.propeller.values.{EthAccount, EthAddress, EthValue, SoliditySourceFile}
 import org.adridadou.ethereum.propeller.{CoreEthereumFacadeProvider, EthereumConfig, EthereumFacade}
@@ -23,7 +23,7 @@ object SolidityConversionHelper {
     .create(new EthereumTest(TestConfig.builder.balance(mainAccount, ether(1000)).build), EthereumConfig.builder().build())
 
   val contract: SolidityContractDetails = facade
-    .compile(SoliditySourceFile.from(new File(getClass.getResource("/conversionContract.sol").getFile)))
+    .compile(SoliditySourceFile.from(new File(getClass.getResource("/conversionContract.sol").getFile)), new EvmVersion("byzantium"))
     .findContract("myContract").get()
 
   val contractAddress: EthAddress = facade.publishContract(contract, mainAccount).get()
