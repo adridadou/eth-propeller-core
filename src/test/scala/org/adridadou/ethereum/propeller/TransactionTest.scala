@@ -57,7 +57,7 @@ class TransactionTest extends FlatSpec with Matchers with Checkers {
 
   it should "estimate the gas usage of the contract creation transaction" in {
     val contractSource = SoliditySource.from(new File("src/test/resources/contractConstructor.sol"))
-    val contract = ethereum.compile(contractSource, Optional.empty()).findContract("ContractConstructor").get
+    val contract = ethereum.compile(contractSource).findContract("ContractConstructor").get
     val constructorArgs = Array("This is a test").map(_.asInstanceOf[Object])
     val smartContract = ethereum.createSmartContract(contract, EthAddress.empty(), mainAccount)
     val argsEncoded: EthData = smartContract

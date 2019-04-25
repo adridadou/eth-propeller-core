@@ -24,7 +24,7 @@ object SolidityConversionHelper {
     .create(new EthereumTest(TestConfig.builder.balance(mainAccount, ether(1000)).build), EthereumConfig.builder().build())
 
   val contract: SolidityContractDetails = facade
-    .compile(SoliditySourceFile.from(new File(getClass.getResource("/conversionContract.sol").getFile)), Optional.empty())
+    .compile(SoliditySourceFile.from(new File(getClass.getResource("/conversionContract.sol").getFile)))
     .findContract("myContract").get()
 
   val contractAddress: EthAddress = facade.publishContract(contract, mainAccount).get()

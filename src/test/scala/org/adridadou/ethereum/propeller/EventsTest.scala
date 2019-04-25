@@ -63,7 +63,7 @@ class EventsTest extends FlatSpec with Matchers with Checkers {
   }
 
   private def publishAndMapContract(ethereum: EthereumFacade) = {
-    val compiledContract = ethereum.compile(contractSource, Optional.empty()).findContract("contractEvents").get
+    val compiledContract = ethereum.compile(contractSource).findContract("contractEvents").get
     val futureAddress = ethereum.publishContract(compiledContract, mainAccount)
     futureAddress.get
   }
