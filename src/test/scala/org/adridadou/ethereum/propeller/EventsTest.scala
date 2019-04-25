@@ -8,7 +8,7 @@ import com.google.common.collect.Lists
 import org.adridadou.ethereum.propeller.backend.{EthereumTest, TestConfig}
 import org.adridadou.ethereum.propeller.exception.EthereumApiException
 import org.adridadou.ethereum.propeller.keystore.AccountProvider
-import org.adridadou.ethereum.propeller.solidity.{EvmVersion, SolidityContractDetails}
+import org.adridadou.ethereum.propeller.solidity.SolidityContractDetails
 import org.adridadou.ethereum.propeller.values.EthValue.ether
 import org.adridadou.ethereum.propeller.values._
 import org.scalatest.check.Checkers
