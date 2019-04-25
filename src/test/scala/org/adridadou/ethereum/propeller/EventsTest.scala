@@ -28,7 +28,7 @@ class EventsTest extends FlatSpec with Matchers with Checkers {
   private val address = publishAndMapContract(ethereum)
 
   "Events" should "be observable from the ethereum network" in {
-    (for (compiledContract <- ethereum.compile(contractSource, Optional.empty()).findContract("contractEvents").asScala;
+    (for (compiledContract <- ethereum.compile(contractSource).findContract("contractEvents").asScala;
           solidityEvent <- ethereum.findEventDefinition(compiledContract, "MyEvent", classOf[MyEvent]).asScala) yield {
       val myContract = ethereum.createContractProxy(compiledContract, address, mainAccount, classOf[ContractEvents])
       val observeEventWithInfo = ethereum.observeEventsWithInfo(solidityEvent, address)

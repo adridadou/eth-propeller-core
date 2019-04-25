@@ -1,7 +1,6 @@
 package org.adridadou.ethereum.propeller
 
 import java.io.File
-import java.util.Optional
 
 import org.adridadou.ethereum.propeller.backend.{EthereumTest, TestConfig}
 import org.adridadou.ethereum.propeller.exception.EthereumApiException
@@ -22,7 +21,7 @@ class ConstructorTest extends FlatSpec with Matchers with Checkers {
 
   "Constructor" should "use the default constructor if no arguments are passed" in {
     val ethereum = CoreEthereumFacadeProvider.create(new EthereumTest(TestConfig.builder.balance(mainAccount, ether(1000)).build), EthereumConfig.builder().build())
-    val compiledContract = ethereum.compile(contractSource, Optional.empty()).findContract("ContractConstructor").get
+    val compiledContract = ethereum.compile(contractSource).findContract("ContractConstructor").get
     val address = ethereum.publishContract(compiledContract, mainAccount).get()
     val myContract = ethereum.createContractProxy(compiledContract, address, mainAccount, classOf[ContractConstructor])
     myContract.value() shouldEqual ""

@@ -1,7 +1,6 @@
 package org.adridadou.ethereum.propeller.converters.e2e
 
 import java.io.File
-import java.util.Optional
 
 import org.adridadou.ethereum.propeller.backend.{EthereumTest, TestConfig}
 import org.adridadou.ethereum.propeller.keystore.AccountProvider

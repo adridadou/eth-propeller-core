@@ -3,7 +3,6 @@ package org.adridadou.ethereum.propeller
 
 import java.io.File
 import java.math.BigInteger
-import java.util.Optional
 
 import org.adridadou.ethereum.propeller.backend.{EthereumTest, TestConfig}
 import org.adridadou.ethereum.propeller.keystore.AccountProvider
