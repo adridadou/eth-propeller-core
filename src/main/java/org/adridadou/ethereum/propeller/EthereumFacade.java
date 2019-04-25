@@ -276,6 +276,10 @@ public class EthereumFacade {
         return solidityCompiler.compileSrc(src, evmVersion);
     }
 
+    public CompilationResult compile(SoliditySourceFile src) {
+        return solidityCompiler.compileSrc(src, Optional.empty());
+    }
+
     /**
      * Search an event definition from the ABI
      * @param contract The compiled contract

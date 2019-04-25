@@ -41,6 +41,10 @@ public class SolidityCompiler {
         }
     }
 
+    public CompilationResult compileSrc(SoliditySourceFile source) {
+        return compileSrc(source, Optional.empty());
+    }
+
     public SolidityVersion getVersion() {
         List<String> commandParts = new ArrayList<>(Arrays.asList("solc", "--version"));
         return new SolidityVersion(runProcess(commandParts));
@@ -75,5 +79,9 @@ public class SolidityCompiler {
                 .collect(Collectors.joining(",")));
 
         return commandParts;
+    }
+
+    private List<String> prepareCommandOptions(SolidityCompilerOptions... options) {
+        return prepareCommandOptions(Optional.empty(), options);
     }
 }
