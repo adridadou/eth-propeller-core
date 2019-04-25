@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
@@ -29,7 +30,7 @@ public class SolidityCompiler {
         return compiler;
     }
 
-    public CompilationResult compileSrc(SoliditySourceFile source, EvmVersion evmVersion) {
+    public CompilationResult compileSrc(SoliditySourceFile source, Optional<EvmVersion> evmVersion) {
         List<String> commandParts = prepareCommandOptions(evmVersion, BIN, ABI, AST, INTERFACE, METADATA);
         commandParts.add(source.getSource().getAbsolutePath());
 
@@ -61,12 +62,14 @@ public class SolidityCompiler {
         }
     }
 
-    private List<String> prepareCommandOptions(EvmVersion evmVersion, SolidityCompilerOptions... options) {
+    private List<String> prepareCommandOptions(Optional<EvmVersion> evmVersion, SolidityCompilerOptions... options) {
         List<String> commandParts = new ArrayList<>();
         commandParts.add("solc");
         commandParts.add("--optimize");
         commandParts.add("--combined-json");
-        commandParts.add("--" + evmVersion.version);
+        if (evmVersion.isPresent()) {
+            commandParts.add("--" + evmVersion.get().version);
+        }
         commandParts.add(Arrays.stream(options)
                 .map(SolidityCompilerOptions::getName)
                 .collect(Collectors.joining(",")));

@@ -1,11 +1,11 @@
 package org.adridadou.ethereum.propeller
 
 import java.io.File
+import java.util.Optional
 
 import org.adridadou.ethereum.propeller.backend.{EthereumTest, TestConfig}
 import org.adridadou.ethereum.propeller.exception.EthereumApiException
 import org.adridadou.ethereum.propeller.keystore.AccountProvider
-import org.adridadou.ethereum.propeller.solidity.EvmVersion
 import org.adridadou.ethereum.propeller.values.EthValue.ether
 import org.adridadou.ethereum.propeller.values.SoliditySource
 import org.scalatest.check.Checkers
@@ -22,7 +22,7 @@ class ConstructorTest extends FlatSpec with Matchers with Checkers {
 
   "Constructor" should "use the default constructor if no arguments are passed" in {
     val ethereum = CoreEthereumFacadeProvider.create(new EthereumTest(TestConfig.builder.balance(mainAccount, ether(1000)).build), EthereumConfig.builder().build())
-    val compiledContract = ethereum.compile(contractSource, new EvmVersion("byzantium")).findContract("ContractConstructor").get
+    val compiledContract = ethereum.compile(contractSource, Optional.empty()).findContract("ContractConstructor").get
     val address = ethereum.publishContract(compiledContract, mainAccount).get()
     val myContract = ethereum.createContractProxy(compiledContract, address, mainAccount, classOf[ContractConstructor])
     myContract.value() shouldEqual ""
@@ -30,7 +30,7 @@ class ConstructorTest extends FlatSpec with Matchers with Checkers {
 
   "Constructor" should "use the parameter if given" in {
     val ethereum = CoreEthereumFacadeProvider.create(new EthereumTest(TestConfig.builder.balance(mainAccount, ether(1000)).build), EthereumConfig.builder().build())
-    val compiledContract = ethereum.compile(contractSource, new EvmVersion("byzantium")).findContract("ContractConstructor").get
+    val compiledContract = ethereum.compile(contractSource, Optional.empty()).findContract("ContractConstructor").get
     val address = ethereum.publishContract(compiledContract, mainAccount, "this is a test").get()
     val myContract = ethereum.createContractProxy(compiledContract, address, mainAccount, classOf[ContractConstructor])
     myContract.value() shouldEqual "this is a test"
@@ -38,7 +38,7 @@ class ConstructorTest extends FlatSpec with Matchers with Checkers {
 
   "Constructor" should "show an error message if the constructor signature did not match the arguments" in {
     val ethereum = CoreEthereumFacadeProvider.create(new EthereumTest(TestConfig.builder.balance(mainAccount, ether(1000)).build), EthereumConfig.builder().build())
-    val compiledContract = ethereum.compile(contractSource, new EvmVersion("byzantium")).findContract("ContractConstructor").get
+    val compiledContract = ethereum.compile(contractSource, Optional.empty()).findContract("ContractConstructor").get
     try {
       ethereum.publishContract(compiledContract, mainAccount, 23938.asInstanceOf[java.lang.Integer]).get()
       fail()

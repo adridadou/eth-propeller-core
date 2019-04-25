@@ -1,13 +1,14 @@
 package org.adridadou.ethereum.propeller
 
 import java.io.File
+import java.util.Optional
 import java.util.concurrent.CompletableFuture
 
 import com.google.common.collect.Lists
 import org.adridadou.ethereum.propeller.backend.{EthereumTest, TestConfig}
 import org.adridadou.ethereum.propeller.exception.EthereumApiException
 import org.adridadou.ethereum.propeller.keystore.AccountProvider
-import org.adridadou.ethereum.propeller.solidity.{SolidityContractDetails, EvmVersion}
+import org.adridadou.ethereum.propeller.solidity.{EvmVersion, SolidityContractDetails}
 import org.adridadou.ethereum.propeller.values.EthValue.ether
 import org.adridadou.ethereum.propeller.values._
 import org.scalatest.check.Checkers
@@ -27,7 +28,7 @@ class EventsTest extends FlatSpec with Matchers with Checkers {
   private val address = publishAndMapContract(ethereum)
 
   "Events" should "be observable from the ethereum network" in {
-    (for (compiledContract <- ethereum.compile(contractSource, new EvmVersion("byzantium")).findContract("contractEvents").asScala;
+    (for (compiledContract <- ethereum.compile(contractSource, Optional.empty()).findContract("contractEvents").asScala;
           solidityEvent <- ethereum.findEventDefinition(compiledContract, "MyEvent", classOf[MyEvent]).asScala) yield {
       val myContract = ethereum.createContractProxy(compiledContract, address, mainAccount, classOf[ContractEvents])
       val observeEventWithInfo = ethereum.observeEventsWithInfo(solidityEvent, address)
@@ -43,7 +44,7 @@ class EventsTest extends FlatSpec with Matchers with Checkers {
   }
 
   it should "work with a generic list as well" in {
-    (for (compiledContract:SolidityContractDetails <- ethereum.compile(contractSource, new EvmVersion("byzantium")).findContract("contractEvents").asScala;
+    (for (compiledContract:SolidityContractDetails <- ethereum.compile(contractSource, Optional.empty()).findContract("contractEvents").asScala;
           solidityEvent    <- ethereum.findEventDefinitionForParameters(compiledContract, "MyEvent", Lists.newArrayList(classOf[EthAddress], classOf[EthAddress], classOf[String], classOf[EthData], classOf[EthSignature])).asScala) yield {
 
       val myContract = ethereum.createContractProxy(compiledContract, address, mainAccount, classOf[ContractEvents])
@@ -62,7 +63,7 @@ class EventsTest extends FlatSpec with Matchers with Checkers {
   }
 
   private def publishAndMapContract(ethereum: EthereumFacade) = {
-    val compiledContract = ethereum.compile(contractSource, new EvmVersion("byzantium")).findContract("contractEvents").get
+    val compiledContract = ethereum.compile(contractSource, Optional.empty()).findContract("contractEvents").get
     val futureAddress = ethereum.publishContract(compiledContract, mainAccount)
     futureAddress.get
   }

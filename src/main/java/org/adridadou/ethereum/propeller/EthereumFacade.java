@@ -272,7 +272,7 @@ public class EthereumFacade {
      * @param src the source file
      * @return The compilation result
      */
-    public CompilationResult compile(SoliditySourceFile src, EvmVersion evmVersion) {
+    public CompilationResult compile(SoliditySourceFile src, Optional<EvmVersion> evmVersion) {
         return solidityCompiler.compileSrc(src, evmVersion);
     }
 

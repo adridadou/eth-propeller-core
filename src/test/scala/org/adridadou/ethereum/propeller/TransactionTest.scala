@@ -3,10 +3,10 @@ package org.adridadou.ethereum.propeller
 
 import java.io.File
 import java.math.BigInteger
+import java.util.Optional
 
 import org.adridadou.ethereum.propeller.backend.{EthereumTest, TestConfig}
 import org.adridadou.ethereum.propeller.keystore.AccountProvider
-import org.adridadou.ethereum.propeller.solidity.EvmVersion
 import org.adridadou.ethereum.propeller.values.EthValue._
 import org.adridadou.ethereum.propeller.values._
 import org.apache.commons.lang.ArrayUtils
@@ -57,7 +57,7 @@ class TransactionTest extends FlatSpec with Matchers with Checkers {
 
   it should "estimate the gas usage of the contract creation transaction" in {
     val contractSource = SoliditySource.from(new File("src/test/resources/contractConstructor.sol"))
-    val contract = ethereum.compile(contractSource, new EvmVersion("byzantium")).findContract("ContractConstructor").get
+    val contract = ethereum.compile(contractSource, Optional.empty()).findContract("ContractConstructor").get
     val constructorArgs = Array("This is a test").map(_.asInstanceOf[Object])
     val smartContract = ethereum.createSmartContract(contract, EthAddress.empty(), mainAccount)
     val argsEncoded: EthData = smartContract
