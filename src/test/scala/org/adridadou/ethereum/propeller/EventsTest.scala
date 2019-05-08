@@ -1,6 +1,7 @@
 package org.adridadou.ethereum.propeller
 
 import java.io.File
+import java.util.Optional
 import java.util.concurrent.CompletableFuture
 
 import com.google.common.collect.Lists
@@ -34,7 +35,7 @@ class EventsTest extends FlatSpec with Matchers with Checkers {
 
       myContract.createEvent("my event is here and it is much longer than anticipated")
       val result = observeEventWithInfo.first(new EventInfo(EthHash.empty(), new EmptyEvent())).toFuture.get()
-      result.getTransactionHash shouldBe EthHash.of("9ecaf5897eb06ec8e1c907cf9494b838cf65e0f06af06afcef8500c0b3fa03f5")
+      result.getTransactionHash shouldBe EthHash.of("16a483684071817f67b4375becca013d17b969afaa8c431c0426b561e83d7bf0")
       result.getResult.value shouldBe "my event is here and it is much longer than anticipated"
 
       ethereum.getEventsAtBlock(ethereum.getTransactionInfo(result.getTransactionHash).get().getBlockHash, solidityEvent, address)
@@ -52,7 +53,7 @@ class EventsTest extends FlatSpec with Matchers with Checkers {
       myContract.createEvent("my event is here and it is much longer than anticipated")
       val emptyList:java.util.List[Any] = Lists.newArrayList()
       val result = observeEventWithInfo.first(new EventInfo(EthHash.empty(), emptyList)).toFuture.get()
-      result.getTransactionHash shouldBe EthHash.of("6d99b716340fb64ec47f07b7b7cc5a9c339667e4657f1c0f44acb0fdd507e62c")
+      result.getTransactionHash shouldBe EthHash.of("98e7a7e23bf648887b69f641756872c1a5a2f5d63caaf11d4ddd551e980e8776")
       result.getResult.get(2) shouldBe "my event is here and it is much longer than anticipated"
 
       val events = ethereum.getEventsAtBlock(ethereum.getTransactionInfo(result.getTransactionHash).get().getBlockHash, solidityEvent, address)

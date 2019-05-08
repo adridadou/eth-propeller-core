@@ -6,7 +6,7 @@ import org.adridadou.ethereum.propeller.backend.{EthereumTest, TestConfig}
 import org.adridadou.ethereum.propeller.keystore.AccountProvider
 import org.adridadou.ethereum.propeller.solidity.SolidityContractDetails
 import org.adridadou.ethereum.propeller.values.EthValue.ether
-import org.adridadou.ethereum.propeller.values.{EthAccount, EthAddress, EthValue, SoliditySourceFile}
+import org.adridadou.ethereum.propeller.values.{EthAccount, EthAddress, SoliditySourceFile}
 import org.adridadou.ethereum.propeller.{CoreEthereumFacadeProvider, EthereumConfig, EthereumFacade}
 
 import scala.reflect.ClassTag
