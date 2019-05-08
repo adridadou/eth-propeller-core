@@ -38,6 +38,10 @@ public class SolidityFunction {
         return description.getName();
     }
 
+    public AbiEntry getDescription() {
+        return description;
+    }
+
     public List<SolidityType> getParameters() {
         return parameters;
     }
