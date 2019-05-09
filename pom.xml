@@ -121,13 +121,13 @@
         <dependency>
             <groupId>org.web3j</groupId>
             <artifactId>core</artifactId>
-            <version>4.2.0</version>
+            <version>4.3.0</version>
         </dependency>
 
         <dependency>
             <groupId>org.web3j</groupId>
             <artifactId>crypto</artifactId>
-            <version>4.2.0</version>
+            <version>4.3.0</version>
         </dependency>
 
         <dependency>

@@ -76,20 +76,10 @@ public class EthereumRpc implements EthereumBackend {
 
     @Override
     public EthHash submit(TransactionRequest request, Nonce nonce) {
-        // TODO: fix that once web3j handle any chainId - this will be once version 4.3 is released
-        // See PR here https://github.com/web3j/web3j/pull/913
-        if(chainId.id > 127 || chainId.id < 0) {
             org.apache.tuweni.eth.Transaction transaction = createTransaction(nonce, getGasPrice(), request);
             transaction.signature();
             web3JFacade.sendTransaction(EthData.of(transaction.signature().bytes().toArray()));
             return EthHash.of(transaction.hash().toBytes().toArray());
-        } else {
-            RawTransaction tx = web3JFacade.createTransaction(nonce, getGasPrice(), request.getGasLimit(), request.getAddress(), request.getValue(), request.getData());
-            EthData signedMessage = EthData.of(TransactionEncoder.signMessage(tx, (byte) chainId.id, Credentials.create(Numeric.toHexStringNoPrefix(request.getAccount().getBigIntPrivateKey()))));
-            web3JFacade.sendTransaction(signedMessage);
-
-            return EthHash.of(Crypto.sha3(signedMessage).data);
-        }
     }
 
     private org.apache.tuweni.eth.Transaction createTransaction(Nonce nonce, GasPrice gasPrice, TransactionRequest request) {
