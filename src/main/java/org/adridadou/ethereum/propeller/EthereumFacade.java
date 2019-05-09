@@ -5,6 +5,7 @@ import org.adridadou.ethereum.propeller.event.EthereumEventHandler;
 import org.adridadou.ethereum.propeller.exception.EthereumApiException;
 import org.adridadou.ethereum.propeller.solidity.*;
 import org.adridadou.ethereum.propeller.solidity.abi.AbiParam;
+import org.adridadou.ethereum.propeller.solidity.EvmVersion;
 import org.adridadou.ethereum.propeller.solidity.converters.SolidityTypeGroup;
 import org.adridadou.ethereum.propeller.solidity.converters.decoders.SolidityTypeDecoder;
 import org.adridadou.ethereum.propeller.solidity.converters.encoders.SolidityTypeEncoder;
@@ -271,8 +272,12 @@ public class EthereumFacade {
      * @param src the source file
      * @return The compilation result
      */
+    public CompilationResult compile(SoliditySourceFile src, Optional<EvmVersion> evmVersion) {
+        return solidityCompiler.compileSrc(src, evmVersion);
+    }
+
     public CompilationResult compile(SoliditySourceFile src) {
-        return solidityCompiler.compileSrc(src);
+        return solidityCompiler.compileSrc(src, Optional.empty());
     }
 
     /**
@@ -301,6 +306,7 @@ public class EthereumFacade {
      * Search an event definition from the ABI
      * @param contract The compiled contract
      * @param eventName The event name
+     * @param eventParams the type of each parameter in the event. Useful when you don't want to map it to a class
      * @return The solidity event definition if found
      */
     public Optional<RawSolidityEvent> findEventDefinitionForParameters(SolidityContractDetails contract, String eventName, List<Class<?>> eventParams) {
@@ -332,6 +338,7 @@ public class EthereumFacade {
      *
      * @param abi         The ABI
      * @param eventName   The event name
+     * @param eventParameters The types of each parameter in the event. Useful when you don't want to map the event to a class
      * @return The solidity event definition if found
      */
     public Optional<RawSolidityEvent> findEventDefinitionForParametersByAbi(EthAbi abi, String eventName, List<Class<?>> eventParameters) {
@@ -344,7 +351,7 @@ public class EthereumFacade {
      * @param abi         The ABI
      * @param eventName   The event name
      * @param eventEntity The entity that will represent the event
-     *  @param <T>         The event entity
+     * @param <T>         The event entity
      * @return The solidity event definition if found
      */
     public <T> Optional<TypedSolidityEvent<T>> findEventDefinition(EthAbi abi, String eventName, Class<T> eventEntity) {
