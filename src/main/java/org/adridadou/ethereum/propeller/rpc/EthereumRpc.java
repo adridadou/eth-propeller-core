@@ -27,8 +27,13 @@ import org.adridadou.ethereum.propeller.values.TransactionInfo;
 import org.adridadou.ethereum.propeller.values.TransactionReceipt;
 import org.adridadou.ethereum.propeller.values.TransactionRequest;
 import org.adridadou.ethereum.propeller.values.TransactionStatus;
-import org.ethereum.crypto.ECKey;
-import org.ethereum.util.ByteUtil;
+import org.apache.tuweni.bytes.Bytes;
+import org.apache.tuweni.bytes.Bytes32;
+import org.apache.tuweni.eth.Address;
+import org.apache.tuweni.rlp.RLPReader;
+import org.apache.tuweni.units.bigints.UInt256;
+import org.apache.tuweni.units.ethereum.Gas;
+import org.apache.tuweni.units.ethereum.Wei;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.web3j.crypto.Credentials;
@@ -73,7 +78,7 @@ public class EthereumRpc implements EthereumBackend {
 
     @Override
     public EthHash submit(TransactionRequest request, Nonce nonce) {
-        //TODO: fix that once web3j handle any chainId
+        //TODO: fix that once web3j handle any chainId - this will be once version 4.3 is released
         if(chainId.id > 127 || chainId.id < 0) {
             org.ethereum.core.Transaction transaction = createTransaction(nonce, getGasPrice(), request);
             transaction.sign(ECKey.fromPrivate(request.getAccount().getBigIntPrivateKey()));
@@ -88,21 +93,15 @@ public class EthereumRpc implements EthereumBackend {
         }
     }
 
-    private org.ethereum.core.Transaction createTransaction(Nonce nonce, GasPrice gasPrice, TransactionRequest request) {
-        byte[] nonceBytes = encodeBigInt(nonce.getValue());
-        byte[] gasPriceBytes = encodeBigInt(gasPrice.getPrice().inWei());
-        byte[] gasBytes = encodeBigInt(request.getGasLimit().getUsage());
-        byte[] valueBytes = encodeBigInt(request.getValue().inWei());
-
-        return new org.ethereum.core.Transaction(nonceBytes, gasPriceBytes, gasBytes,
-                request.getAddress().toData().data, valueBytes, request.getData().data, chainId.id);
-    }
-
-    private byte[] encodeBigInt(BigInteger value) {
-        if(BigInteger.ZERO.equals(value)){
-            return ByteUtil.EMPTY_BYTE_ARRAY;
-        }
-        return ByteUtil.bigIntegerToBytes(value);
+    private org.apache.tuweni.eth.Transaction createTransaction(Nonce nonce, GasPrice gasPrice, TransactionRequest request) {
+        UInt256 nonceInt = UInt256.valueOf(nonce.getValue());
+        Wei gasPriceWei = Wei.valueOf(gasPrice.getPrice().inWei());
+        Gas gasLimitWei = Gas.valueOf(gasPrice.getPrice().inWei());
+        Address address = Address.fromBytes(Bytes.of(request.getAddress().toData().data));
+        Wei value = Wei.valueOf(request.getValue().inWei());
+        Bytes payload = Bytes.of(request.getData().data);
+        return new org.apache.tuweni.eth.Transaction(nonceInt, gasPriceWei, gasLimitWei,
+                address, value, payload, chainId.id);
     }
 
     @Override
