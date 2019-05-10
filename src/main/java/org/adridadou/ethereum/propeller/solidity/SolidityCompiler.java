@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
@@ -29,8 +30,8 @@ public class SolidityCompiler {
         return compiler;
     }
 
-    public CompilationResult compileSrc(SoliditySourceFile source) {
-        List<String> commandParts = prepareCommandOptions(BIN, ABI, AST, INTERFACE, METADATA);
+    public CompilationResult compileSrc(SoliditySourceFile source, Optional<EvmVersion> evmVersion) {
+        List<String> commandParts = prepareCommandOptions(evmVersion, BIN, ABI, AST, INTERFACE, METADATA);
         commandParts.add(source.getSource().getAbsolutePath());
 
         try {
@@ -38,6 +39,10 @@ public class SolidityCompiler {
         } catch (IOException e) {
             throw new EthereumApiException("error while waiting for the process to finish", e);
         }
+    }
+
+    public CompilationResult compileSrc(SoliditySourceFile source) {
+        return compileSrc(source, Optional.empty());
     }
 
     public SolidityVersion getVersion() {
@@ -61,9 +66,12 @@ public class SolidityCompiler {
         }
     }
 
-    private List<String> prepareCommandOptions(SolidityCompilerOptions... options) {
+    private List<String> prepareCommandOptions(Optional<EvmVersion> evmVersion, SolidityCompilerOptions... options) {
         List<String> commandParts = new ArrayList<>();
         commandParts.add("solc");
+        if (evmVersion.isPresent()) {
+            commandParts.add("--evm-version=" + evmVersion.get().version);
+        }
         commandParts.add("--optimize");
         commandParts.add("--combined-json");
         commandParts.add(Arrays.stream(options)
@@ -71,5 +79,9 @@ public class SolidityCompiler {
                 .collect(Collectors.joining(",")));
 
         return commandParts;
+    }
+
+    private List<String> prepareCommandOptions(SolidityCompilerOptions... options) {
+        return prepareCommandOptions(Optional.empty(), options);
     }
 }

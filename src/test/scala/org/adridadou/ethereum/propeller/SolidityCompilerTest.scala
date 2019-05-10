@@ -2,12 +2,14 @@ package org.adridadou.ethereum.propeller
 
 import java.io.{File, FileInputStream}
 import java.nio.charset.StandardCharsets
+import java.util.Optional
 
 import junit.framework.TestCase.{assertEquals, assertTrue}
 import org.adridadou.ethereum.propeller.exception.EthereumApiException
-import org.adridadou.ethereum.propeller.solidity.{CompilationResult, SolidityCompiler}
+import org.adridadou.ethereum.propeller.solidity.{CompilationResult, EvmVersion, SolidityCompiler}
 import org.adridadou.ethereum.propeller.values.SoliditySource
 import org.apache.commons.io.IOUtils
+import scala.language.postfixOps
 import org.scalatest.check.Checkers
 import org.scalatest.{FlatSpec, Matchers}
 
@@ -25,6 +27,14 @@ class SolidityCompilerTest extends FlatSpec with Matchers with Checkers {
 
   it should "compile a smart contract from a single file" in {
     val result = solidityCompiler.compileSrc(SoliditySource.from(new File("src/test/resources/contract2.sol")))
+    val details = result.findContract("myContract2").orElseThrow(() => new EthereumApiException("myContract2 not found"))
+    val entries = details.getAbi
+    assertEquals(6, entries.size)
+  }
+
+  it should "compile a smart contract from a single file for a specified evm version" in {
+    val evmVersion: Optional[EvmVersion] = Optional.of(new EvmVersion("constantinople"))
+    val result = solidityCompiler.compileSrc(SoliditySource.from(new File("src/test/resources/contract2.sol")), evmVersion)
     val details = result.findContract("myContract2").orElseThrow(() => new EthereumApiException("myContract2 not found"))
     val entries = details.getAbi
     assertEquals(6, entries.size)

@@ -5,6 +5,7 @@ import org.adridadou.ethereum.propeller.event.EthereumEventHandler;
 import org.adridadou.ethereum.propeller.exception.EthereumApiException;
 import org.adridadou.ethereum.propeller.solidity.*;
 import org.adridadou.ethereum.propeller.solidity.abi.AbiParam;
+import org.adridadou.ethereum.propeller.solidity.EvmVersion;
 import org.adridadou.ethereum.propeller.solidity.converters.SolidityTypeGroup;
 import org.adridadou.ethereum.propeller.solidity.converters.decoders.SolidityTypeDecoder;
 import org.adridadou.ethereum.propeller.solidity.converters.encoders.SolidityTypeEncoder;
@@ -271,8 +272,12 @@ public class EthereumFacade {
      * @param src the source file
      * @return The compilation result
      */
+    public CompilationResult compile(SoliditySourceFile src, Optional<EvmVersion> evmVersion) {
+        return solidityCompiler.compileSrc(src, evmVersion);
+    }
+
     public CompilationResult compile(SoliditySourceFile src) {
-        return solidityCompiler.compileSrc(src);
+        return solidityCompiler.compileSrc(src, Optional.empty());
     }
 
     /**
