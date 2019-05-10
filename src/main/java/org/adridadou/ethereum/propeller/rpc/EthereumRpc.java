@@ -86,7 +86,7 @@ public class EthereumRpc implements EthereumBackend {
     private org.apache.tuweni.eth.Transaction createTransaction(Nonce nonce, GasPrice gasPrice, TransactionRequest request) {
         UInt256 nonceInt = UInt256.valueOf(nonce.getValue());
         Wei gasPriceWei = Wei.valueOf(gasPrice.getPrice().inWei());
-        Gas gasLimitWei = Gas.valueOf(gasPrice.getPrice().inWei());
+        Gas gasLimitWei = Gas.valueOf(request.getGasLimit().getUsage());
         Address address = Address.fromBytes(Bytes.of(request.getAddress().toData().data));
         Wei value = Wei.valueOf(request.getValue().inWei());
         Bytes payload = Bytes.of(request.getData().data);
