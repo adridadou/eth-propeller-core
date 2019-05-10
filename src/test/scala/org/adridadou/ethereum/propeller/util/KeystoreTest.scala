@@ -15,7 +15,15 @@ import org.scalatest.{FlatSpec, Matchers}
 class KeystoreTest extends FlatSpec with Matchers with Checkers {
 
   "Keystore" should "be able to read the keystore file and decode it" in {
-    val ecKey = Keystore.fromKeystore(new File("src/test/resources/keystore.json"), "testpassword")
-    assertEquals(new BigInteger("55254095649631781209224057814590225966912998986153936485890744796566334537373"), ecKey.getBigIntPrivateKey)
+    val ecKey = Keystore.fromKeystore(
+      new File("src/test/resources/keystore.json"),
+      "testpassword"
+    )
+    assertEquals(
+      new BigInteger(
+        "55254095649631781209224057814590225966912998986153936485890744796566334537373"
+      ),
+      ecKey.getBigIntPrivateKey
+    )
   }
 }

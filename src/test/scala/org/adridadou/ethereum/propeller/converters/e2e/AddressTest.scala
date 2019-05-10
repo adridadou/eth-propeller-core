@@ -6,12 +6,15 @@ import org.scalacheck.Prop._
 import org.scalatest.check.Checkers
 import org.scalatest.{FlatSpec, Matchers}
 
-
 /**
   * Created by davidroon on 26.03.17.
   * This code is released under Apache 2 license
   */
-class AddressTest extends FlatSpec with Matchers with Checkers with SolidityConversionHelper {
+class AddressTest
+    extends FlatSpec
+    with Matchers
+    with Checkers
+    with SolidityConversionHelper {
 
   "The address type" should "be converted from and to address and stay the same value" in {
     val contract = contractObject[AddressContract]

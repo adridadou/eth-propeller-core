@@ -15,7 +15,11 @@ import scala.util.Try
   * Created by davidroon on 26.03.17.
   * This code is released under Apache 2 license
   */
-class CollectionTest extends FlatSpec with Matchers with Checkers with SolidityConversionHelper {
+class CollectionTest
+    extends FlatSpec
+    with Matchers
+    with Checkers
+    with SolidityConversionHelper {
 
   "Collection type (array, list, set)" should "be converted from and to the same value" in {
     val contract = contractObject[CollectionContract]
@@ -30,7 +34,9 @@ class CollectionTest extends FlatSpec with Matchers with Checkers with SolidityC
       val result = createResult(seed)
       contract.arrayFunc(seed.toArray) shouldEqual result.toArray
       contract.arrayFunc(seed.asJava) shouldEqual result.asJava
-      contract.arrayFunc(new util.HashSet(seed.asJava)) shouldEqual new util.HashSet(result.asJava)
+      contract.arrayFunc(new util.HashSet(seed.asJava)) shouldEqual new util.HashSet(
+        result.asJava
+      )
     }
 
     contract.dynArrayFunc(seed.asJava) shouldEqual getDynResult(seed.asJava)
@@ -54,7 +60,9 @@ class CollectionTest extends FlatSpec with Matchers with Checkers with SolidityC
 }
 
 trait CollectionContract {
-  def arrayFunc(intValue: java.util.List[BigInteger]): java.util.List[BigInteger]
+  def arrayFunc(
+      intValue: java.util.List[BigInteger]
+  ): java.util.List[BigInteger]
 
   def arrayFunc(intValue: Array[BigInteger]): Array[BigInteger]
 

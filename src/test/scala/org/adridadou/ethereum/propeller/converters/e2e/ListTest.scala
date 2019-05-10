@@ -11,7 +11,11 @@ import org.scalatest.{FlatSpec, Matchers}
   * Created by davidroon on 26.03.18.
   * This code is released under Apache 2 license
   */
-class ListTest extends FlatSpec with Matchers with Checkers with SolidityConversionHelper {
+class ListTest
+    extends FlatSpec
+    with Matchers
+    with Checkers
+    with SolidityConversionHelper {
 
   "List type" should "be converted from and to the same value" in {
     val contract = contractObject[ListContract]

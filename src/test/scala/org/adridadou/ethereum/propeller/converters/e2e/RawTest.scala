@@ -6,12 +6,15 @@ import org.scalacheck.Prop.forAll
 import org.scalatest.check.Checkers
 import org.scalatest.{FlatSpec, Matchers}
 
-
 /**
   * Created by davidroon on 26.03.17.
   * This code is released under Apache 2 license
   */
-class RawTest extends FlatSpec with Matchers with Checkers with SolidityConversionHelper {
+class RawTest
+    extends FlatSpec
+    with Matchers
+    with Checkers
+    with SolidityConversionHelper {
 
   private val contract = contractObject[RawContract]
 
@@ -42,5 +45,3 @@ trait RawContract {
 
   def signatureFunc(signature: EthSignature): EthSignature
 }
-
-
