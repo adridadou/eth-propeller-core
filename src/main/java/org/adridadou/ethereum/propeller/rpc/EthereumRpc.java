@@ -87,14 +87,20 @@ public class EthereumRpc implements EthereumBackend {
         UInt256 nonceInt = UInt256.valueOf(nonce.getValue());
         Wei gasPriceWei = Wei.valueOf(gasPrice.getPrice().inWei());
         Gas gasLimitWei = Gas.valueOf(request.getGasLimit().getUsage());
-        Address address = null;
-        //Address address = Address.fromBytes(Bytes.of(request.getAddress().toData().data));
         Wei value = Wei.valueOf(request.getValue().inWei());
         Bytes payload = Bytes.of(request.getData().data);
         SECP256K1.KeyPair keyPair = SECP256K1.KeyPair.fromSecretKey(SECP256K1.SecretKey.fromInteger(request.getAccount().getBigIntPrivateKey()));
-        //the signature gets generated when the transaction is created - if I'm understanding correctly
-        return new org.apache.tuweni.eth.Transaction(nonceInt, gasPriceWei, gasLimitWei,
-                address, value, payload, keyPair, chainId.id);
+        if (request.getAddress().isEmpty()) {
+            Address address = null;
+            //the signature gets generated when the Transaction is created
+            return new org.apache.tuweni.eth.Transaction(nonceInt, gasPriceWei, gasLimitWei,
+                    address, value, payload, keyPair, chainId.id);
+        }
+        else {
+            Address address = Address.fromBytes(Bytes.of(request.getAddress().toData().data));
+            return new org.apache.tuweni.eth.Transaction(nonceInt, gasPriceWei, gasLimitWei,
+                    address, value, payload, keyPair, chainId.id);
+        }
     }
 
     @Override
