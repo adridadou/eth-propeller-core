@@ -150,10 +150,6 @@ public class Web3JFacade {
         }
     }
 
-    RawTransaction createTransaction(Nonce nonce, GasPrice gasPrice, GasUsage gasLimit, EthAddress address, EthValue value, EthData data) {
-        return RawTransaction.createTransaction(nonce.getValue(), gasPrice.getPrice().inWei(), gasLimit.getUsage(), address.toString(), value.inWei(), data.toString());
-    }
-
     TransactionReceipt getReceipt(EthHash hash) {
         try {
             return handleError(web3j.ethGetTransactionReceipt(hash.withLeading0x()).send());

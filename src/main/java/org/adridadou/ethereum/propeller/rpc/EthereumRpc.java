@@ -87,7 +87,8 @@ public class EthereumRpc implements EthereumBackend {
         UInt256 nonceInt = UInt256.valueOf(nonce.getValue());
         Wei gasPriceWei = Wei.valueOf(gasPrice.getPrice().inWei());
         Gas gasLimitWei = Gas.valueOf(request.getGasLimit().getUsage());
-        Address address = Address.fromBytes(Bytes.of(request.getAddress().toData().data));
+        Address address = Address.fromBytes(null);
+        //Address address = Address.fromBytes(Bytes.of(request.getAddress().toData().data));
         Wei value = Wei.valueOf(request.getValue().inWei());
         Bytes payload = Bytes.of(request.getData().data);
         SECP256K1.KeyPair keyPair = SECP256K1.KeyPair.fromSecretKey(SECP256K1.SecretKey.fromInteger(request.getAccount().getBigIntPrivateKey()));
