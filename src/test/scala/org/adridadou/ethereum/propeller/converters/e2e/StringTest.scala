@@ -9,11 +9,7 @@ import org.scalatest.{FlatSpec, Matchers}
   * Created by davidroon on 26.03.17.
   * This code is released under Apache 2 license
   */
-class StringTest
-    extends FlatSpec
-    with Matchers
-    with Checkers
-    with SolidityConversionHelper {
+class StringTest extends FlatSpec with Matchers with Checkers with SolidityConversionHelper {
 
   "String type" should "be converted from and to the same value" in {
     val contract = contractObject[StringContract]

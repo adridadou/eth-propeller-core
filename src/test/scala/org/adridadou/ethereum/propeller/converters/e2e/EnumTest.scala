@@ -4,15 +4,12 @@ import org.adridadou.ethereum.propeller.MyEnum
 import org.scalatest.check.Checkers
 import org.scalatest.{FlatSpec, Matchers}
 
+
 /**
   * Created by davidroon on 26.03.17.
   * This code is released under Apache 2 license
   */
-class EnumTest
-    extends FlatSpec
-    with Matchers
-    with Checkers
-    with SolidityConversionHelper {
+class EnumTest extends FlatSpec with Matchers with Checkers with SolidityConversionHelper {
 
   private val contract = contractObject[EnumContract]
 
@@ -29,3 +26,5 @@ class EnumTest
 trait EnumContract {
   def intFunc(intValue: MyEnum): MyEnum
 }
+
+

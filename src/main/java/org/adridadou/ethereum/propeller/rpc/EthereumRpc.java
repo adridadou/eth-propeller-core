@@ -29,8 +29,6 @@ import org.adridadou.ethereum.propeller.values.TransactionStatus;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.crypto.SECP256K1;
 import org.apache.tuweni.eth.Address;
-import org.apache.tuweni.rlp.RLP;
-import org.apache.tuweni.rlp.RLPReader;
 import org.apache.tuweni.units.bigints.UInt256;
 import org.apache.tuweni.units.ethereum.Gas;
 import org.apache.tuweni.units.ethereum.Wei;
@@ -79,7 +77,7 @@ public class EthereumRpc implements EthereumBackend {
     @Override
     public EthHash submit(TransactionRequest request, Nonce nonce) {
             org.apache.tuweni.eth.Transaction transaction = createTransaction(nonce, getGasPrice(), request);
-            web3JFacade.sendTransaction(EthData.of(transaction.toBytes().toArray()));
+            web3JFacade.sendTransaction(EthData.of(transaction.signature().bytes().toArray()));
             return EthHash.of(transaction.hash().toBytes().toArray());
     }
 

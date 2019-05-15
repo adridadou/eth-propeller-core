@@ -9,15 +9,12 @@ import org.scalacheck.Prop._
 import org.scalatest.check.Checkers
 import org.scalatest.{FlatSpec, Matchers}
 
+
 /**
   * Created by davidroon on 26.03.17.
   * This code is released under Apache 2 license
   */
-class FutureTest
-    extends FlatSpec
-    with Matchers
-    with Checkers
-    with SolidityConversionHelper {
+class FutureTest extends FlatSpec with Matchers with Checkers with SolidityConversionHelper {
 
   "The address type" should "be converted from and to address and stay the same value" in {
     val contract = contractObject[FutureContract]
@@ -26,9 +23,8 @@ class FutureTest
 
   private def checkEncode(contractObject: FutureContract, seed: BigInt) = {
     val account = new EthAccount(seed.bigInteger)
-    contractObject
-      .addressFunc(account.getAddress)
-      .get() shouldEqual account.getAddress
+    contractObject.addressFunc(account.getAddress).get() shouldEqual account.getAddress
+
 
     true
   }

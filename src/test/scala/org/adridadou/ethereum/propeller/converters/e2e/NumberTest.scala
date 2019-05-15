@@ -13,11 +13,7 @@ import scala.util.Try
   * Created by davidroon on 26.03.17.
   * This code is released under Apache 2 license
   */
-class NumberTest
-    extends FlatSpec
-    with Matchers
-    with Checkers
-    with SolidityConversionHelper {
+class NumberTest extends FlatSpec with Matchers with Checkers with SolidityConversionHelper {
 
   private val contract = contractObject[NumberContract]
 

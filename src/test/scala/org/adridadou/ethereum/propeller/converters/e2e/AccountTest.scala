@@ -16,11 +16,7 @@ import org.scalatest.{FlatSpec, Matchers}
   * Created by davidroon on 26.03.17.
   * This code is released under Apache 2 license
   */
-class AccountTest
-    extends FlatSpec
-    with Matchers
-    with Checkers
-    with SolidityConversionHelper {
+class AccountTest extends FlatSpec with Matchers with Checkers with SolidityConversionHelper {
 
   "The account type" should "be converted into an address and then encoded and the address should be decoded properly" in {
     val contract = contractObject[AccountContract]
@@ -30,15 +26,8 @@ class AccountTest
   }
 
   it should "read a keystore file and decode it properly" in {
-    val account = AccountProvider
-      .fromKeystore(new File("src/test/resources/keystore.json"))
-      .decode("testpassword")
-    assertEquals(
-      new BigInteger(
-        "55254095649631781209224057814590225966912998986153936485890744796566334537373"
-      ),
-      account.getBigIntPrivateKey
-    )
+    val account = AccountProvider.fromKeystore(new File("src/test/resources/keystore.json")).decode("testpassword")
+    assertEquals(new BigInteger("55254095649631781209224057814590225966912998986153936485890744796566334537373"), account.getBigIntPrivateKey)
   }
 
   it should "be able to sign data properly" in {
@@ -67,10 +56,7 @@ class AccountTest
     true
   }
 
-  private def checkEncode(
-      contractObject: AccountContractFuture,
-      seed: BigInt
-  ) = {
+  private def checkEncode(contractObject: AccountContractFuture, seed: BigInt) = {
     val account = new EthAccount(seed.bigInteger)
     contractObject.addressFunc(account).get() shouldEqual account.getAddress
     true
@@ -81,12 +67,7 @@ class AccountTest
 trait ECREcovery {
   def recover(hash: EthData, sig: EthSignature): EthAddress
 
-  def recoverSimple(
-      hash: EthData,
-      v: Byte,
-      r: BigInteger,
-      s: BigInteger
-  ): EthAddress
+  def recoverSimple(hash: EthData, v: Byte, r: BigInteger, s: BigInteger): EthAddress
 }
 
 trait AccountContract {

@@ -28,12 +28,10 @@ class EthAccountTest extends FlatSpec with Matchers with Checkers {
   }
 
   private def checkSameAddressGenerated(seed: BigInt) = {
-    if (seed === 0) {
+    if(seed === 0 ){
       Try(ECKey.fromPrivate(seed.bigInteger)) match {
         case Success(_) =>
-          throw new RuntimeException(
-            "it should not be possible to create a private key from int 0"
-          )
+          throw new RuntimeException("it should not be possible to create a private key from int 0")
         case Failure(ex) =>
           ex.getMessage shouldEqual "Public key must not be a point at infinity, probably your private key is incorrect"
           true
