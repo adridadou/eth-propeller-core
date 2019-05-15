@@ -58,7 +58,7 @@ class EventsTest extends FlatSpec with Matchers with Checkers {
         .toFuture
         .get()
       result.getTransactionHash shouldBe EthHash.of(
-        "90d8b78789e8cfadac95132974bf5cd119a4d51465e940f01ac08cf7332062e7"
+        "9ecaf5897eb06ec8e1c907cf9494b838cf65e0f06af06afcef8500c0b3fa03f5"
       )
       result.getResult.value shouldBe "my event is here and it is much longer than anticipated"
 
@@ -112,7 +112,7 @@ class EventsTest extends FlatSpec with Matchers with Checkers {
         .toFuture
         .get()
       result.getTransactionHash shouldBe EthHash.of(
-        "815307693bb489694f38c2f1e61934bd9dfc0f24a182c157824fc180cbf2216d"
+       "6d99b716340fb64ec47f07b7b7cc5a9c339667e4657f1c0f44acb0fdd507e62c"
       )
       result.getResult
         .get(2) shouldBe "my event is here and it is much longer than anticipated"
