@@ -1,7 +1,6 @@
 package org.adridadou.ethereum.propeller
 
 import java.io.File
-import java.util.Optional
 import java.util.concurrent.CompletableFuture
 
 import com.google.common.collect.Lists
