@@ -38,6 +38,10 @@ public class SolidityFunction {
         return description.getName();
     }
 
+    public AbiEntry getDescription() {
+        return description;
+    }
+
     public List<SolidityType> getParameters() {
         return parameters;
     }
@@ -75,6 +79,25 @@ public class SolidityFunction {
         return Optional.empty();
     }
 
+    public EthData encodeParam(Object arg, int index) {
+        if (arg == null) {
+            return EthData.empty();
+        }
+
+        SolidityTypeEncoder encoder = getEncoder(index, arg);
+        AbiParam param = description.getInputs().get(index);
+        SolidityType solidityType = SolidityType.find(param.getType()).orElseThrow(() -> new EthereumApiException("unknown solidity type " + description.getType()));
+
+        return encoder.encode(arg, solidityType);
+
+    }
+
+    private SolidityTypeEncoder getEncoder(int index, Object arg) {
+        return encoders.get(index).stream()
+                .filter(enc -> enc.canConvert(arg.getClass()))
+                .findFirst().orElseThrow(() -> new EthereumApiException("encoder could not be found for \"" + arg.getClass().getSimpleName() + "\". Serious bug detected!!"));
+    }
+
     public EthData encode(Object... args) {
         EthData result = description.signature();
         int dynamicIndex = args.length * WORD_SIZE;
@@ -85,9 +108,7 @@ public class SolidityFunction {
         for (int i = 0; i < args.length; i++) {
             final Object arg = args[i];
             if (arg != null) {
-                SolidityTypeEncoder encoder = encoders.get(i).stream()
-                        .filter(enc -> enc.canConvert(arg.getClass()))
-                        .findFirst().orElseThrow(() -> new EthereumApiException("encoder could not be found for \"" + arg.getClass().getSimpleName() + "\". Serious bug detected!!"));
+                SolidityTypeEncoder encoder = getEncoder(i, arg);
                 AbiParam param = description.getInputs().get(i);
                 SolidityType solidityType = SolidityType.find(param.getType()).orElseThrow(() -> new EthereumApiException("unknown solidity type " + description.getType()));
                 if (solidityType.isDynamic || param.isDynamic()) {

@@ -5,6 +5,7 @@ import org.adridadou.ethereum.propeller.exception.EthereumApiException;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.util.Objects;
 
 /**
@@ -54,7 +55,7 @@ public class EthValue implements Comparable<EthValue> {
 
     public BigDecimal inEth() {
         return value
-                .divide(ETHER_CONVERSION, BigDecimal.ROUND_FLOOR);
+                .divide(ETHER_CONVERSION, RoundingMode.HALF_DOWN);
     }
 
     public boolean isZero() {
