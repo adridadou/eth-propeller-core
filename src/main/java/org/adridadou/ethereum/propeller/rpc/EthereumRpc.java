@@ -1,6 +1,5 @@
 package org.adridadou.ethereum.propeller.rpc;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -27,8 +26,12 @@ import org.adridadou.ethereum.propeller.values.TransactionInfo;
 import org.adridadou.ethereum.propeller.values.TransactionReceipt;
 import org.adridadou.ethereum.propeller.values.TransactionRequest;
 import org.adridadou.ethereum.propeller.values.TransactionStatus;
-import org.ethereum.crypto.ECKey;
-import org.ethereum.util.ByteUtil;
+import org.apache.tuweni.bytes.Bytes;
+import org.apache.tuweni.crypto.SECP256K1;
+import org.apache.tuweni.eth.Address;
+import org.apache.tuweni.units.bigints.UInt256;
+import org.apache.tuweni.units.ethereum.Gas;
+import org.apache.tuweni.units.ethereum.Wei;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.web3j.crypto.Credentials;
@@ -73,36 +76,29 @@ public class EthereumRpc implements EthereumBackend {
 
     @Override
     public EthHash submit(TransactionRequest request, Nonce nonce) {
-        //TODO: fix that once web3j handle any chainId
-        if(chainId.id > 127 || chainId.id < 0) {
-            org.ethereum.core.Transaction transaction = createTransaction(nonce, getGasPrice(), request);
-            transaction.sign(ECKey.fromPrivate(request.getAccount().getBigIntPrivateKey()));
-            web3JFacade.sendTransaction(EthData.of(transaction.getEncoded()));
-            return EthHash.of(transaction.getHash());
-        } else {
-            RawTransaction tx = web3JFacade.createTransaction(nonce, getGasPrice(), request.getGasLimit(), request.getAddress(), request.getValue(), request.getData());
-            EthData signedMessage = EthData.of(TransactionEncoder.signMessage(tx, (byte) chainId.id, Credentials.create(Numeric.toHexStringNoPrefix(request.getAccount().getBigIntPrivateKey()))));
-            web3JFacade.sendTransaction(signedMessage);
-
-            return EthHash.of(Crypto.sha3(signedMessage).data);
-        }
+            org.apache.tuweni.eth.Transaction transaction = createTransaction(nonce, getGasPrice(), request);
+            web3JFacade.sendTransaction(EthData.of(transaction.toBytes().toArray()));
+            return EthHash.of(transaction.hash().toBytes().toArray());
     }
 
-    private org.ethereum.core.Transaction createTransaction(Nonce nonce, GasPrice gasPrice, TransactionRequest request) {
-        byte[] nonceBytes = encodeBigInt(nonce.getValue());
-        byte[] gasPriceBytes = encodeBigInt(gasPrice.getPrice().inWei());
-        byte[] gasBytes = encodeBigInt(request.getGasLimit().getUsage());
-        byte[] valueBytes = encodeBigInt(request.getValue().inWei());
-
-        return new org.ethereum.core.Transaction(nonceBytes, gasPriceBytes, gasBytes,
-                request.getAddress().toData().data, valueBytes, request.getData().data, chainId.id);
-    }
-
-    private byte[] encodeBigInt(BigInteger value) {
-        if(BigInteger.ZERO.equals(value)){
-            return ByteUtil.EMPTY_BYTE_ARRAY;
+    private org.apache.tuweni.eth.Transaction createTransaction(Nonce nonce, GasPrice gasPrice, TransactionRequest request) {
+        UInt256 nonceInt = UInt256.valueOf(nonce.getValue());
+        Wei gasPriceWei = Wei.valueOf(gasPrice.getPrice().inWei());
+        Gas gasLimitWei = Gas.valueOf(request.getGasLimit().getUsage());
+        Wei value = Wei.valueOf(request.getValue().inWei());
+        Bytes payload = Bytes.of(request.getData().data);
+        SECP256K1.KeyPair keyPair = SECP256K1.KeyPair.fromSecretKey(SECP256K1.SecretKey.fromInteger(request.getAccount().getBigIntPrivateKey()));
+        if (request.getAddress().isEmpty()) {
+            Address address = null;
+            //the signature gets generated when the Transaction is created
+            return new org.apache.tuweni.eth.Transaction(nonceInt, gasPriceWei, gasLimitWei,
+                    address, value, payload, keyPair, chainId.id);
         }
-        return ByteUtil.bigIntegerToBytes(value);
+        else {
+            Address address = Address.fromBytes(Bytes.of(request.getAddress().toData().data));
+            return new org.apache.tuweni.eth.Transaction(nonceInt, gasPriceWei, gasLimitWei,
+                    address, value, payload, keyPair, chainId.id);
+        }
     }
 
     @Override
