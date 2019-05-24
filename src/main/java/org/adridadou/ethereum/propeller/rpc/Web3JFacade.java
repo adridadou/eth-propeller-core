@@ -49,11 +49,11 @@ public class Web3JFacade {
     EthData constantCall(final EthAccount account, final EthAddress address, final EthData data) {
         try {
             return EthData.of(handleError(web3j.ethCall(new Transaction(
-                    account.getAddress().withLeading0x(),
+                    account.getAddress().normalizedWithLeading0x(),
                     null,
                     null,
                     null,
-                    address.withLeading0x(),
+                    address.normalizedWithLeading0x(),
                     BigInteger.ZERO,
                     data.toString()
             ), DefaultBlockParameterName.LATEST).send()));
@@ -148,10 +148,6 @@ public class Web3JFacade {
         } catch (IOException e) {
             throw new IOError(e);
         }
-    }
-
-    RawTransaction createTransaction(Nonce nonce, GasPrice gasPrice, GasUsage gasLimit, EthAddress address, EthValue value, EthData data) {
-        return RawTransaction.createTransaction(nonce.getValue(), gasPrice.getPrice().inWei(), gasLimit.getUsage(), address.toString(), value.inWei(), data.toString());
     }
 
     TransactionReceipt getReceipt(EthHash hash) {

@@ -43,6 +43,7 @@ class EventsTest extends FlatSpec with Matchers with Checkers {
   }
 
   it should "work with a generic list as well" in {
+
     (for (compiledContract:SolidityContractDetails <- ethereum.compile(contractSource).findContract("contractEvents").asScala;
           solidityEvent    <- ethereum.findEventDefinitionForParameters(compiledContract, "MyEvent", Lists.newArrayList(classOf[EthAddress], classOf[EthAddress], classOf[String], classOf[EthData], classOf[EthSignature])).asScala) yield {
 
