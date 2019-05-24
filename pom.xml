@@ -62,14 +62,6 @@
             <url>https://jcenter.bintray.com</url>
         </repository>
 
-        <repository>
-            <id>apache.snapshots</id>
-            <name>Apache Snapshot Repository</name>
-            <url>https://repository.apache.org/snapshots</url>
-            <releases>
-                <enabled>false</enabled>
-            </releases>
-        </repository>
     </repositories>
 
     <dependencies>
@@ -165,7 +157,25 @@
 
         <dependency>
             <groupId>org.openlaw</groupId>
-            <artifactId>tuweni</artifactId>
+            <artifactId>tuweni-bytes</artifactId>
+            <version>0.8.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.openlaw</groupId>
+            <artifactId>tuweni-eth</artifactId>
+            <version>0.8.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.openlaw</groupId>
+            <artifactId>tuweni-crypto</artifactId>
+            <version>0.8.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.openlaw</groupId>
+            <artifactId>tuweni-units</artifactId>
             <version>0.8.0</version>
         </dependency>
 
