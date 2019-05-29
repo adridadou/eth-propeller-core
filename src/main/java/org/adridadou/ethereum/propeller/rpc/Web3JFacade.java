@@ -49,11 +49,11 @@ public class Web3JFacade {
     EthData constantCall(final EthAccount account, final EthAddress address, final EthData data) {
         try {
             return EthData.of(handleError(web3j.ethCall(new Transaction(
-                    account.getAddress().withLeading0x(),
+                    account.getAddress().normalizedWithLeading0x(),
                     null,
                     null,
                     null,
-                    address.withLeading0x(),
+                    address.normalizedWithLeading0x(),
                     BigInteger.ZERO,
                     data.toString()
             ), DefaultBlockParameterName.LATEST).send()));
