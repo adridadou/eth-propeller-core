@@ -81,17 +81,20 @@ public class Web3JFacade {
                     EthBlock currentBlock = web3j
                             .ethGetBlockByNumber(DefaultBlockParameter.valueOf(DefaultBlockParameterName.LATEST.name()), true).send();
                     BigInteger currentBlockNumber = currentBlock.getBlock().getNumber();
-                    if (this.lastBlockNumber.equals(BigInteger.ZERO) || currentBlockNumber.compareTo(this.lastBlockNumber) > 0) {
-                        if (currentBlockNumber.subtract(this.lastBlockNumber).compareTo(BigInteger.ONE) > 0 && !this.lastBlockNumber.equals(BigInteger.ZERO)) {
-                            for (BigInteger i = this.lastBlockNumber; i.compareTo(currentBlockNumber) < 0; i = i.add(BigInteger.ONE)) {
-                                EthBlock missedBlock = web3j
-                                        .ethGetBlockByNumber(DefaultBlockParameter.valueOf(i), true).send();
-                                blockEventHandler.newElement(missedBlock);
-                            }
-                        }
-                        this.lastBlockNumber = currentBlockNumber;
-                        blockEventHandler.newElement(currentBlock);
+
+                    //Set last block to current block -1 in case last block is zero to prevent all blocks from being retrieved
+                    if (this.lastBlockNumber.equals(BigInteger.ZERO)) {
+                        this.lastBlockNumber = currentBlockNumber.subtract(BigInteger.ONE);
                     }
+
+                    //In case the block number of the current block is more than 1 higher than the last block, retrieve intermediate blocks
+                    for (BigInteger i = this.lastBlockNumber.add(BigInteger.ONE); i.compareTo(currentBlockNumber) < 0; i = i.add(BigInteger.ONE)) {
+                        EthBlock missedBlock = web3j.ethGetBlockByNumber(DefaultBlockParameter.valueOf(i), true).send();
+                        blockEventHandler.newElement(missedBlock);
+                    }
+
+                    this.lastBlockNumber = currentBlockNumber;
+                    blockEventHandler.newElement(currentBlock);
                 } catch (Throwable e) {
                     logger.warn("error while polling blocks", e);
                 }
