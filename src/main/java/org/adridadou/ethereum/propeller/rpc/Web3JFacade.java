@@ -82,6 +82,13 @@ public class Web3JFacade {
                             .ethGetBlockByNumber(DefaultBlockParameter.valueOf(DefaultBlockParameterName.LATEST.name()), true).send();
                     BigInteger currentBlockNumber = currentBlock.getBlock().getNumber();
                     if (this.lastBlockNumber.equals(BigInteger.ZERO) || currentBlockNumber.compareTo(this.lastBlockNumber) > 0) {
+                        if (currentBlockNumber.subtract(this.lastBlockNumber).compareTo(BigInteger.ONE) > 0 && !this.lastBlockNumber.equals(BigInteger.ZERO)) {
+                            for (BigInteger i = this.lastBlockNumber; i.compareTo(currentBlockNumber) < 0; i = i.add(BigInteger.ONE)) {
+                                EthBlock missedBlock = web3j
+                                        .ethGetBlockByNumber(DefaultBlockParameter.valueOf(i), true).send();
+                                blockEventHandler.newElement(missedBlock);
+                            }
+                        }
                         this.lastBlockNumber = currentBlockNumber;
                         blockEventHandler.newElement(currentBlock);
                     }
