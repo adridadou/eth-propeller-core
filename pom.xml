@@ -51,13 +51,17 @@
         </repository>
 
         <repository>
-            <id>apache.snapshots</id>
-            <name>Apache Snapshot Repository</name>
-            <url>https://repository.apache.org/snapshots</url>
-            <releases>
-                <enabled>false</enabled>
-            </releases>
+            <id>oss.jfrog.org4</id>
+            <name>Repository from Bintray</name>
+            <url>http://dl.bintray.com/openlawbot/forks</url>
         </repository>
+
+        <repository>
+            <id>oss.jfrog.org5</id>
+            <name>Repository from Bintray</name>
+            <url>https://jcenter.bintray.com</url>
+        </repository>
+
     </repositories>
 
     <dependencies>
@@ -152,21 +156,27 @@
         </dependency>
 
         <dependency>
-            <groupId>org.apache.tuweni</groupId>
+            <groupId>org.openlaw</groupId>
+            <artifactId>tuweni-bytes</artifactId>
+            <version>0.8.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.openlaw</groupId>
             <artifactId>tuweni-eth</artifactId>
-            <version>1.1.0-SNAPSHOT</version>
+            <version>0.8.0</version>
         </dependency>
 
         <dependency>
-            <groupId>org.apache.tuweni</groupId>
+            <groupId>org.openlaw</groupId>
             <artifactId>tuweni-crypto</artifactId>
-            <version>1.1.0-SNAPSHOT</version>
+            <version>0.8.0</version>
         </dependency>
 
         <dependency>
-            <groupId>org.apache.tuweni</groupId>
+            <groupId>org.openlaw</groupId>
             <artifactId>tuweni-units</artifactId>
-            <version>1.1.0-SNAPSHOT</version>
+            <version>0.8.0</version>
         </dependency>
 
         <dependency>
@@ -174,6 +184,24 @@
             <artifactId>ethereumj-core</artifactId>
             <version>1.12.0-RELEASE</version>
             <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.logl</groupId>
+            <artifactId>logl-api</artifactId>
+            <version>0.3.1</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.logl</groupId>
+            <artifactId>logl-logl</artifactId>
+            <version>0.3.1</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.logl</groupId>
+            <artifactId>logl-vertx</artifactId>
+            <version>0.3.1</version>
         </dependency>
 
         <dependency>
