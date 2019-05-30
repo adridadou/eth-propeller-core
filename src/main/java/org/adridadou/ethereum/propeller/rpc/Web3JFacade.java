@@ -82,20 +82,23 @@ public class Web3JFacade {
                             .ethGetBlockByNumber(DefaultBlockParameter.valueOf(DefaultBlockParameterName.LATEST.name()), true).send();
                     BigInteger currentBlockNumber = currentBlock.getBlock().getNumber();
 
-                    //Set last block to current block -1 in case last block is zero to prevent all blocks from being retrieved
-                    if (this.lastBlockNumber.equals(BigInteger.ZERO)) {
-                        this.lastBlockNumber = currentBlockNumber.subtract(BigInteger.ONE);
-                    }
+                    if(currentBlockNumber.compareTo(this.lastBlockNumber) > 0) {
 
-                    //In case the block number of the current block is more than 1 higher than the last block, retrieve intermediate blocks
-                    for (BigInteger i = this.lastBlockNumber.add(BigInteger.ONE); i.compareTo(currentBlockNumber) < 0; i = i.add(BigInteger.ONE)) {
-                        EthBlock missedBlock = web3j.ethGetBlockByNumber(DefaultBlockParameter.valueOf(i), true).send();
-                        this.lastBlockNumber = i;
-                        blockEventHandler.newElement(missedBlock);
-                    }
+                        //Set last block to current block -1 in case last block is zero to prevent all blocks from being retrieved
+                        if (this.lastBlockNumber.equals(BigInteger.ZERO)) {
+                            this.lastBlockNumber = currentBlockNumber.subtract(BigInteger.ONE);
+                        }
 
-                    this.lastBlockNumber = currentBlockNumber;
-                    blockEventHandler.newElement(currentBlock);
+                        //In case the block number of the current block is more than 1 higher than the last block, retrieve intermediate blocks
+                        for (BigInteger i = this.lastBlockNumber.add(BigInteger.ONE); i.compareTo(currentBlockNumber) < 0; i = i.add(BigInteger.ONE)) {
+                            EthBlock missedBlock = web3j.ethGetBlockByNumber(DefaultBlockParameter.valueOf(i), true).send();
+                            this.lastBlockNumber = i;
+                            blockEventHandler.newElement(missedBlock);
+                        }
+
+                        this.lastBlockNumber = currentBlockNumber;
+                        blockEventHandler.newElement(currentBlock);
+                    }
                 } catch (Throwable e) {
                     logger.warn("error while polling blocks", e);
                 }
