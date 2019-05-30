@@ -90,6 +90,7 @@ public class Web3JFacade {
                     //In case the block number of the current block is more than 1 higher than the last block, retrieve intermediate blocks
                     for (BigInteger i = this.lastBlockNumber.add(BigInteger.ONE); i.compareTo(currentBlockNumber) < 0; i = i.add(BigInteger.ONE)) {
                         EthBlock missedBlock = web3j.ethGetBlockByNumber(DefaultBlockParameter.valueOf(i), true).send();
+                        this.lastBlockNumber = i;
                         blockEventHandler.newElement(missedBlock);
                     }
 
