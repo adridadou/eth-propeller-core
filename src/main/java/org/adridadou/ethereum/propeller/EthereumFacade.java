@@ -266,8 +266,6 @@ public class EthereumFacade {
         return ethereumProxy.getCode(address);
     }
 
-
-
     /**
      * Downloads and returns the smart contract's metadata
      * @param swarmMetadaLink Swarm url
