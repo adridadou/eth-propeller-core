@@ -19,6 +19,8 @@ import org.ethereum.util.blockchain.StandaloneBlockchain;
 import org.ethereum.vm.LogInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.web3j.abi.datatypes.Event;
+import org.web3j.protocol.core.methods.response.Log;
 
 import java.math.BigInteger;
 import java.util.List;
@@ -141,6 +143,11 @@ public class EthereumTest implements EthereumBackend {
     @Override
     public synchronized EthData constantCall(final EthAccount account, final EthAddress address, final EthValue value, final EthData data) {
         return localExecutionService.executeLocally(account, address, value, data);
+    }
+
+    @Override
+    public List<Log> loggingCall(Event event, EthAddress address, String... optionalTopics) {
+        return null;
     }
 
     @Override

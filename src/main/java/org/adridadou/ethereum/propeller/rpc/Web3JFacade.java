@@ -3,6 +3,8 @@ package org.adridadou.ethereum.propeller.rpc;
 import java.io.IOError;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Executors;
 
@@ -19,15 +21,19 @@ import org.adridadou.ethereum.propeller.values.Nonce;
 import org.adridadou.ethereum.propeller.values.SmartContractByteCode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.web3j.abi.EventEncoder;
+import org.web3j.abi.datatypes.Event;
 import org.web3j.crypto.RawTransaction;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameter;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.DefaultBlockParameterNumber;
 import org.web3j.protocol.core.Response;
+import org.web3j.protocol.core.methods.request.EthFilter;
 import org.web3j.protocol.core.methods.request.Transaction;
 import org.web3j.protocol.core.methods.response.EthBlock;
 import org.web3j.protocol.core.methods.response.EthGetBalance;
+import org.web3j.protocol.core.methods.response.Log;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.utils.Numeric;
 import io.reactivex.Observable;
@@ -60,6 +66,16 @@ public class Web3JFacade {
         } catch (IOException e) {
             throw new IOError(e);
         }
+    }
+
+    List<Log> loggingCall(final Event event, final EthAddress address, final String... optionalTopics) {
+        EthFilter ethFilter = new EthFilter(DefaultBlockParameterName.EARLIEST, DefaultBlockParameterName.LATEST, address.withLeading0x());
+        ethFilter.addSingleTopic(EventEncoder.encode(event));
+        ethFilter.addOptionalTopics(optionalTopics);
+
+        List<Log> list = new ArrayList();
+        this.web3j.ethLogFlowable(ethFilter).subscribe(log -> list.add(log)).dispose();
+        return list;
     }
 
     BigInteger getTransactionCount(EthAddress address) {

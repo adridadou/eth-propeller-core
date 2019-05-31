@@ -33,6 +33,7 @@ import org.apache.tuweni.units.ethereum.Gas;
 import org.apache.tuweni.units.ethereum.Wei;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.web3j.abi.datatypes.Event;
 import org.web3j.protocol.core.methods.response.EthBlock;
 import org.web3j.protocol.core.methods.response.Log;
 import org.web3j.protocol.core.methods.response.Transaction;
@@ -129,6 +130,11 @@ public class EthereumRpc implements EthereumBackend {
     @Override
     public EthData constantCall(EthAccount account, EthAddress address, EthValue value, EthData data) {
         return web3JFacade.constantCall(account, address, data);
+    }
+
+    @Override
+    public List<Log> loggingCall(Event event, EthAddress address, String... optionalTopics) {
+        return web3JFacade.loggingCall(event, address, optionalTopics);
     }
 
     @Override

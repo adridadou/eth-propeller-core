@@ -3,7 +3,10 @@ package org.adridadou.ethereum.propeller;
 import org.adridadou.ethereum.propeller.event.BlockInfo;
 import org.adridadou.ethereum.propeller.event.EthereumEventHandler;
 import org.adridadou.ethereum.propeller.values.*;
+import org.web3j.abi.datatypes.Event;
+import org.web3j.protocol.core.methods.response.Log;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -32,6 +35,8 @@ public interface EthereumBackend {
     SmartContractByteCode getCode(EthAddress address);
 
     EthData constantCall(EthAccount account, EthAddress address, EthValue value, EthData data);
+
+    List<Log> loggingCall(final Event event, EthAddress address, final String... optionalTopics);
 
     void register(EthereumEventHandler eventHandler);
 
