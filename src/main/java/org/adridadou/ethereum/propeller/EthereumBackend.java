@@ -36,7 +36,7 @@ public interface EthereumBackend {
 
     EthData constantCall(EthAccount account, EthAddress address, EthValue value, EthData data);
 
-    List<Log> loggingCall(final Event event, EthAddress address, final String... optionalTopics);
+    List<EventInfo> eventCall(final Event event, EthAddress address, final String... optionalTopics);
 
     void register(EthereumEventHandler eventHandler);
 

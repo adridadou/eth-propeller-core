@@ -10,15 +10,7 @@ import java.util.concurrent.Executors;
 
 import io.reactivex.Flowable;
 import org.adridadou.ethereum.propeller.exception.EthereumApiException;
-import org.adridadou.ethereum.propeller.values.EthAccount;
-import org.adridadou.ethereum.propeller.values.EthAddress;
-import org.adridadou.ethereum.propeller.values.EthData;
-import org.adridadou.ethereum.propeller.values.EthHash;
-import org.adridadou.ethereum.propeller.values.EthValue;
-import org.adridadou.ethereum.propeller.values.GasPrice;
-import org.adridadou.ethereum.propeller.values.GasUsage;
-import org.adridadou.ethereum.propeller.values.Nonce;
-import org.adridadou.ethereum.propeller.values.SmartContractByteCode;
+import org.adridadou.ethereum.propeller.values.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.web3j.abi.EventEncoder;
@@ -68,13 +60,13 @@ public class Web3JFacade {
         }
     }
 
-    List<Log> loggingCall(final Event event, final EthAddress address, final String... optionalTopics) {
+    List<EventInfo> loggingCall(final Event event, final EthAddress address, final String... optionalTopics) {
         EthFilter ethFilter = new EthFilter(DefaultBlockParameterName.EARLIEST, DefaultBlockParameterName.LATEST, address.withLeading0x());
         ethFilter.addSingleTopic(EventEncoder.encode(event));
         ethFilter.addOptionalTopics(optionalTopics);
 
-        List<Log> list = new ArrayList();
-        this.web3j.ethLogFlowable(ethFilter).subscribe(log -> list.add(log)).dispose();
+        List<EventInfo> list = new ArrayList();
+        this.web3j.ethLogFlowable(ethFilter).subscribe(log -> list.add(new EventInfo(EthHash.of(log.getTransactionHash()), log.getData()))).dispose();
         return list;
     }
 

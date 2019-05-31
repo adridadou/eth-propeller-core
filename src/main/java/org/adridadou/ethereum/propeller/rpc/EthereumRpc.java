@@ -10,21 +10,7 @@ import java.util.stream.Collectors;
 import org.adridadou.ethereum.propeller.EthereumBackend;
 import org.adridadou.ethereum.propeller.event.BlockInfo;
 import org.adridadou.ethereum.propeller.event.EthereumEventHandler;
-import org.adridadou.ethereum.propeller.values.ChainId;
-import org.adridadou.ethereum.propeller.values.EthAccount;
-import org.adridadou.ethereum.propeller.values.EthAddress;
-import org.adridadou.ethereum.propeller.values.EthData;
-import org.adridadou.ethereum.propeller.values.EthHash;
-import org.adridadou.ethereum.propeller.values.EthValue;
-import org.adridadou.ethereum.propeller.values.EventData;
-import org.adridadou.ethereum.propeller.values.GasPrice;
-import org.adridadou.ethereum.propeller.values.GasUsage;
-import org.adridadou.ethereum.propeller.values.Nonce;
-import org.adridadou.ethereum.propeller.values.SmartContractByteCode;
-import org.adridadou.ethereum.propeller.values.TransactionInfo;
-import org.adridadou.ethereum.propeller.values.TransactionReceipt;
-import org.adridadou.ethereum.propeller.values.TransactionRequest;
-import org.adridadou.ethereum.propeller.values.TransactionStatus;
+import org.adridadou.ethereum.propeller.values.*;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.crypto.SECP256K1;
 import org.apache.tuweni.eth.Address;
@@ -133,7 +119,7 @@ public class EthereumRpc implements EthereumBackend {
     }
 
     @Override
-    public List<Log> loggingCall(Event event, EthAddress address, String... optionalTopics) {
+    public List<EventInfo> eventCall(Event event, EthAddress address, String... optionalTopics) {
         return web3JFacade.loggingCall(event, address, optionalTopics);
     }
 

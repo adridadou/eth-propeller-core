@@ -13,6 +13,8 @@ import org.adridadou.ethereum.propeller.swarm.SwarmHash;
 import org.adridadou.ethereum.propeller.swarm.SwarmService;
 import org.adridadou.ethereum.propeller.values.*;
 import io.reactivex.Observable;
+import org.web3j.abi.datatypes.Event;
+import org.web3j.protocol.core.methods.response.Log;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -264,6 +266,8 @@ public class EthereumFacade {
         return ethereumProxy.getCode(address);
     }
 
+
+
     /**
      * Downloads and returns the smart contract's metadata
      * @param swarmMetadaLink Swarm url
@@ -467,6 +471,19 @@ public class EthereumFacade {
      */
     public <T> List<EventInfo<T>> getEventsAtTransactionWithInfo(EthHash transactionHash, SolidityEvent<T> eventDefinition, EthAddress address) {
         return ethereumProxy.getEventsAtTransactionWithInfo(eventDefinition, address, transactionHash);
+    }
+
+
+    /**
+     * Returns all the events that happened at a smart contract matching an event signature and indexed parameters
+     *
+     * @param event Event that should be matched
+     * @param address address of the smart contract that emits the events
+     * @param optionalTopics Optional indexed event parameters
+     * @return
+     */
+    public List<EventInfo> getSpecificEvents(Event event, EthAddress address, String... optionalTopics) {
+        return ethereumProxy.getSpecificEvents(event, address, optionalTopics);
     }
 
     /**
