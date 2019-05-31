@@ -19,6 +19,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -243,6 +244,15 @@ public class EthereumFacade {
      */
     public GasUsage estimateGas(EthValue value, EthData data, EthAccount account, EthAddress address) {
         return ethereumProxy.estimateGas(value, data, account, address);
+    }
+
+    /**
+     * Returns the set of transactions that are being sent by propeller and but not added to the chain yet
+     * @param address The transaction sender
+     * @return the set of transaction hashes
+     */
+    public Set<EthHash> getPendingTransactions(EthAddress address) {
+        return ethereumProxy.getPendingTransactions(address);
     }
 
     /**

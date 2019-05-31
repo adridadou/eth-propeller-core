@@ -276,6 +276,10 @@ class EthereumProxy {
         return gasLimit.add(ADDITIONAL_GAS_DIRTY_FIX);
     }
 
+    public Set<EthHash> getPendingTransactions(EthAddress address) {
+        return pendingTransactions.get(address);
+    }
+
     private TransactionInfo createTransactionParameters(TransactionReceipt receipt) {
         return new TransactionInfo(receipt.hash, receipt, TransactionStatus.Executed, receipt.blockHash);
     }
