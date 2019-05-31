@@ -146,7 +146,7 @@ public class EthereumTest implements EthereumBackend {
     }
 
     @Override
-    public List<Log> eventCall(Event event, EthAddress address, String... optionalTopics) {
+    public List<EventInfo> eventCall(Event event, EthAddress address, String... optionalTopics) {
         return null;
     }
 
