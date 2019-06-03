@@ -475,9 +475,9 @@ public class EthereumFacade {
     /**
      * Returns all the events that happened at a smart contract matching an event signature and indexed parameters
      *
-     * @param event Event that should be matched
+     * @param eventDefiniton Event definition that should be matched
      * @param address address of the smart contract that emits the events
-     * @param optionalTopics Optional indexed event parameters
+     * @param optionalTopics Optional indexed event parameters, passed as hexidecimal string
      * @return
      */
     public List<EventData> getSpecificEvents(SolidityEvent eventDefiniton, EthAddress address, String... optionalTopics) {
