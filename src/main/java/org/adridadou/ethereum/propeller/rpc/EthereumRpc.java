@@ -149,6 +149,11 @@ public class EthereumRpc implements EthereumBackend {
         );
     }
 
+    @Override
+    public ChainId getChainId() {
+        return chainId;
+    }
+
     BlockInfo toBlockInfo(EthBlock ethBlock) {
         return Optional.ofNullable(ethBlock.getBlock()).map(block -> {
             try {

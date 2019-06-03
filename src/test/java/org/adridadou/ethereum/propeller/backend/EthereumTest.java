@@ -158,6 +158,11 @@ public class EthereumTest implements EthereumBackend {
         });
     }
 
+    @Override
+    public ChainId getChainId() {
+        return ChainId.id(123456);
+    }
+
     private ECKey getKey(EthAccount account) {
         return ECKey.fromPrivate(account.getBigIntPrivateKey());
     }

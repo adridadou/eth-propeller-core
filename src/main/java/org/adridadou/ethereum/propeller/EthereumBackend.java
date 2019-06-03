@@ -11,6 +11,7 @@ import java.util.Optional;
  * This code is released under Apache 2 license
  */
 public interface EthereumBackend {
+
     GasPrice getGasPrice();
 
     EthValue getBalance(EthAddress address);
@@ -36,4 +37,6 @@ public interface EthereumBackend {
     void register(EthereumEventHandler eventHandler);
 
     Optional<TransactionInfo> getTransactionInfo(EthHash hash);
+
+    ChainId getChainId();
 }

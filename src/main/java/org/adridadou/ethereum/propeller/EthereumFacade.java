@@ -509,6 +509,10 @@ public class EthereumFacade {
         return (T) decoder.decode(index, data, cls);
     }
 
+    public ChainId getChainId() {
+        return ethereumProxy.getChainId();
+    }
+
     /**
      * Gets info for the transaction with the specific hash
      *

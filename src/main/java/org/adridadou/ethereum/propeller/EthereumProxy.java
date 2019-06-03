@@ -454,4 +454,8 @@ class EthereumProxy {
     public Optional<TransactionInfo> getTransactionInfo(EthHash hash) {
         return ethereum.getTransactionInfo(hash);
     }
+
+    public ChainId getChainId() {
+        return ethereum.getChainId();
+    }
 }
