@@ -64,22 +64,12 @@ public class Web3JFacade {
     List<Log> loggingCall(SolidityEvent eventDefiniton, final EthAddress address, final String... optionalTopics) {
         EthFilter ethFilter = new EthFilter(DefaultBlockParameterName.EARLIEST, DefaultBlockParameterName.LATEST, address.withLeading0x());
 
-        ethFilter.addSingleTopic(EventEncoder.buildEventSignature(buildMethodSignature(eventDefiniton.getDescription().getName(), eventDefiniton.getDescription().getInputs())));
+        ethFilter.addSingleTopic(eventDefiniton.getDescription().signatureLong().withLeading0x());
         ethFilter.addOptionalTopics(optionalTopics);
 
         List<Log> list = new ArrayList();
         this.web3j.ethLogFlowable(ethFilter).subscribe(log -> list.add(log)).dispose();
         return list;
-    }
-
-    private String buildMethodSignature(String methodName, List<AbiParam> parameters) {
-        StringBuilder result = new StringBuilder();
-        result.append(methodName);
-        result.append("(");
-        String params = parameters.stream().map((p) -> p.getType()).collect(Collectors.joining(","));
-        result.append(params);
-        result.append(")");
-        return result.toString();
     }
 
     BigInteger getTransactionCount(EthAddress address) {
