@@ -7,16 +7,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 import io.reactivex.Flowable;
 import org.adridadou.ethereum.propeller.exception.EthereumApiException;
 import org.adridadou.ethereum.propeller.solidity.SolidityEvent;
+import org.adridadou.ethereum.propeller.solidity.abi.AbiParam;
 import org.adridadou.ethereum.propeller.values.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.web3j.abi.EventEncoder;
-import org.web3j.abi.datatypes.Event;
-import org.web3j.crypto.RawTransaction;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameter;
 import org.web3j.protocol.core.DefaultBlockParameterName;
@@ -64,12 +64,22 @@ public class Web3JFacade {
     List<Log> loggingCall(SolidityEvent eventDefiniton, final EthAddress address, final String... optionalTopics) {
         EthFilter ethFilter = new EthFilter(DefaultBlockParameterName.EARLIEST, DefaultBlockParameterName.LATEST, address.withLeading0x());
 
-        ethFilter.addSingleTopic(eventDefiniton.toString());
+        ethFilter.addSingleTopic(EventEncoder.buildEventSignature(buildMethodSignature(eventDefiniton.getDescription().getName(), eventDefiniton.getDescription().getInputs())));
         ethFilter.addOptionalTopics(optionalTopics);
 
         List<Log> list = new ArrayList();
         this.web3j.ethLogFlowable(ethFilter).subscribe(log -> list.add(log)).dispose();
         return list;
+    }
+
+    private String buildMethodSignature(String methodName, List<AbiParam> parameters) {
+        StringBuilder result = new StringBuilder();
+        result.append(methodName);
+        result.append("(");
+        String params = parameters.stream().map((p) -> p.getType()).collect(Collectors.joining(","));
+        result.append(params);
+        result.append(")");
+        return result.toString();
     }
 
     BigInteger getTransactionCount(EthAddress address) {
