@@ -120,7 +120,7 @@ public class EthereumRpc implements EthereumBackend {
     }
 
     @Override
-    public List<EventData> eventCall(SolidityEvent eventDefiniton, EthAddress address, String... optionalTopics) {
+    public List<EventData> logCall(SolidityEvent eventDefiniton, EthAddress address, String... optionalTopics) {
         return web3JFacade.loggingCall(eventDefiniton, address, optionalTopics).stream().map(log -> toEventInfo(EthHash.of(log.getTransactionHash()), log)).collect(Collectors.toList());
     }
 
