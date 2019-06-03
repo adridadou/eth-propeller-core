@@ -61,10 +61,10 @@ public class Web3JFacade {
         }
     }
 
-    List<Log> loggingCall(Event event, final EthAddress address, final String... optionalTopics) {
+    List<Log> loggingCall(SolidityEvent eventDefiniton, final EthAddress address, final String... optionalTopics) {
         EthFilter ethFilter = new EthFilter(DefaultBlockParameterName.EARLIEST, DefaultBlockParameterName.LATEST, address.withLeading0x());
 
-        ethFilter.addSingleTopic(EventEncoder.encode(event));
+        ethFilter.addSingleTopic(eventDefiniton.toString());
         ethFilter.addOptionalTopics(optionalTopics);
 
         List<Log> list = new ArrayList();

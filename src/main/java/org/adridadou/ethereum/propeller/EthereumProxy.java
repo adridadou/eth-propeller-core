@@ -449,8 +449,8 @@ class EthereumProxy {
         return new ArrayList<>();
     }
 
-    public List<EventData> getSpecificEvents(Event event, EthAddress address, String... optionalTopics) {
-        return ethereum.eventCall(event, address, optionalTopics);
+    public List<EventData> getSpecificEvents(SolidityEvent eventDefiniton, EthAddress address, String... optionalTopics) {
+        return ethereum.eventCall(eventDefiniton, address, optionalTopics);
     }
 
     public long getCurrentBlockNumber() {

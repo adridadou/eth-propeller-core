@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 import org.adridadou.ethereum.propeller.EthereumBackend;
 import org.adridadou.ethereum.propeller.event.BlockInfo;
 import org.adridadou.ethereum.propeller.event.EthereumEventHandler;
+import org.adridadou.ethereum.propeller.solidity.SolidityEvent;
 import org.adridadou.ethereum.propeller.values.*;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.crypto.SECP256K1;
@@ -119,8 +120,8 @@ public class EthereumRpc implements EthereumBackend {
     }
 
     @Override
-    public List<EventData> eventCall(Event event, EthAddress address, String... optionalTopics) {
-        return web3JFacade.loggingCall(event, address, optionalTopics).stream().map(log -> toEventInfo(EthHash.of(log.getTransactionHash()), log)).collect(Collectors.toList());
+    public List<EventData> eventCall(SolidityEvent eventDefiniton, EthAddress address, String... optionalTopics) {
+        return web3JFacade.loggingCall(eventDefiniton, address, optionalTopics).stream().map(log -> toEventInfo(EthHash.of(log.getTransactionHash()), log)).collect(Collectors.toList());
     }
 
     @Override

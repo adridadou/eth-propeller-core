@@ -2,6 +2,7 @@ package org.adridadou.ethereum.propeller;
 
 import org.adridadou.ethereum.propeller.event.BlockInfo;
 import org.adridadou.ethereum.propeller.event.EthereumEventHandler;
+import org.adridadou.ethereum.propeller.solidity.SolidityEvent;
 import org.adridadou.ethereum.propeller.values.*;
 import org.web3j.abi.datatypes.Event;
 import org.web3j.protocol.core.methods.response.Log;
@@ -36,7 +37,7 @@ public interface EthereumBackend {
 
     EthData constantCall(EthAccount account, EthAddress address, EthValue value, EthData data);
 
-    List<EventData> eventCall(final Event event, EthAddress address, final String... optionalTopics);
+    List<EventData> eventCall(final SolidityEvent eventDefiniton, EthAddress address, final String... optionalTopics);
 
     void register(EthereumEventHandler eventHandler);
 

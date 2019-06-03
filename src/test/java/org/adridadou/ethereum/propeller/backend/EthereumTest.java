@@ -8,6 +8,7 @@ import org.adridadou.ethereum.propeller.EthereumBackend;
 import org.adridadou.ethereum.propeller.event.BlockInfo;
 import org.adridadou.ethereum.propeller.event.EthereumEventHandler;
 import org.adridadou.ethereum.propeller.exception.EthereumApiException;
+import org.adridadou.ethereum.propeller.solidity.SolidityEvent;
 import org.adridadou.ethereum.propeller.values.*;
 import org.ethereum.config.BlockchainNetConfig;
 import org.ethereum.config.blockchain.*;
@@ -146,7 +147,7 @@ public class EthereumTest implements EthereumBackend {
     }
 
     @Override
-    public List<EventData> eventCall(Event event, EthAddress address, String... optionalTopics) {
+    public List<EventData> eventCall(SolidityEvent eventDefiniton, EthAddress address, String... optionalTopics) {
         return null;
     }
 
