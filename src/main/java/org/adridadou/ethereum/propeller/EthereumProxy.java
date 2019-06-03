@@ -449,7 +449,7 @@ class EthereumProxy {
         return new ArrayList<>();
     }
 
-    public List<EventInfo> getSpecificEvents(Event event, EthAddress address, String... optionalTopics) {
+    public List<EventData> getSpecificEvents(Event event, EthAddress address, String... optionalTopics) {
         return ethereum.eventCall(event, address, optionalTopics);
     }
 

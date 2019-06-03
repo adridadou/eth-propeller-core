@@ -480,7 +480,7 @@ public class EthereumFacade {
      * @param optionalTopics Optional indexed event parameters
      * @return
      */
-    public List<EventInfo> getSpecificEvents(Event event, EthAddress address, String... optionalTopics) {
+    public List<EventData> getSpecificEvents(Event event, EthAddress address, String... optionalTopics) {
         return ethereumProxy.getSpecificEvents(event, address, optionalTopics);
     }
 

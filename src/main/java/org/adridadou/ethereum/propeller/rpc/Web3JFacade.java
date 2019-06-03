@@ -10,6 +10,7 @@ import java.util.concurrent.Executors;
 
 import io.reactivex.Flowable;
 import org.adridadou.ethereum.propeller.exception.EthereumApiException;
+import org.adridadou.ethereum.propeller.solidity.SolidityEvent;
 import org.adridadou.ethereum.propeller.values.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,13 +61,14 @@ public class Web3JFacade {
         }
     }
 
-    List<EventInfo> loggingCall(final Event event, final EthAddress address, final String... optionalTopics) {
+    List<Log> loggingCall(Event event, final EthAddress address, final String... optionalTopics) {
         EthFilter ethFilter = new EthFilter(DefaultBlockParameterName.EARLIEST, DefaultBlockParameterName.LATEST, address.withLeading0x());
+
         ethFilter.addSingleTopic(EventEncoder.encode(event));
         ethFilter.addOptionalTopics(optionalTopics);
 
-        List<EventInfo> list = new ArrayList();
-        this.web3j.ethLogFlowable(ethFilter).subscribe(log -> list.add(new EventInfo(EthHash.of(log.getTransactionHash()), log.getData()))).dispose();
+        List<Log> list = new ArrayList();
+        this.web3j.ethLogFlowable(ethFilter).subscribe(log -> list.add(log)).dispose();
         return list;
     }
 
