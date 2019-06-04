@@ -7,16 +7,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Executors;
-import java.util.stream.Collectors;
 
 import io.reactivex.Flowable;
 import org.adridadou.ethereum.propeller.exception.EthereumApiException;
 import org.adridadou.ethereum.propeller.solidity.SolidityEvent;
-import org.adridadou.ethereum.propeller.solidity.abi.AbiParam;
 import org.adridadou.ethereum.propeller.values.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.web3j.abi.EventEncoder;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameter;
 import org.web3j.protocol.core.DefaultBlockParameterName;
@@ -67,8 +64,8 @@ public class Web3JFacade {
         ethFilter.addSingleTopic(eventDefiniton.getDescription().signatureLong().withLeading0x());
         ethFilter.addOptionalTopics(optionalTopics);
 
-        List<Log> list = new ArrayList();
-        this.web3j.ethLogFlowable(ethFilter).subscribe(log -> list.add(log)).dispose();
+        List<Log> list = new ArrayList<>();
+        this.web3j.ethLogFlowable(ethFilter).subscribe(list::add).dispose();
         return list;
     }
 
