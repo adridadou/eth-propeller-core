@@ -22,8 +22,6 @@ import org.apache.commons.lang.ArrayUtils;
 import org.apache.http.util.Asserts;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.web3j.abi.datatypes.Event;
-import org.web3j.protocol.core.methods.response.Log;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
@@ -45,7 +43,7 @@ class EthereumProxy {
     private final ReplaySubject<TransactionRequest> transactionPublisher = ReplaySubject.create(100);
     private final Flowable<TransactionRequest> pendingTransactionObservable = transactionPublisher.toFlowable(BackpressureStrategy.BUFFER);
 
-    private final Map<TransactionRequest, CompletableFuture<EthHash>> futureMap = new ConcurrentHashMap<>();
+    private final Map<TransactionRequest, CompletableFuture<TransactionExecutionResult>> futureMap = new ConcurrentHashMap<>();
 
     private final EthereumBackend ethereum;
     private final EthereumEventHandler eventHandler;
@@ -81,10 +79,11 @@ class EthereumProxy {
         try {
             logger.debug("Executing new transaction: " + txRequest.hashCode());
             txLock.lock();
-            EthHash hash = ethereum.submit(txRequest, getNonce(txRequest.getAccount().getAddress()));
+            Nonce nonce = getNonce(txRequest.getAccount().getAddress());
+            EthHash hash = ethereum.submit(txRequest, nonce);
             increasePendingTransactionCounter(txRequest.getAccount().getAddress(), hash);
             Optional.ofNullable(futureMap.get(txRequest))
-                    .ifPresent(future -> future.complete(hash));
+                    .ifPresent(future -> future.complete(new TransactionExecutionResult(hash, nonce)));
             futureMap.remove(txRequest);
         } catch (Throwable t) {
             logger.error("Interrupted error while waiting for transactions to be submitted:", t);
@@ -204,11 +203,11 @@ class EthereumProxy {
         }).reduce((a, b) -> a + ", " + b).orElse("[no args]");
     }
 
-    private CompletableFuture<EthHash> submitTransaction(TransactionRequest txRequest) {
+    private CompletableFuture<TransactionExecutionResult> submitTransaction(TransactionRequest txRequest) {
         if (futureMap.containsKey(txRequest)) {
             return futureMap.get(txRequest);
         }
-        CompletableFuture<EthHash> future = new CompletableFuture<>();
+        CompletableFuture<TransactionExecutionResult> future = new CompletableFuture<>();
         logger.debug("Accepted transaction " + txRequest.hashCode());
         transactionPublisher.onNext(txRequest);
         futureMap.put(txRequest, future);
@@ -221,7 +220,7 @@ class EthereumProxy {
             GasPrice gasPrice = ethereum.getGasPrice();
 
             return submitTransaction(new TransactionRequest(account, toAddress, value, data, gasLimit, gasPrice))
-                    .thenApply(txHash -> new CallDetails(this.waitForResult(txHash), txHash));
+                    .thenApply(executionResult -> new CallDetails(this.waitForResult(executionResult.transactionHash), executionResult.transactionHash, executionResult.nonce, gasLimit));
         });
     }
 
