@@ -62,6 +62,27 @@ class EventsTest extends FlatSpec with Matchers with Checkers {
     }).asJava.orElseThrow(() => new EthereumApiException("something went wrong!"))
   }
 
+
+  "Events" should "retrieved from smartcontract with indexed parameters" in {
+    (for (compiledContract <- ethereum.compile(contractSource).findContract("contractEvents").asScala;
+          solidityEvent <- ethereum.findEventDefinition(compiledContract, "MyEvent", classOf[MyEvent]).asScala) yield {
+      val myContract = ethereum.createContractProxy(compiledContract, address, mainAccount, classOf[ContractEvents])
+      val observeEventWithInfo = ethereum.observeEventsWithInfo(solidityEvent, address)
+
+      myContract.createEvent("my event is here and it is much longer than anticipated")
+      val result = observeEventWithInfo.first(new EventInfo(EthHash.empty(), new EmptyEvent())).toFuture.get()
+      result.getTransactionHash shouldBe EthHash.of("9ecaf5897eb06ec8e1c907cf9494b838cf65e0f06af06afcef8500c0b3fa03f5")
+      result.getResult.value shouldBe "my event is here and it is much longer than anticipated"
+
+      ethereum.getEventsAtBlock(ethereum.getTransactionInfo(result.getTransactionHash).get().getBlockHash, solidityEvent, address)
+
+      ethereum.getLogs(solidityEvent, address, null, null, null)
+
+
+    }).asJava.orElseThrow(() => new EthereumApiException("something went wrong!"))
+  }
+
+
   private def publishAndMapContract(ethereum: EthereumFacade) = {
     val compiledContract = ethereum.compile(contractSource).findContract("contractEvents").get
     val futureAddress = ethereum.publishContract(compiledContract, mainAccount)

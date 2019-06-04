@@ -11,7 +11,9 @@ import org.adridadou.ethereum.propeller.exception.EthereumApiException;
 import org.adridadou.ethereum.propeller.solidity.SolidityEvent;
 import org.adridadou.ethereum.propeller.values.*;
 import org.ethereum.config.BlockchainNetConfig;
-import org.ethereum.config.blockchain.*;
+import org.ethereum.config.blockchain.DaoNoHFConfig;
+import org.ethereum.config.blockchain.HomesteadConfig;
+import org.ethereum.config.blockchain.PetersburgConfig;
 import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
 import org.ethereum.crypto.ECKey;
@@ -20,10 +22,9 @@ import org.ethereum.util.blockchain.StandaloneBlockchain;
 import org.ethereum.vm.LogInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.web3j.abi.datatypes.Event;
-import org.web3j.protocol.core.methods.response.Log;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
@@ -45,7 +46,6 @@ public class EthereumTest implements EthereumBackend {
     private Logger logger = LoggerFactory.getLogger(EthereumTest.class);
 
     public EthereumTest(TestConfig testConfig) {
-
 
 
         this.blockchain = new StandaloneBlockchain().withNetConfig(getBlockchainConfig());
@@ -147,8 +147,40 @@ public class EthereumTest implements EthereumBackend {
     }
 
     @Override
-    public List<EventData> logCall(SolidityEvent eventDefiniton, EthAddress address, String... optionalTopics) {
-        return null;
+    public List<EventData> logCall(SolidityEvent eventDefinition, EthAddress address, String... optionalTopics) {
+        ArrayList events = new ArrayList();
+
+        for (long i = 0; i < this.getCurrentBlockNumber(); i++) {
+            BlockInfo block = this.getBlock(i).get();
+            block.receipts.stream()
+                    .filter(params -> address.equals(params.contractAddress))
+                    .flatMap(params -> params.events.stream())
+                    .filter(eventDefinition::match).forEach(eventData -> {
+
+                // If we have indexed parameters to match check if we matched them all here
+                if (optionalTopics.length > 0) {
+                    for (int j = 0; j < optionalTopics.length; j++) {
+                        int matched = 0;
+
+                        // Check if null / matching, since null can be passed if we don't care about it being matched with multiple
+                        // indexed parameters
+                        if (optionalTopics[j] == null || optionalTopics[j].equals(eventData.getIndexedArguments().get(j).withLeading0x())) {
+                            matched++;
+                        }
+
+                        // If equals to matched the events matched everything and should be added
+                        if (optionalTopics.length == matched) {
+                            events.add(eventData);
+                        }
+                    }
+
+                    // If there are no optional parameters add to return list since eventDefinitions matched
+                } else {
+                    events.add(eventData);
+                }
+            });
+        }
+        return events;
     }
 
     @Override
