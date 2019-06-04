@@ -153,28 +153,28 @@ public class EthereumTest implements EthereumBackend {
         for (long i = 0; i < this.getCurrentBlockNumber(); i++) {
             BlockInfo block = this.getBlock(i).get();
             block.receipts.stream()
-                    .filter(params -> address.equals(params.contractAddress))
+                    .filter(params -> address.equals(params.receiveAddress))
                     .flatMap(params -> params.events.stream())
                     .filter(eventDefinition::match).forEach(eventData -> {
 
                 // If we have indexed parameters to match check if we matched them all here
                 if (optionalTopics.length > 0) {
+                    int matched = 0;
                     for (int j = 0; j < optionalTopics.length; j++) {
-                        int matched = 0;
 
                         // Check if null / matching, since null can be passed if we don't care about it being matched with multiple
-                        // indexed parameters
+                        // indexed parameters (this is web3j behaviour as well)
                         if (optionalTopics[j] == null || optionalTopics[j].equals(eventData.getIndexedArguments().get(j).withLeading0x())) {
                             matched++;
                         }
-
-                        // If equals to matched the events matched everything and should be added
-                        if (optionalTopics.length == matched) {
-                            events.add(eventData);
-                        }
                     }
 
-                    // If there are no optional parameters add to return list since eventDefinitions matched
+                    // If equals to matched the events matched everything and should be added
+                    if (optionalTopics.length == matched) {
+                        events.add(eventData);
+                    }
+
+                // If there are no optional parameters add to return list since eventDefinitions matched
                 } else {
                     events.add(eventData);
                 }
