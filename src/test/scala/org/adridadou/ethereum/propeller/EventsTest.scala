@@ -51,7 +51,7 @@ class EventsTest extends FlatSpec with Matchers with Checkers {
       val observeEventWithInfo = ethereum.observeEventsWithInfo(solidityEvent, address)
 
       myContract.createEvent("my event is here and it is much longer than anticipated")
-      val emptyList: java.util.List[Any] = Lists.newArrayList()
+      val emptyList:java.util.List[Any] = Lists.newArrayList()
       val result = observeEventWithInfo.first(new EventInfo(EthHash.empty(), emptyList)).toFuture.get()
       result.getTransactionHash shouldBe EthHash.of("6d99b716340fb64ec47f07b7b7cc5a9c339667e4657f1c0f44acb0fdd507e62c")
       result.getResult.get(2) shouldBe "my event is here and it is much longer than anticipated"
