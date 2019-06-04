@@ -83,6 +83,10 @@ class EventsTest extends FlatSpec with Matchers with Checkers {
       // Test when search on a indexed parameter
       result = ethereum.getLogs(solidityEvent, address, EthData.of("0000000000000000000000000000000000000000000000000000000398484838").withLeading0x(), null, null)
       result.size() shouldBe 1
+
+      // Test when search with multiple indexed parameters
+      result = ethereum.getLogs(solidityEvent, address, EthData.of("0000000000000000000000000000000000000000000000000000000398484838").withLeading0x(), null, EthData.of(Crypto.sha3("my event is here and it is much longer than anticipated".getBytes())).withLeading0x())
+      result.size() shouldBe 1
     }).asJava.orElseThrow(() => new EthereumApiException("something went wrong!"))
   }
 
