@@ -22,6 +22,7 @@ import org.apache.commons.lang.ArrayUtils;
 import org.apache.http.util.Asserts;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.web3j.protocol.core.DefaultBlockParameter;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
@@ -448,8 +449,8 @@ class EthereumProxy {
         return new ArrayList<>();
     }
 
-    public List<EventData> getLogs(SolidityEvent eventDefiniton, EthAddress address, String... optionalTopics) {
-        return ethereum.logCall(eventDefiniton, address, optionalTopics);
+    public List<EventData> getLogs(DefaultBlockParameter fromBlock, DefaultBlockParameter toBlock, SolidityEvent eventDefiniton, EthAddress address, String... optionalTopics) {
+        return ethereum.logCall(fromBlock, toBlock, eventDefiniton, address, optionalTopics);
     }
 
     public long getCurrentBlockNumber() {

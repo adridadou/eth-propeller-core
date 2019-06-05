@@ -14,6 +14,7 @@ import org.adridadou.ethereum.propeller.swarm.SwarmService;
 import org.adridadou.ethereum.propeller.values.*;
 import io.reactivex.Observable;
 import org.web3j.abi.datatypes.Event;
+import org.web3j.protocol.core.DefaultBlockParameter;
 import org.web3j.protocol.core.methods.response.Log;
 
 import java.io.IOException;
@@ -480,8 +481,8 @@ public class EthereumFacade {
      * @param optionalTopics Optional indexed event parameters, passed as 64 character hexidecimal string
      * @return
      */
-    public List<EventData> getLogs(SolidityEvent eventDefiniton, EthAddress address, String... optionalTopics) {
-        return ethereumProxy.getLogs(eventDefiniton, address, optionalTopics);
+    public List<EventData> getLogs(DefaultBlockParameter fromBlock, DefaultBlockParameter toBlock, SolidityEvent eventDefiniton, EthAddress address, String... optionalTopics) {
+        return ethereumProxy.getLogs(fromBlock, toBlock, eventDefiniton, address, optionalTopics);
     }
 
     /**
