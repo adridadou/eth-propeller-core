@@ -15,6 +15,7 @@ import org.adridadou.ethereum.propeller.values.*;
 import io.reactivex.Observable;
 import org.web3j.abi.datatypes.Event;
 import org.web3j.protocol.core.DefaultBlockParameter;
+import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.methods.response.Log;
 
 import java.io.IOException;
@@ -479,10 +480,22 @@ public class EthereumFacade {
      * @param eventDefiniton Event definition that should be matched
      * @param address address of the smart contract that emits the events
      * @param optionalTopics Optional indexed event parameters, passed as 64 character hexidecimal string
-     * @return
+     * @param fromBlock From which block to search from for the events
+     * @param toBlock Latest block which should be searched from for the events
      */
     public List<EventData> getLogs(DefaultBlockParameter fromBlock, DefaultBlockParameter toBlock, SolidityEvent eventDefiniton, EthAddress address, String... optionalTopics) {
         return ethereumProxy.getLogs(fromBlock, toBlock, eventDefiniton, address, optionalTopics);
+    }
+
+    /**
+     * Returns all the events that happened at a smart contract matching an event signature and indexed parameters
+     *
+     * @param eventDefiniton Event definition that should be matched
+     * @param address address of the smart contract that emits the events
+     * @param optionalTopics Optional indexed event parameters, passed as 64 character hexidecimal string
+     */
+    public List<EventData> getLogs(SolidityEvent eventDefiniton, EthAddress address, String... optionalTopics) {
+        return getLogs(DefaultBlockParameterName.EARLIEST, DefaultBlockParameterName.LATEST, eventDefiniton, address, optionalTopics);
     }
 
     /**
