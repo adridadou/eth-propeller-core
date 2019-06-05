@@ -22,6 +22,6 @@ public class EthPayableCall<T> {
 
     public CompletableFuture<EthCall<T>> with(EthValue value) {
         return contract.callFunctionAndGetDetails(value, method, arguments)
-                .thenApply(details -> (EthCall<T>) new EthCall<>(details.getTxHash(), contract.transformDetailsToResult(details, method)));
+                .thenApply(details -> (EthCall<T>) new EthCall<>(details.getNonce(), details.getGasEstimate(), details.getTxHash(), contract.transformDetailsToResult(details, method)));
     }
 }

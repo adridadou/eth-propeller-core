@@ -18,13 +18,14 @@ class ConstructorTest extends FlatSpec with Matchers with Checkers {
 
   private val mainAccount = AccountProvider.fromSeed("hello")
   private val contractSource = SoliditySource.from(new File("src/test/resources/contractConstructor.sol"))
+  private val contractDefaultSource = SoliditySource.from(new File("src/test/resources/contractDefaultConstructor.sol"))
 
   "Constructor" should "use the default constructor if no arguments are passed" in {
     val ethereum = CoreEthereumFacadeProvider.create(new EthereumTest(TestConfig.builder.balance(mainAccount, ether(1000)).build), EthereumConfig.builder().build())
-    val compiledContract = ethereum.compile(contractSource).findContract("ContractConstructor").get
+    val compiledContract = ethereum.compile(contractDefaultSource).findContract("ContractDefaultConstructor").get
     val address = ethereum.publishContract(compiledContract, mainAccount).get()
     val myContract = ethereum.createContractProxy(compiledContract, address, mainAccount, classOf[ContractConstructor])
-    myContract.value() shouldEqual ""
+    myContract.value() shouldEqual "hello world"
   }
 
   "Constructor" should "use the parameter if given" in {
