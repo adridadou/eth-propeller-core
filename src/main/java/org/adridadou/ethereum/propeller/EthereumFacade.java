@@ -483,8 +483,8 @@ public class EthereumFacade {
      * @param fromBlock From which block to search from for the events
      * @param toBlock Latest block which should be searched from for the events
      */
-    public List<EventData> getLogs(DefaultBlockParameter fromBlock, DefaultBlockParameter toBlock, SolidityEvent eventDefiniton, EthAddress address, String... optionalTopics) {
-        return ethereumProxy.getLogs(fromBlock, toBlock, eventDefiniton, address, optionalTopics);
+    public List<EventData> getLogs(Optional<DefaultBlockParameter> fromBlock, Optional<DefaultBlockParameter> toBlock, SolidityEvent eventDefiniton, EthAddress address, String... optionalTopics) {
+        return ethereumProxy.getLogs(fromBlock.orElse(DefaultBlockParameterName.EARLIEST), toBlock.orElse(DefaultBlockParameterName.LATEST), eventDefiniton, address, optionalTopics);
     }
 
     /**
@@ -495,7 +495,7 @@ public class EthereumFacade {
      * @param optionalTopics Optional indexed event parameters, passed as 64 character hexidecimal string
      */
     public List<EventData> getLogs(SolidityEvent eventDefiniton, EthAddress address, String... optionalTopics) {
-        return getLogs(DefaultBlockParameterName.EARLIEST, DefaultBlockParameterName.LATEST, eventDefiniton, address, optionalTopics);
+        return ethereumProxy.getLogs(DefaultBlockParameterName.EARLIEST, DefaultBlockParameterName.LATEST, eventDefiniton, address, optionalTopics);
     }
 
     /**
