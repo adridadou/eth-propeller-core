@@ -488,17 +488,6 @@ public class EthereumFacade {
     }
 
     /**
-     * Returns all the events that happened at a smart contract matching an event signature and indexed parameters
-     *
-     * @param eventDefiniton Event definition that should be matched
-     * @param address address of the smart contract that emits the events
-     * @param optionalTopics Optional indexed event parameters, passed as 64 character hexidecimal string
-     */
-    public List<EventData> getLogs(SolidityEvent eventDefiniton, EthAddress address, String... optionalTopics) {
-        return getLogs(Optional.of(DefaultBlockParameterName.EARLIEST), Optional.of(DefaultBlockParameterName.LATEST), eventDefiniton, address, optionalTopics);
-    }
-
-    /**
      * Encodes an argument manually. This can be useful when you need to send a value to a bytes or bytes32 input
      * @param arg The argument to encode
      * @param solidityType Which solidity type is the argument represented

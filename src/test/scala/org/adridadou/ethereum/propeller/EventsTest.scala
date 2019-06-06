@@ -71,23 +71,23 @@ class EventsTest extends FlatSpec with Matchers with Checkers {
       myContract.createEvent("my event is here and it is much longer than anticipated")
 
       // Test for event without indexed parameters
-      var result = ethereum.getLogs(solidityEvent, address)
+      var result = ethereum.getLogs(Optional.empty(), Optional.empty(), solidityEvent, address)
       result.size() shouldBe 1
 
       // Test when indexed parameters don't matter
-      result = ethereum.getLogs(solidityEvent, address, null, null, null)
+      result = ethereum.getLogs(Optional.empty(), Optional.empty(), solidityEvent, address, null, null, null)
       result.size() shouldBe 1
 
       // Test when indexed parameters do matter and should not match
-      result = ethereum.getLogs(solidityEvent, address, "0x0", null, null)
+      result = ethereum.getLogs(Optional.empty(), Optional.empty(), solidityEvent, address, "0x0", null, null)
       result.size() shouldBe 0
 
       // Test when search on a indexed parameter
-      result = ethereum.getLogs(solidityEvent, address, EthData.of("0000000000000000000000000000000000000000000000000000000398484838").withLeading0x(), null, null)
+      result = ethereum.getLogs(Optional.empty(), Optional.empty(), solidityEvent, address, EthData.of("0000000000000000000000000000000000000000000000000000000398484838").withLeading0x(), null, null)
       result.size() shouldBe 1
 
       // Test when search with multiple indexed parameters
-      result = ethereum.getLogs(solidityEvent, address, EthData.of("0000000000000000000000000000000000000000000000000000000398484838").withLeading0x(), null, EthData.of(Crypto.sha3("my event is here and it is much longer than anticipated".getBytes())).withLeading0x())
+      result = ethereum.getLogs(Optional.empty(), Optional.empty(), solidityEvent, address, EthData.of("0000000000000000000000000000000000000000000000000000000398484838").withLeading0x(), null, EthData.of(Crypto.sha3("my event is here and it is much longer than anticipated".getBytes())).withLeading0x())
       result.size() shouldBe 1
     }).asJava.orElseThrow(() => new EthereumApiException("something went wrong!"))
   }
