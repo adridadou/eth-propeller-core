@@ -495,7 +495,7 @@ public class EthereumFacade {
      * @param optionalTopics Optional indexed event parameters, passed as 64 character hexidecimal string
      */
     public List<EventData> getLogs(SolidityEvent eventDefiniton, EthAddress address, String... optionalTopics) {
-        return ethereumProxy.getLogs(DefaultBlockParameterName.EARLIEST, DefaultBlockParameterName.LATEST, eventDefiniton, address, optionalTopics);
+        return getLogs(Optional.of(DefaultBlockParameterName.EARLIEST), Optional.of(DefaultBlockParameterName.LATEST), eventDefiniton, address, optionalTopics);
     }
 
     /**
