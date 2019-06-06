@@ -20,6 +20,7 @@ import org.apache.tuweni.units.ethereum.Gas;
 import org.apache.tuweni.units.ethereum.Wei;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.web3j.protocol.core.DefaultBlockParameter;
 import org.web3j.protocol.core.methods.response.EthBlock;
 import org.web3j.protocol.core.methods.response.Log;
 import org.web3j.protocol.core.methods.response.Transaction;
@@ -119,8 +120,8 @@ public class EthereumRpc implements EthereumBackend {
     }
 
     @Override
-    public List<EventData> logCall(SolidityEvent eventDefinition, EthAddress address, String... optionalTopics) {
-        return web3JFacade.loggingCall(eventDefinition, address, optionalTopics).stream().map(log -> toEventInfo(EthHash.of(log.getTransactionHash()), log)).collect(Collectors.toList());
+    public List<EventData> logCall(DefaultBlockParameter fromBlock, DefaultBlockParameter toBlock, SolidityEvent eventDefinition, EthAddress address, String... optionalTopics) {
+        return web3JFacade.loggingCall(fromBlock, toBlock, eventDefinition, address, optionalTopics).stream().map(log -> toEventInfo(EthHash.of(log.getTransactionHash()), log)).collect(Collectors.toList());
     }
 
     @Override

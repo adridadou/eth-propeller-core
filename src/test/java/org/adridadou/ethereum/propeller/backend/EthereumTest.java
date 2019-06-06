@@ -22,6 +22,7 @@ import org.ethereum.util.blockchain.StandaloneBlockchain;
 import org.ethereum.vm.LogInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.web3j.protocol.core.DefaultBlockParameter;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -147,7 +148,7 @@ public class EthereumTest implements EthereumBackend {
     }
 
     @Override
-    public List<EventData> logCall(SolidityEvent eventDefinition, EthAddress address, String... optionalTopics) {
+    public List<EventData> logCall(DefaultBlockParameter fromBlock, DefaultBlockParameter toBlock, SolidityEvent eventDefinition, EthAddress address, String... optionalTopics) {
         ArrayList events = new ArrayList();
 
         for (long i = 0; i < this.getCurrentBlockNumber(); i++) {
