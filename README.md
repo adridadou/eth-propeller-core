@@ -6,7 +6,8 @@
 
 Ethereum Framework for JVM developers
 
-#Introduction
+## Introduction
+
 The name Ethereum Propeller comes from the idea that this framework should give your project the push it needs to reach success.
 
 The goal of this project is to give JVM developers the tools to build applications on top of Ethereum.
@@ -22,10 +23,11 @@ You still need to decide which backend you want to use. There are two possibilit
 * If you want to use Ethereumj with a embedded full node, go to eth-propeller-ethj
 * If you want to use web3j to connect to a remote RPC API, go to eth-propeller-core
 
-#getting started
+## Getting started
 
-**Add the dependency**
-```
+### Add the dependency
+
+```xml
 <dependency>
     <groupId>org.adridadou</groupId>
     <artifactId>eth-propeller-{ethj or core}</artifactId>
@@ -35,13 +37,16 @@ You still need to decide which backend you want to use. There are two possibilit
 
 Simply add the backend you want to use as a dependency. Right you, have the choice between ethereumj (ethj) and web3j
 
-**Create an EthereumFacade**
+### Create an EthereumFacade
+
 Each backend has its own EthereumFacadeProvider
 - RpcEthereumFacadeProvider for web3j
 - EthjEthereumFacadeProvider for ethereumj
 
-**Quick introduction to EthereumFacade**
+### Quick introduction to EthereumFacade
+
 EthereumFacade is your interface to Ethereum. This is how you interact with it:
+
 - Compile & deploy a smart contract
 - Send ether
 - Listen to Ethereum events (new block, new transactions)
@@ -49,7 +54,7 @@ EthereumFacade is your interface to Ethereum. This is how you interact with it:
 - Interface with a smart contract
 
 
-#Testing
+## Testing
 
 To run the project tests, install maven and then run `mvn clean test.`
 
