@@ -15,21 +15,28 @@ public class NumberEncoder implements SolidityTypeEncoder {
 
     @Override
     public boolean canConvert(Class<?> type) {
-        return type.getTypeName().equals("int") ||
-                type.getTypeName().equals("long") ||
-                type.getTypeName().equals("byte") ||
-                Number.class.isAssignableFrom(type);
+        return  type.getTypeName().equals("int")        ||
+                type.getTypeName().equals("long")       ||
+                type.getTypeName().equals("byte")       ||
+                type.getTypeName().equals("short")      ||
+
+                Integer.class.isAssignableFrom(type)    ||
+                Long.class.isAssignableFrom(type)       ||
+                Byte.class.isAssignableFrom(type)       ||
+                Short.class.isAssignableFrom(type)      ||
+                BigInteger.class.isAssignableFrom(type) ||
+                BigDecimal.class.isAssignableFrom(type);
     }
 
     @Override
     public EthData encode(Object arg, SolidityType solidityType) {
         if (solidityType.name().startsWith("U")) {
             if (arg instanceof BigInteger) {
-                //we can only accept non decimal values
                 if (((BigInteger) arg).signum() == -1) {
                     throw new EthereumApiException("unsigned type cannot encode negative values");
                 }
             } else if (arg instanceof BigDecimal) {
+                //we can only accept non decimal values
                 return encode(((BigDecimal) arg).toBigInteger(), solidityType);
             } else if (((Number) arg).longValue() < 0) {
                 throw new EthereumApiException("unsigned type cannot encode negative values." + ((Number) arg).longValue());
