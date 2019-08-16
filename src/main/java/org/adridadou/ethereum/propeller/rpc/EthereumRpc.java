@@ -10,9 +10,9 @@ import java.util.stream.Collectors;
 import org.adridadou.ethereum.propeller.EthereumBackend;
 import org.adridadou.ethereum.propeller.event.BlockInfo;
 import org.adridadou.ethereum.propeller.event.EthereumEventHandler;
+import org.adridadou.ethereum.propeller.service.CryptoProvider;
 import org.adridadou.ethereum.propeller.solidity.SolidityEvent;
 import org.adridadou.ethereum.propeller.values.ChainId;
-import org.adridadou.ethereum.propeller.values.EthAccount;
 import org.adridadou.ethereum.propeller.values.EthAddress;
 import org.adridadou.ethereum.propeller.values.EthData;
 import org.adridadou.ethereum.propeller.values.EthHash;
@@ -49,18 +49,18 @@ public class EthereumRpc implements EthereumBackend {
     private final Web3JFacade web3JFacade;
     private final EthereumRpcEventGenerator ethereumRpcEventGenerator;
     private final ChainId chainId;
-    private final Optional<GasPrice> fixedGasPrice;
+    private final GasPrice fixedGasPrice;
 
     public EthereumRpc(Web3JFacade web3JFacade, ChainId chainId, EthereumRpcConfig config) {
         this.web3JFacade = web3JFacade;
         this.ethereumRpcEventGenerator = new EthereumRpcEventGenerator(web3JFacade, config, this);
-        this.fixedGasPrice = Optional.ofNullable(config.getGasPrice());
+        this.fixedGasPrice = config.getGasPrice();
         this.chainId = chainId;
     }
 
     @Override
     public GasPrice getGasPrice() {
-        return fixedGasPrice.orElse(web3JFacade.getGasPrice());
+        return Optional.ofNullable(fixedGasPrice).orElse(web3JFacade.getGasPrice());
     }
 
     @Override
@@ -86,12 +86,11 @@ public class EthereumRpc implements EthereumBackend {
         Gas gasLimitWei = Gas.valueOf(request.getGasLimit().getUsage());
         Wei value = Wei.valueOf(request.getValue().inWei());
         Bytes payload = Bytes.of(request.getData().data);
-        SECP256K1.KeyPair keyPair = SECP256K1.KeyPair.fromSecretKey(SECP256K1.SecretKey.fromInteger(request.getAccount().getBigIntPrivateKey()));
+        SECP256K1.KeyPair keyPair = SECP256K1.KeyPair.fromSecretKey(SECP256K1.SecretKey.fromInteger(request.getCryptoProvider().getBigIntPrivateKey()));
         if (request.getAddress().isEmpty()) {
-            Address address = null;
             //the signature gets generated when the Transaction is created
             return new org.apache.tuweni.eth.Transaction(nonceInt, gasPriceWei, gasLimitWei,
-                    address, value, payload, keyPair, chainId.id);
+                    null, value, payload, keyPair, chainId.id);
         }
         else {
             Address address = Address.fromBytes(Bytes.of(request.getAddress().toData().data));
@@ -101,8 +100,8 @@ public class EthereumRpc implements EthereumBackend {
     }
 
     @Override
-    public GasUsage estimateGas(EthAccount account, EthAddress address, EthValue value, EthData data) {
-        return new GasUsage(web3JFacade.estimateGas(account, address, value, data));
+    public GasUsage estimateGas(CryptoProvider cryptoProvider, EthAddress address, EthValue value, EthData data) {
+        return new GasUsage(web3JFacade.estimateGas(cryptoProvider, address, value, data));
     }
 
     @Override
@@ -131,8 +130,8 @@ public class EthereumRpc implements EthereumBackend {
     }
 
     @Override
-    public EthData constantCall(EthAccount account, EthAddress address, EthValue value, EthData data) {
-        return web3JFacade.constantCall(account, address, data);
+    public EthData constantCall(CryptoProvider cryptoProvider, EthAddress address, EthValue value, EthData data) {
+        return web3JFacade.constantCall(cryptoProvider, address, data);
     }
 
     @Override

@@ -1,16 +1,20 @@
 package org.adridadou.ethereum.propeller.values;
 
 
+import org.adridadou.ethereum.propeller.service.CryptoProvider;
+
+import java.util.Objects;
+
 public class TransactionRequest {
-    private final EthAccount account;
+    private final CryptoProvider cryptoProvider;
     private final EthAddress address;
     private final EthValue value;
     private final EthData data;
     private final GasUsage gasLimit;
     private final GasPrice gasPrice;
 
-    public TransactionRequest(EthAccount account, EthAddress address, EthValue value, EthData data, GasUsage gasLimit, GasPrice gasPrice) {
-        this.account = account;
+    public TransactionRequest(CryptoProvider cryptoProvider, EthAddress address, EthValue value, EthData data, GasUsage gasLimit, GasPrice gasPrice) {
+        this.cryptoProvider = cryptoProvider;
         this.address = address;
         this.value = value;
         this.data = data;
@@ -18,8 +22,8 @@ public class TransactionRequest {
         this.gasPrice = gasPrice;
     }
 
-    public EthAccount getAccount() {
-        return account;
+    public CryptoProvider getCryptoProvider() {
+        return cryptoProvider;
     }
 
     public EthAddress getAddress() {
@@ -45,7 +49,7 @@ public class TransactionRequest {
     @Override
     public String toString() {
         return "TransactionRequest{" +
-                "account=" + account +
+                "account=" + cryptoProvider.getAddress().withLeading0x() +
                 ", address=" + address +
                 ", value=" + value +
                 ", data=" + data +
@@ -61,17 +65,17 @@ public class TransactionRequest {
 
         TransactionRequest that = (TransactionRequest) o;
 
-        if (account != null ? !account.equals(that.account) : that.account != null) return false;
-        if (address != null ? !address.equals(that.address) : that.address != null) return false;
-        if (value != null ? !value.equals(that.value) : that.value != null) return false;
-        if (data != null ? !data.equals(that.data) : that.data != null) return false;
-        if (gasLimit != null ? !gasLimit.equals(that.gasLimit) : that.gasLimit != null) return false;
-        return gasPrice != null ? gasPrice.equals(that.gasPrice) : that.gasPrice == null;
+        if (!Objects.equals(cryptoProvider, that.cryptoProvider)) return false;
+        if (!Objects.equals(address, that.address)) return false;
+        if (!Objects.equals(value, that.value)) return false;
+        if (!Objects.equals(data, that.data)) return false;
+        if (!Objects.equals(gasLimit, that.gasLimit)) return false;
+        return Objects.equals(gasPrice, that.gasPrice);
     }
 
     @Override
     public int hashCode() {
-        int result = account != null ? account.hashCode() : 0;
+        int result = cryptoProvider != null ? cryptoProvider.getAddress().hashCode() : 0;
         result = 31 * result + (address != null ? address.hashCode() : 0);
         result = 31 * result + (value != null ? value.hashCode() : 0);
         result = 31 * result + (data != null ? data.hashCode() : 0);
