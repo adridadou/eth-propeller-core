@@ -102,18 +102,31 @@ public class EthereumFacade {
         return createSmartContract(new SolcSolidityContractDetails(abi.getAbi(), null, null), address, account);
     }
 
+	/**
+	 * Creates a proxy object representing the interface with the smart contract.
+	 * @param abi The ABI of the smart contract
+	 * @param address The address of the smart contract
+	 * @param account The account to use to send transactions
+	 * @param contractInterface The interface representing the smart contract
+	 * @param <T> the proxy object type
+	 * @return The contract proxy object
+	 */
+	public <T> T createContractProxy(EthAbi abi, EthAddress address, EthAccount account, Class<T> contractInterface) {
+		return createContractProxy(abi, address, PropellerCryptoProvider.from(account), contractInterface);
+	}
+
     /**
      * Creates a proxy object representing the interface with the smart contract.
      * @param abi The ABI of the smart contract
      * @param address The address of the smart contract
-     * @param account The account to use to send transactions
+     * @param cryptoProvider The crypto provider to use to send transactions
      * @param contractInterface The interface representing the smart contract
      * @param <T> the proxy object type
      * @return The contract proxy object
      */
-    public <T> T createContractProxy(EthAbi abi, EthAddress address, EthAccount account, Class<T> contractInterface) {
+    public <T> T createContractProxy(EthAbi abi, EthAddress address, CryptoProvider cryptoProvider, Class<T> contractInterface) {
         T proxy = (T) newProxyInstance(contractInterface.getClassLoader(), new Class[]{contractInterface}, handler);
-        handler.register(proxy, contractInterface, new SolcSolidityContractDetails(abi.getAbi(), null, null), address, account);
+        handler.register(proxy, contractInterface, new SolcSolidityContractDetails(abi.getAbi(), null, null), address, cryptoProvider);
         return proxy;
     }
 
@@ -127,10 +140,23 @@ public class EthereumFacade {
      * @return The contract proxy object
      */
     public <T> T createContractProxy(SolidityContractDetails details, EthAddress address, EthAccount account, Class<T> contractInterface) {
-        T proxy = (T) newProxyInstance(contractInterface.getClassLoader(), new Class[]{contractInterface}, handler);
-        handler.register(proxy, contractInterface, details, address, account);
-        return proxy;
+        return createContractProxy(details, address, PropellerCryptoProvider.from(account), contractInterface);
     }
+
+	/**
+	 * Creates a proxy object representing the interface with the smart contract.
+	 * @param details The compiled smart contract
+	 * @param address The address of the smart contract
+	 * @param cryptoProvider The crypto provider to use to send transactions
+	 * @param contractInterface The interface representing the smart contract
+	 * @param <T> the proxy object type
+	 * @return The contract proxy object
+	 */
+	public <T> T createContractProxy(SolidityContractDetails details, EthAddress address, CryptoProvider cryptoProvider, Class<T> contractInterface) {
+		T proxy = (T) newProxyInstance(contractInterface.getClassLoader(), new Class[]{contractInterface}, handler);
+		handler.register(proxy, contractInterface, details, address, cryptoProvider);
+		return proxy;
+	}
 
     /**
      * Publishes the contract

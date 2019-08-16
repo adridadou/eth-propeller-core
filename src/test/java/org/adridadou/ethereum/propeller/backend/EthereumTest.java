@@ -8,6 +8,8 @@ import org.adridadou.ethereum.propeller.EthereumBackend;
 import org.adridadou.ethereum.propeller.event.BlockInfo;
 import org.adridadou.ethereum.propeller.event.EthereumEventHandler;
 import org.adridadou.ethereum.propeller.exception.EthereumApiException;
+import org.adridadou.ethereum.propeller.service.CryptoProvider;
+import org.adridadou.ethereum.propeller.service.PropellerCryptoProvider;
 import org.adridadou.ethereum.propeller.solidity.SolidityEvent;
 import org.adridadou.ethereum.propeller.values.*;
 import org.ethereum.config.BlockchainNetConfig;
@@ -108,13 +110,13 @@ public class EthereumTest implements EthereumBackend {
 
     private Transaction createTransaction(TransactionRequest request, Nonce nonce) {
         Transaction transaction = new Transaction(ByteUtil.bigIntegerToBytes(nonce.getValue()), ByteUtil.bigIntegerToBytes(BigInteger.ZERO), ByteUtil.bigIntegerToBytes(request.getGasLimit().getUsage()), request.getAddress().address, ByteUtil.bigIntegerToBytes(request.getValue().inWei()), request.getData().data, null);
-        transaction.sign(getKey(request.getAccount()));
+        transaction.sign(getKey(request.getCryptoProvider()));
         return transaction;
     }
 
     @Override
-    public GasUsage estimateGas(final EthAccount account, final EthAddress address, final EthValue value, final EthData data) {
-        return localExecutionService.estimateGas(account, address, value, data);
+    public GasUsage estimateGas(final CryptoProvider cryptoProvider, final EthAddress address, final EthValue value, final EthData data) {
+        return localExecutionService.estimateGas(getAccount(cryptoProvider), address, value, data);
     }
 
     @Override
@@ -143,8 +145,8 @@ public class EthereumTest implements EthereumBackend {
     }
 
     @Override
-    public synchronized EthData constantCall(final EthAccount account, final EthAddress address, final EthValue value, final EthData data) {
-        return localExecutionService.executeLocally(account, address, value, data);
+    public synchronized EthData constantCall(final CryptoProvider cryptoProvider, final EthAddress address, final EthValue value, final EthData data) {
+        return localExecutionService.executeLocally(getAccount(cryptoProvider), address, value, data);
     }
 
     @Override
@@ -204,8 +206,12 @@ public class EthereumTest implements EthereumBackend {
         return ChainId.id(123456);
     }
 
-    private ECKey getKey(EthAccount account) {
-        return ECKey.fromPrivate(account.getBigIntPrivateKey());
+    private EthAccount getAccount(CryptoProvider cryptoProvider) {
+		return ((PropellerCryptoProvider) cryptoProvider).getAccount();
+	}
+
+    private ECKey getKey(CryptoProvider cryptoProvider) {
+        return ECKey.fromPrivate(getAccount(cryptoProvider).getBigIntPrivateKey());
     }
 
     BlockInfo toBlockInfo(Block block) {

@@ -12,20 +12,7 @@ import org.adridadou.ethereum.propeller.event.BlockInfo;
 import org.adridadou.ethereum.propeller.event.EthereumEventHandler;
 import org.adridadou.ethereum.propeller.service.CryptoProvider;
 import org.adridadou.ethereum.propeller.solidity.SolidityEvent;
-import org.adridadou.ethereum.propeller.values.ChainId;
-import org.adridadou.ethereum.propeller.values.EthAddress;
-import org.adridadou.ethereum.propeller.values.EthData;
-import org.adridadou.ethereum.propeller.values.EthHash;
-import org.adridadou.ethereum.propeller.values.EthValue;
-import org.adridadou.ethereum.propeller.values.EventData;
-import org.adridadou.ethereum.propeller.values.GasPrice;
-import org.adridadou.ethereum.propeller.values.GasUsage;
-import org.adridadou.ethereum.propeller.values.Nonce;
-import org.adridadou.ethereum.propeller.values.SmartContractByteCode;
-import org.adridadou.ethereum.propeller.values.TransactionInfo;
-import org.adridadou.ethereum.propeller.values.TransactionReceipt;
-import org.adridadou.ethereum.propeller.values.TransactionRequest;
-import org.adridadou.ethereum.propeller.values.TransactionStatus;
+import org.adridadou.ethereum.propeller.values.*;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.crypto.SECP256K1;
 import org.apache.tuweni.eth.Address;
@@ -83,20 +70,21 @@ public class EthereumRpc implements EthereumBackend {
     private org.apache.tuweni.eth.Transaction createTransaction(Nonce nonce, GasPrice gasPrice, TransactionRequest request) {
         UInt256 nonceInt = UInt256.valueOf(nonce.getValue());
         Wei gasPriceWei = Wei.valueOf(gasPrice.getPrice().inWei());
-        Gas gasLimitWei = Gas.valueOf(request.getGasLimit().getUsage());
+        Gas gasLimit = Gas.valueOf(request.getGasLimit().getUsage());
         Wei value = Wei.valueOf(request.getValue().inWei());
         Bytes payload = Bytes.of(request.getData().data);
-        SECP256K1.KeyPair keyPair = SECP256K1.KeyPair.fromSecretKey(SECP256K1.SecretKey.fromInteger(request.getCryptoProvider().getBigIntPrivateKey()));
-        if (request.getAddress().isEmpty()) {
-            //the signature gets generated when the Transaction is created
-            return new org.apache.tuweni.eth.Transaction(nonceInt, gasPriceWei, gasLimitWei,
-                    null, value, payload, keyPair, chainId.id);
+
+        Address address = null;
+
+        if (!request.getAddress().isEmpty()) {
+			address = Address.fromBytes(Bytes.of(request.getAddress().toData().data));
         }
-        else {
-            Address address = Address.fromBytes(Bytes.of(request.getAddress().toData().data));
-            return new org.apache.tuweni.eth.Transaction(nonceInt, gasPriceWei, gasLimitWei,
-                    address, value, payload, keyPair, chainId.id);
-        }
+
+		Bytes data = org.apache.tuweni.eth.Transaction.signatureData(nonceInt, gasPriceWei, gasLimit, address, value, payload, chainId.id);
+
+		EthSignature signature = request.getCryptoProvider().sign(EthData.of(data.toArray()));
+
+		return new org.apache.tuweni.eth.Transaction(nonceInt, gasPriceWei, gasLimit, address, value, payload, chainId.id, SECP256K1.Signature.create(signature.getRecId(), signature.getR(), signature.getS()));
     }
 
     @Override
