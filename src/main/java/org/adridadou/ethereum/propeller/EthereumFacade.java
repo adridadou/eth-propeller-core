@@ -7,7 +7,9 @@ import org.adridadou.ethereum.propeller.solidity.*;
 import org.adridadou.ethereum.propeller.solidity.abi.AbiParam;
 import org.adridadou.ethereum.propeller.solidity.EvmVersion;
 import org.adridadou.ethereum.propeller.solidity.converters.SolidityTypeGroup;
+import org.adridadou.ethereum.propeller.solidity.converters.decoders.list.CollectionDecoder;
 import org.adridadou.ethereum.propeller.solidity.converters.decoders.SolidityTypeDecoder;
+import org.adridadou.ethereum.propeller.solidity.converters.encoders.list.CollectionEncoder;
 import org.adridadou.ethereum.propeller.solidity.converters.encoders.SolidityTypeEncoder;
 import org.adridadou.ethereum.propeller.swarm.SwarmHash;
 import org.adridadou.ethereum.propeller.swarm.SwarmService;
@@ -548,6 +550,16 @@ public class EthereumFacade {
 
     public EthereumFacade addEncoder(SolidityTypeGroup solidityTypeGroup, SolidityTypeEncoder encoder) {
         ethereumProxy.addEncoder(solidityTypeGroup, encoder);
+        return this;
+    }
+
+    public EthereumFacade addListDecoder(final Class<? extends CollectionDecoder> decoder) {
+        ethereumProxy.addListDecoder(decoder);
+        return this;
+    }
+
+    public EthereumFacade addListEncoder(final Class<? extends CollectionEncoder> encoder) {
+        ethereumProxy.addListEncoder(encoder);
         return this;
     }
 
