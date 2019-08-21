@@ -8,6 +8,7 @@ import io.reactivex.subjects.ReplaySubject;
 import org.adridadou.ethereum.propeller.event.BlockInfo;
 import org.adridadou.ethereum.propeller.event.EthereumEventHandler;
 import org.adridadou.ethereum.propeller.exception.EthereumApiException;
+import org.adridadou.ethereum.propeller.service.CryptoProvider;
 import org.adridadou.ethereum.propeller.solidity.SolidityContractDetails;
 import org.adridadou.ethereum.propeller.solidity.SolidityEvent;
 import org.adridadou.ethereum.propeller.solidity.SolidityType;
@@ -22,6 +23,7 @@ import org.apache.commons.lang.ArrayUtils;
 import org.apache.http.util.Asserts;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.web3j.protocol.core.DefaultBlockParameter;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
@@ -43,7 +45,7 @@ class EthereumProxy {
     private final ReplaySubject<TransactionRequest> transactionPublisher = ReplaySubject.create(100);
     private final Flowable<TransactionRequest> pendingTransactionObservable = transactionPublisher.toFlowable(BackpressureStrategy.BUFFER);
 
-    private final Map<TransactionRequest, CompletableFuture<EthHash>> futureMap = new ConcurrentHashMap<>();
+    private final Map<TransactionRequest, CompletableFuture<TransactionExecutionResult>> futureMap = new ConcurrentHashMap<>();
 
     private final EthereumBackend ethereum;
     private final EthereumEventHandler eventHandler;
@@ -79,10 +81,11 @@ class EthereumProxy {
         try {
             logger.debug("Executing new transaction: " + txRequest.hashCode());
             txLock.lock();
-            EthHash hash = ethereum.submit(txRequest, getNonce(txRequest.getAccount().getAddress()));
-            increasePendingTransactionCounter(txRequest.getAccount().getAddress(), hash);
+            Nonce nonce = getNonce(txRequest.getCryptoProvider().getAddress());
+            EthHash hash = ethereum.submit(txRequest, nonce);
+            increasePendingTransactionCounter(txRequest.getCryptoProvider().getAddress(), hash);
             Optional.ofNullable(futureMap.get(txRequest))
-                    .ifPresent(future -> future.complete(hash));
+                    .ifPresent(future -> future.complete(new TransactionExecutionResult(hash, nonce)));
             futureMap.remove(txRequest);
         } catch (Throwable t) {
             logger.error("Interrupted error while waiting for transactions to be submitted:", t);
@@ -120,12 +123,12 @@ class EthereumProxy {
         return this;
     }
 
-    CompletableFuture<EthAddress> publishWithValue(SolidityContractDetails contract, EthAccount account, EthValue value, Object... constructorArgs) {
-        return createContractWithValue(contract, account, value, constructorArgs);
+    CompletableFuture<EthAddress> publishWithValue(SolidityContractDetails contract, CryptoProvider cryptoProvider, EthValue value, Object... constructorArgs) {
+        return createContractWithValue(contract, cryptoProvider, value, constructorArgs);
     }
 
-    CompletableFuture<EthAddress> publish(SolidityContractDetails contract, EthAccount account, Object... constructorArgs) {
-        return createContract(contract, account, constructorArgs);
+    CompletableFuture<EthAddress> publish(SolidityContractDetails contract, CryptoProvider cryptoProvider, Object... constructorArgs) {
+        return createContract(contract, cryptoProvider, constructorArgs);
     }
 
     Nonce getNonce(final EthAddress address) {
@@ -160,26 +163,26 @@ class EthereumProxy {
                 });
     }
 
-    private CompletableFuture<EthAddress> publishContract(EthValue ethValue, EthData data, EthAccount account) {
-        return this.sendTxInternal(ethValue, data, account, EthAddress.empty())
+    private CompletableFuture<EthAddress> publishContract(EthValue ethValue, EthData data, CryptoProvider cryptoProvider) {
+        return this.sendTxInternal(ethValue, data, cryptoProvider, EthAddress.empty())
                 .thenCompose(CallDetails::getResult)
                 .thenApply(receipt -> receipt.contractAddress);
     }
 
-    CompletableFuture<CallDetails> sendTx(EthValue value, EthData data, EthAccount account, EthAddress address) {
-        return this.sendTxInternal(value, data, account, address);
+    CompletableFuture<CallDetails> sendTx(EthValue value, EthData data, CryptoProvider cryptoProvider, EthAddress address) {
+        return this.sendTxInternal(value, data, cryptoProvider, address);
     }
 
-    public SmartContract getSmartContract(SolidityContractDetails details, EthAddress address, EthAccount account) {
-        return new SmartContract(details, account, address, this, ethereum);
+    public SmartContract getSmartContract(SolidityContractDetails details, EthAddress address, CryptoProvider cryptoProvider) {
+        return new SmartContract(details, cryptoProvider, address, this, ethereum);
     }
 
-    private CompletableFuture<EthAddress> createContract(SolidityContractDetails contract, EthAccount account, Object... constructorArgs) {
-        return createContractWithValue(contract, account, wei(0), constructorArgs);
+    private CompletableFuture<EthAddress> createContract(SolidityContractDetails contract, CryptoProvider cryptoProvider, Object... constructorArgs) {
+        return createContractWithValue(contract, cryptoProvider, wei(0), constructorArgs);
     }
 
-    private CompletableFuture<EthAddress> createContractWithValue(SolidityContractDetails contract, EthAccount account, EthValue value, Object... constructorArgs) {
-        EthData argsEncoded = new SmartContract(contract, account, EthAddress.empty(), this, ethereum)
+    private CompletableFuture<EthAddress> createContractWithValue(SolidityContractDetails contract, CryptoProvider cryptoProvider, EthValue value, Object... constructorArgs) {
+        EthData argsEncoded = new SmartContract(contract, cryptoProvider, EthAddress.empty(), this, ethereum)
                 .getConstructor(constructorArgs)
                 .map(constructor -> constructor.encode(constructorArgs))
                 .orElseGet(() -> {
@@ -188,7 +191,7 @@ class EthereumProxy {
                     }
                     return EthData.empty();
                 });
-        return publishContract(value, EthData.of(ArrayUtils.addAll(contract.getBinary().data, argsEncoded.data)), account);
+        return publishContract(value, EthData.of(ArrayUtils.addAll(contract.getBinary().data, argsEncoded.data)), cryptoProvider);
 
     }
 
@@ -202,24 +205,24 @@ class EthereumProxy {
         }).reduce((a, b) -> a + ", " + b).orElse("[no args]");
     }
 
-    private CompletableFuture<EthHash> submitTransaction(TransactionRequest txRequest) {
+    private CompletableFuture<TransactionExecutionResult> submitTransaction(TransactionRequest txRequest) {
         if (futureMap.containsKey(txRequest)) {
             return futureMap.get(txRequest);
         }
-        CompletableFuture<EthHash> future = new CompletableFuture<>();
+        CompletableFuture<TransactionExecutionResult> future = new CompletableFuture<>();
         logger.debug("Accepted transaction " + txRequest.hashCode());
         transactionPublisher.onNext(txRequest);
         futureMap.put(txRequest, future);
         return future;
     }
 
-    private CompletableFuture<CallDetails> sendTxInternal(EthValue value, EthData data, EthAccount account, EthAddress toAddress) {
+    private CompletableFuture<CallDetails> sendTxInternal(EthValue value, EthData data, CryptoProvider cryptoProvider, EthAddress toAddress) {
         return eventHandler.ready().thenCompose(v -> {
-            GasUsage gasLimit = estimateGas(value, data, account, toAddress);
+            GasUsage gasLimit = estimateGas(value, data, cryptoProvider, toAddress);
             GasPrice gasPrice = ethereum.getGasPrice();
 
-            return submitTransaction(new TransactionRequest(account, toAddress, value, data, gasLimit, gasPrice))
-                    .thenApply(txHash -> new CallDetails(this.waitForResult(txHash), txHash));
+            return submitTransaction(new TransactionRequest(cryptoProvider, toAddress, value, data, gasLimit, gasPrice))
+                    .thenApply(executionResult -> new CallDetails(this.waitForResult(executionResult.transactionHash), executionResult.transactionHash, executionResult.nonce, gasLimit));
         });
     }
 
@@ -267,13 +270,17 @@ class EthereumProxy {
         return futureResult;
     }
 
-    public GasUsage estimateGas(EthValue value, EthData data, EthAccount account, EthAddress toAddress) {
-        GasUsage gasLimit = ethereum.estimateGas(account, toAddress, value, data);
+    public GasUsage estimateGas(EthValue value, EthData data, CryptoProvider cryptoProvider, EthAddress toAddress) {
+        GasUsage gasLimit = ethereum.estimateGas(cryptoProvider, toAddress, value, data);
         //if it is a contract creation
         if (toAddress.isEmpty()) {
             gasLimit = gasLimit.add(ADDITIONAL_GAS_FOR_CONTRACT_CREATION);
         }
         return gasLimit.add(ADDITIONAL_GAS_DIRTY_FIX);
+    }
+
+    public Set<EthHash> getPendingTransactions(EthAddress address) {
+        return pendingTransactions.get(address);
     }
 
     private TransactionInfo createTransactionParameters(TransactionReceipt receipt) {
@@ -443,11 +450,19 @@ class EthereumProxy {
         return new ArrayList<>();
     }
 
+    public List<EventData> getLogs(DefaultBlockParameter fromBlock, DefaultBlockParameter toBlock, SolidityEvent eventDefiniton, EthAddress address, String... optionalTopics) {
+        return ethereum.logCall(fromBlock, toBlock, eventDefiniton, address, optionalTopics);
+    }
+
     public long getCurrentBlockNumber() {
         return eventHandler.getCurrentBlockNumber();
     }
 
     public Optional<TransactionInfo> getTransactionInfo(EthHash hash) {
         return ethereum.getTransactionInfo(hash);
+    }
+
+    public ChainId getChainId() {
+        return ethereum.getChainId();
     }
 }

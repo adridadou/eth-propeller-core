@@ -4,7 +4,7 @@
 
     <groupId>org.adridadou</groupId>
     <artifactId>eth-propeller-core</artifactId>
-    <version>0.49</version>
+    <version>0.51</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -18,7 +18,7 @@
 
     <distributionManagement>
         <repository>
-            <id>bintray</id>
+            <id>bintray-cubefriendly-maven</id>
             <name>Cubefriendly maven repo</name>
             <url>https://api.bintray.com/maven/cubefriendly/maven/eth-propeller-core</url>
         </repository>
@@ -49,19 +49,32 @@
             <name>Repository from Bintray</name>
             <url>http://dl.bintray.com/web3j/maven</url>
         </repository>
+
+        <repository>
+            <id>oss.jfrog.org4</id>
+            <name>Repository from Bintray</name>
+            <url>http://dl.bintray.com/openlawbot/forks</url>
+        </repository>
+
+        <repository>
+            <id>oss.jfrog.org5</id>
+            <name>Repository from Bintray</name>
+            <url>https://jcenter.bintray.com</url>
+        </repository>
+
     </repositories>
 
     <dependencies>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>2.9.8</version>
+            <version>2.10.0.pr1</version>
         </dependency>
 
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-annotations</artifactId>
-            <version>2.9.8</version>
+            <version>2.10.0.pr1</version>
         </dependency>
 
         <dependency>
@@ -73,7 +86,7 @@
         <dependency>
             <groupId>io.reactivex.rxjava2</groupId>
             <artifactId>rxjava</artifactId>
-            <version>2.2.8</version>
+            <version>2.2.11</version>
         </dependency>
 
         <dependency>
@@ -109,44 +122,86 @@
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>fluent-hc</artifactId>
-            <version>4.5.8</version>
+            <version>4.5.9</version>
         </dependency>
 
         <dependency>
             <groupId>org.zeroturnaround</groupId>
             <artifactId>zt-exec</artifactId>
-            <version>1.10</version>
+            <version>1.11</version>
         </dependency>
 
         <dependency>
             <groupId>org.web3j</groupId>
             <artifactId>core</artifactId>
-            <version>4.2.0</version>
+            <version>4.4.1</version>
         </dependency>
 
         <dependency>
             <groupId>org.web3j</groupId>
             <artifactId>crypto</artifactId>
-            <version>4.2.0</version>
+            <version>4.4.1</version>
         </dependency>
 
         <dependency>
             <groupId>org.web3j</groupId>
             <artifactId>utils</artifactId>
-            <version>4.2.0</version>
+            <version>4.4.1</version>
         </dependency>
 
         <dependency>
             <groupId>com.squareup.okhttp3</groupId>
             <artifactId>okhttp</artifactId>
-            <version>3.14.1</version>
+            <version>4.1.0</version>
         </dependency>
 
-        <!-- PUT BACK AS TEST -->
+        <dependency>
+            <groupId>org.openlaw</groupId>
+            <artifactId>tuweni-bytes</artifactId>
+            <version>0.10.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.openlaw</groupId>
+            <artifactId>tuweni-eth</artifactId>
+            <version>0.10.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.openlaw</groupId>
+            <artifactId>tuweni-crypto</artifactId>
+            <version>0.10.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.openlaw</groupId>
+            <artifactId>tuweni-units</artifactId>
+            <version>0.10.0</version>
+        </dependency>
+
         <dependency>
             <groupId>org.ethereum</groupId>
             <artifactId>ethereumj-core</artifactId>
             <version>1.12.0-RELEASE</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.logl</groupId>
+            <artifactId>logl-api</artifactId>
+            <version>0.3.1</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.logl</groupId>
+            <artifactId>logl-logl</artifactId>
+            <version>0.3.1</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.logl</groupId>
+            <artifactId>logl-vertx</artifactId>
+            <version>0.3.1</version>
         </dependency>
 
         <dependency>
@@ -158,7 +213,7 @@
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
-            <version>2.27.0</version>
+            <version>3.0.0</version>
             <scope>test</scope>
         </dependency>
 
@@ -167,7 +222,7 @@
         <dependency>
             <artifactId>scala-library</artifactId>
             <groupId>org.scala-lang</groupId>
-            <version>2.12.8</version>
+            <version>2.12.9</version>
             <scope>test</scope>
         </dependency>
 
@@ -209,6 +264,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
+                <version>3.0.1</version>
                 <executions>
                     <execution>
                         <id>attach-sources</id>
@@ -223,6 +279,8 @@
                 <artifactId>jgitflow-maven-plugin</artifactId>
                 <version>1.0-m5.1</version>
                 <configuration>
+					<pushReleases>true</pushReleases>
+					<allowUntracked>true</allowUntracked>
                     <!-- see goals wiki page for configuration options -->
                 </configuration>
             </plugin>

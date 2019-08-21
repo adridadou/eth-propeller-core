@@ -14,6 +14,7 @@ hs_err_pid*
 /database/
 /logs/
 /target/
+/out/
 /eth-propeller-core.iml
 pom.xml.releaseBackup
 release.properties

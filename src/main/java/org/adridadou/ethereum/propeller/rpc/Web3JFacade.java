@@ -3,31 +3,28 @@ package org.adridadou.ethereum.propeller.rpc;
 import java.io.IOError;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Executors;
 
 import io.reactivex.Flowable;
 import org.adridadou.ethereum.propeller.exception.EthereumApiException;
-import org.adridadou.ethereum.propeller.values.EthAccount;
-import org.adridadou.ethereum.propeller.values.EthAddress;
-import org.adridadou.ethereum.propeller.values.EthData;
-import org.adridadou.ethereum.propeller.values.EthHash;
-import org.adridadou.ethereum.propeller.values.EthValue;
-import org.adridadou.ethereum.propeller.values.GasPrice;
-import org.adridadou.ethereum.propeller.values.GasUsage;
-import org.adridadou.ethereum.propeller.values.Nonce;
-import org.adridadou.ethereum.propeller.values.SmartContractByteCode;
+import org.adridadou.ethereum.propeller.service.CryptoProvider;
+import org.adridadou.ethereum.propeller.solidity.SolidityEvent;
+import org.adridadou.ethereum.propeller.values.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.web3j.crypto.RawTransaction;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameter;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.DefaultBlockParameterNumber;
 import org.web3j.protocol.core.Response;
+import org.web3j.protocol.core.methods.request.EthFilter;
 import org.web3j.protocol.core.methods.request.Transaction;
 import org.web3j.protocol.core.methods.response.EthBlock;
 import org.web3j.protocol.core.methods.response.EthGetBalance;
+import org.web3j.protocol.core.methods.response.Log;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.utils.Numeric;
 import io.reactivex.Observable;
@@ -46,20 +43,31 @@ public class Web3JFacade {
         this.web3j = web3j;
     }
 
-    EthData constantCall(final EthAccount account, final EthAddress address, final EthData data) {
+    EthData constantCall(final CryptoProvider cryptoProvider, final EthAddress address, final EthData data) {
         try {
             return EthData.of(handleError(web3j.ethCall(new Transaction(
-                    account.getAddress().withLeading0x(),
+                    cryptoProvider.getAddress().normalizedWithLeading0x(),
                     null,
                     null,
                     null,
-                    address.withLeading0x(),
+                    address.normalizedWithLeading0x(),
                     BigInteger.ZERO,
                     data.toString()
             ), DefaultBlockParameterName.LATEST).send()));
         } catch (IOException e) {
             throw new IOError(e);
         }
+    }
+
+    List<Log> loggingCall(DefaultBlockParameter fromBlock, DefaultBlockParameter toBlock, SolidityEvent eventDefiniton, final EthAddress address, final String... optionalTopics) {
+        EthFilter ethFilter = new EthFilter(fromBlock, toBlock, address.withLeading0x());
+
+        ethFilter.addSingleTopic(eventDefiniton.getDescription().signatureLong().withLeading0x());
+        ethFilter.addOptionalTopics(optionalTopics);
+
+        List<Log> list = new ArrayList<>();
+        this.web3j.ethLogFlowable(ethFilter).subscribe(list::add).dispose();
+        return list;
     }
 
     BigInteger getTransactionCount(EthAddress address) {
@@ -81,7 +89,21 @@ public class Web3JFacade {
                     EthBlock currentBlock = web3j
                             .ethGetBlockByNumber(DefaultBlockParameter.valueOf(DefaultBlockParameterName.LATEST.name()), true).send();
                     BigInteger currentBlockNumber = currentBlock.getBlock().getNumber();
-                    if (this.lastBlockNumber.equals(BigInteger.ZERO) || currentBlockNumber.compareTo(this.lastBlockNumber) > 0) {
+
+                    if(currentBlockNumber.compareTo(this.lastBlockNumber) > 0) {
+
+                        //Set last block to current block -1 in case last block is zero to prevent all blocks from being retrieved
+                        if (this.lastBlockNumber.equals(BigInteger.ZERO)) {
+                            this.lastBlockNumber = currentBlockNumber.subtract(BigInteger.ONE);
+                        }
+
+                        //In case the block number of the current block is more than 1 higher than the last block, retrieve intermediate blocks
+                        for (BigInteger i = this.lastBlockNumber.add(BigInteger.ONE); i.compareTo(currentBlockNumber) < 0; i = i.add(BigInteger.ONE)) {
+                            EthBlock missedBlock = web3j.ethGetBlockByNumber(DefaultBlockParameter.valueOf(i), true).send();
+                            this.lastBlockNumber = i;
+                            blockEventHandler.newElement(missedBlock);
+                        }
+
                         this.lastBlockNumber = currentBlockNumber;
                         blockEventHandler.newElement(currentBlock);
                     }
@@ -94,9 +116,9 @@ public class Web3JFacade {
         return blockEventHandler.observable;
     }
 
-    BigInteger estimateGas(EthAccount account, EthAddress address, EthValue value, EthData data) {
+    BigInteger estimateGas(CryptoProvider cryptoProvider, EthAddress address, EthValue value, EthData data) {
         try {
-            return Numeric.decodeQuantity(handleError(web3j.ethEstimateGas(new Transaction(account.getAddress().normalizedWithLeading0x(), null, null, null,
+            return Numeric.decodeQuantity(handleError(web3j.ethEstimateGas(new Transaction(cryptoProvider.getAddress().normalizedWithLeading0x(), null, null, null,
                     address.isEmpty() ? null : address.normalizedWithLeading0x(), value.inWei(), data.toString())).send()));
         } catch (IOException e) {
             throw new IOError(e);
@@ -148,10 +170,6 @@ public class Web3JFacade {
         } catch (IOException e) {
             throw new IOError(e);
         }
-    }
-
-    RawTransaction createTransaction(Nonce nonce, GasPrice gasPrice, GasUsage gasLimit, EthAddress address, EthValue value, EthData data) {
-        return RawTransaction.createTransaction(nonce.getValue(), gasPrice.getPrice().inWei(), gasLimit.getUsage(), address.toString(), value.inWei(), data.toString());
     }
 
     TransactionReceipt getReceipt(EthHash hash) {

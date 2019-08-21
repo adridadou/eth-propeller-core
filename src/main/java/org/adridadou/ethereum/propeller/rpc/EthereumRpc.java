@@ -1,6 +1,5 @@
 package org.adridadou.ethereum.propeller.rpc;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -8,36 +7,24 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.adridadou.ethereum.propeller.Crypto;
 import org.adridadou.ethereum.propeller.EthereumBackend;
 import org.adridadou.ethereum.propeller.event.BlockInfo;
 import org.adridadou.ethereum.propeller.event.EthereumEventHandler;
-import org.adridadou.ethereum.propeller.values.ChainId;
-import org.adridadou.ethereum.propeller.values.EthAccount;
-import org.adridadou.ethereum.propeller.values.EthAddress;
-import org.adridadou.ethereum.propeller.values.EthData;
-import org.adridadou.ethereum.propeller.values.EthHash;
-import org.adridadou.ethereum.propeller.values.EthValue;
-import org.adridadou.ethereum.propeller.values.EventData;
-import org.adridadou.ethereum.propeller.values.GasPrice;
-import org.adridadou.ethereum.propeller.values.GasUsage;
-import org.adridadou.ethereum.propeller.values.Nonce;
-import org.adridadou.ethereum.propeller.values.SmartContractByteCode;
-import org.adridadou.ethereum.propeller.values.TransactionInfo;
-import org.adridadou.ethereum.propeller.values.TransactionReceipt;
-import org.adridadou.ethereum.propeller.values.TransactionRequest;
-import org.adridadou.ethereum.propeller.values.TransactionStatus;
-import org.ethereum.crypto.ECKey;
-import org.ethereum.util.ByteUtil;
+import org.adridadou.ethereum.propeller.service.CryptoProvider;
+import org.adridadou.ethereum.propeller.solidity.SolidityEvent;
+import org.adridadou.ethereum.propeller.values.*;
+import org.apache.tuweni.bytes.Bytes;
+import org.apache.tuweni.crypto.SECP256K1;
+import org.apache.tuweni.eth.Address;
+import org.apache.tuweni.units.bigints.UInt256;
+import org.apache.tuweni.units.ethereum.Gas;
+import org.apache.tuweni.units.ethereum.Wei;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.web3j.crypto.Credentials;
-import org.web3j.crypto.RawTransaction;
-import org.web3j.crypto.TransactionEncoder;
+import org.web3j.protocol.core.DefaultBlockParameter;
 import org.web3j.protocol.core.methods.response.EthBlock;
 import org.web3j.protocol.core.methods.response.Log;
 import org.web3j.protocol.core.methods.response.Transaction;
-import org.web3j.utils.Numeric;
 
 /**
  * Created by davidroon on 20.01.17.
@@ -49,16 +36,18 @@ public class EthereumRpc implements EthereumBackend {
     private final Web3JFacade web3JFacade;
     private final EthereumRpcEventGenerator ethereumRpcEventGenerator;
     private final ChainId chainId;
+    private final GasPrice fixedGasPrice;
 
     public EthereumRpc(Web3JFacade web3JFacade, ChainId chainId, EthereumRpcConfig config) {
         this.web3JFacade = web3JFacade;
         this.ethereumRpcEventGenerator = new EthereumRpcEventGenerator(web3JFacade, config, this);
+        this.fixedGasPrice = config.getGasPrice();
         this.chainId = chainId;
     }
 
     @Override
     public GasPrice getGasPrice() {
-        return web3JFacade.getGasPrice();
+        return Optional.ofNullable(fixedGasPrice).orElse(web3JFacade.getGasPrice());
     }
 
     @Override
@@ -73,41 +62,34 @@ public class EthereumRpc implements EthereumBackend {
 
     @Override
     public EthHash submit(TransactionRequest request, Nonce nonce) {
-        //TODO: fix that once web3j handle any chainId
-        if(chainId.id > 127 || chainId.id < 0) {
-            org.ethereum.core.Transaction transaction = createTransaction(nonce, getGasPrice(), request);
-            transaction.sign(ECKey.fromPrivate(request.getAccount().getBigIntPrivateKey()));
-            web3JFacade.sendTransaction(EthData.of(transaction.getEncoded()));
-            return EthHash.of(transaction.getHash());
-        } else {
-            RawTransaction tx = web3JFacade.createTransaction(nonce, getGasPrice(), request.getGasLimit(), request.getAddress(), request.getValue(), request.getData());
-            EthData signedMessage = EthData.of(TransactionEncoder.signMessage(tx, (byte) chainId.id, Credentials.create(Numeric.toHexStringNoPrefix(request.getAccount().getBigIntPrivateKey()))));
-            web3JFacade.sendTransaction(signedMessage);
-
-            return EthHash.of(Crypto.sha3(signedMessage).data);
-        }
+            org.apache.tuweni.eth.Transaction transaction = createTransaction(nonce, getGasPrice(), request);
+            web3JFacade.sendTransaction(EthData.of(transaction.toBytes().toArray()));
+            return EthHash.of(transaction.hash().toBytes().toArray());
     }
 
-    private org.ethereum.core.Transaction createTransaction(Nonce nonce, GasPrice gasPrice, TransactionRequest request) {
-        byte[] nonceBytes = encodeBigInt(nonce.getValue());
-        byte[] gasPriceBytes = encodeBigInt(gasPrice.getPrice().inWei());
-        byte[] gasBytes = encodeBigInt(request.getGasLimit().getUsage());
-        byte[] valueBytes = encodeBigInt(request.getValue().inWei());
+    private org.apache.tuweni.eth.Transaction createTransaction(Nonce nonce, GasPrice gasPrice, TransactionRequest request) {
+        UInt256 nonceInt = UInt256.valueOf(nonce.getValue());
+        Wei gasPriceWei = Wei.valueOf(gasPrice.getPrice().inWei());
+        Gas gasLimit = Gas.valueOf(request.getGasLimit().getUsage());
+        Wei value = Wei.valueOf(request.getValue().inWei());
+        Bytes payload = Bytes.of(request.getData().data);
 
-        return new org.ethereum.core.Transaction(nonceBytes, gasPriceBytes, gasBytes,
-                request.getAddress().toData().data, valueBytes, request.getData().data, chainId.id);
-    }
+        Address address = null;
 
-    private byte[] encodeBigInt(BigInteger value) {
-        if(BigInteger.ZERO.equals(value)){
-            return ByteUtil.EMPTY_BYTE_ARRAY;
+        if (!request.getAddress().isEmpty()) {
+			address = Address.fromBytes(Bytes.of(request.getAddress().toData().data));
         }
-        return ByteUtil.bigIntegerToBytes(value);
+
+		Bytes data = org.apache.tuweni.eth.Transaction.signatureData(nonceInt, gasPriceWei, gasLimit, address, value, payload, chainId.id);
+
+		EthSignature signature = request.getCryptoProvider().sign(EthData.of(data.toArray()));
+
+		return new org.apache.tuweni.eth.Transaction(nonceInt, gasPriceWei, gasLimit, address, value, payload, chainId.id, SECP256K1.Signature.create(signature.getRecId(), signature.getR(), signature.getS()));
     }
 
     @Override
-    public GasUsage estimateGas(EthAccount account, EthAddress address, EthValue value, EthData data) {
-        return new GasUsage(web3JFacade.estimateGas(account, address, value, data));
+    public GasUsage estimateGas(CryptoProvider cryptoProvider, EthAddress address, EthValue value, EthData data) {
+        return new GasUsage(web3JFacade.estimateGas(cryptoProvider, address, value, data));
     }
 
     @Override
@@ -136,8 +118,13 @@ public class EthereumRpc implements EthereumBackend {
     }
 
     @Override
-    public EthData constantCall(EthAccount account, EthAddress address, EthValue value, EthData data) {
-        return web3JFacade.constantCall(account, address, data);
+    public EthData constantCall(CryptoProvider cryptoProvider, EthAddress address, EthValue value, EthData data) {
+        return web3JFacade.constantCall(cryptoProvider, address, data);
+    }
+
+    @Override
+    public List<EventData> logCall(DefaultBlockParameter fromBlock, DefaultBlockParameter toBlock, SolidityEvent eventDefinition, EthAddress address, String... optionalTopics) {
+        return web3JFacade.loggingCall(fromBlock, toBlock, eventDefinition, address, optionalTopics).stream().map(log -> toEventInfo(EthHash.of(log.getTransactionHash()), log)).collect(Collectors.toList());
     }
 
     @Override
@@ -156,6 +143,11 @@ public class EthereumRpc implements EthereumBackend {
                     return new TransactionInfo(hash, receipt, status, EthHash.of(transaction.getBlockHash()));
                 })
         );
+    }
+
+    @Override
+    public ChainId getChainId() {
+        return chainId;
     }
 
     BlockInfo toBlockInfo(EthBlock ethBlock) {

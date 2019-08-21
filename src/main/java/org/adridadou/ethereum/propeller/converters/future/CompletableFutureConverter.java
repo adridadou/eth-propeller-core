@@ -1,10 +1,7 @@
 package org.adridadou.ethereum.propeller.converters.future;
 
 import org.adridadou.ethereum.propeller.SmartContract;
-import org.adridadou.ethereum.propeller.values.CallDetails;
-import org.adridadou.ethereum.propeller.values.EthCall;
-import org.adridadou.ethereum.propeller.values.EthPayableCall;
-import org.adridadou.ethereum.propeller.values.Payable;
+import org.adridadou.ethereum.propeller.values.*;
 
 import java.lang.reflect.Method;
 import java.util.concurrent.CompletableFuture;
@@ -21,7 +18,7 @@ public class CompletableFutureConverter implements FutureConverter {
 
     @Override
     public EthCall convertWithDetails(CallDetails details, CompletableFuture<?> futureResult) {
-        return new EthCall<>(details.getTxHash(), futureResult);
+        return new EthCall<>(details.getNonce(), details.getGasEstimate(), details.getTxHash(), futureResult);
     }
 
     @Override

@@ -22,6 +22,7 @@ import java.math.BigInteger;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
+import java.util.Objects;
 import java.util.stream.IntStream;
 
 import static java.util.Arrays.copyOfRange;
@@ -116,7 +117,7 @@ public class EthAccount {
 
         EthAccount that = (EthAccount) o;
 
-        return privateKey != null ? privateKey.equals(that.privateKey) : that.privateKey == null;
+        return Objects.equals(privateKey, that.privateKey);
     }
 
     @Override
