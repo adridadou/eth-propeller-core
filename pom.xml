@@ -279,6 +279,8 @@
                 <artifactId>jgitflow-maven-plugin</artifactId>
                 <version>1.0-m5.1</version>
                 <configuration>
+					<pushReleases>true</pushReleases>
+					<allowUntracked>true</allowUntracked>
                     <!-- see goals wiki page for configuration options -->
                 </configuration>
             </plugin>
