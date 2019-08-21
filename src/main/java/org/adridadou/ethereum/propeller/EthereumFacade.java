@@ -376,6 +376,7 @@ public class EthereumFacade {
     /**
      * Compiles the solidity file
      * @param src the source file
+	 * @param evmVersion Ethereum virtual machine version (default to latest)
      * @return The compilation result
      */
     public CompilationResult compile(SoliditySourceFile src, Optional<EvmVersion> evmVersion) {
@@ -574,6 +575,7 @@ public class EthereumFacade {
      * @param eventDefiniton Event definition that should be matched
      * @param address address of the smart contract that emits the events
      * @param optionalTopics Optional indexed event parameters, passed as 64 character hexidecimal string
+	 * @return the list of event data (logs) based on the query parameters
      */
     public List<EventData> getLogs(Optional<DefaultBlockParameter> fromBlock, Optional<DefaultBlockParameter> toBlock, SolidityEvent eventDefiniton, EthAddress address, String... optionalTopics) {
         return ethereumProxy.getLogs(fromBlock.orElse(DefaultBlockParameterName.EARLIEST), toBlock.orElse(DefaultBlockParameterName.LATEST), eventDefiniton, address, optionalTopics);
