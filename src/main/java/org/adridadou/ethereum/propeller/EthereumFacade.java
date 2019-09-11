@@ -3,17 +3,23 @@ package org.adridadou.ethereum.propeller;
 import org.adridadou.ethereum.propeller.converters.future.FutureConverter;
 import org.adridadou.ethereum.propeller.event.EthereumEventHandler;
 import org.adridadou.ethereum.propeller.exception.EthereumApiException;
+import org.adridadou.ethereum.propeller.service.CryptoProvider;
+import org.adridadou.ethereum.propeller.service.PropellerCryptoProvider;
 import org.adridadou.ethereum.propeller.solidity.*;
 import org.adridadou.ethereum.propeller.solidity.abi.AbiParam;
 import org.adridadou.ethereum.propeller.solidity.EvmVersion;
 import org.adridadou.ethereum.propeller.solidity.converters.SolidityTypeGroup;
+import org.adridadou.ethereum.propeller.solidity.converters.decoders.list.CollectionDecoder;
 import org.adridadou.ethereum.propeller.solidity.converters.decoders.SolidityTypeDecoder;
+import org.adridadou.ethereum.propeller.solidity.converters.encoders.list.CollectionEncoder;
 import org.adridadou.ethereum.propeller.solidity.converters.encoders.SolidityTypeEncoder;
 import org.adridadou.ethereum.propeller.swarm.SwarmHash;
 import org.adridadou.ethereum.propeller.swarm.SwarmService;
 import org.adridadou.ethereum.propeller.values.*;
 import io.reactivex.Observable;
 import org.web3j.abi.datatypes.Event;
+import org.web3j.protocol.core.DefaultBlockParameter;
+import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.methods.response.Log;
 
 import java.io.IOException;
@@ -82,10 +88,13 @@ public class EthereumFacade {
         return createContractProxy(getDetails(address), address, account, contractInterface);
     }
 
-
     public SmartContract createSmartContract(SolidityContractDetails contract, EthAddress address, EthAccount account) {
-        return ethereumProxy.getSmartContract(contract, address, account);
+        return createSmartContract(contract, address, PropellerCryptoProvider.from(account));
     }
+
+	public SmartContract createSmartContract(SolidityContractDetails contract, EthAddress address, CryptoProvider cryptoProvider) {
+		return ethereumProxy.getSmartContract(contract, address, cryptoProvider);
+	}
 
     public SmartContract createSmartContract(EthAddress address, EthAccount account) {
         return createSmartContract(getDetails(address), address, account);
@@ -95,18 +104,31 @@ public class EthereumFacade {
         return createSmartContract(new SolcSolidityContractDetails(abi.getAbi(), null, null), address, account);
     }
 
+	/**
+	 * Creates a proxy object representing the interface with the smart contract.
+	 * @param abi The ABI of the smart contract
+	 * @param address The address of the smart contract
+	 * @param account The account to use to send transactions
+	 * @param contractInterface The interface representing the smart contract
+	 * @param <T> the proxy object type
+	 * @return The contract proxy object
+	 */
+	public <T> T createContractProxy(EthAbi abi, EthAddress address, EthAccount account, Class<T> contractInterface) {
+		return createContractProxy(abi, address, PropellerCryptoProvider.from(account), contractInterface);
+	}
+
     /**
      * Creates a proxy object representing the interface with the smart contract.
      * @param abi The ABI of the smart contract
      * @param address The address of the smart contract
-     * @param account The account to use to send transactions
+     * @param cryptoProvider The crypto provider to use to send transactions
      * @param contractInterface The interface representing the smart contract
      * @param <T> the proxy object type
      * @return The contract proxy object
      */
-    public <T> T createContractProxy(EthAbi abi, EthAddress address, EthAccount account, Class<T> contractInterface) {
+    public <T> T createContractProxy(EthAbi abi, EthAddress address, CryptoProvider cryptoProvider, Class<T> contractInterface) {
         T proxy = (T) newProxyInstance(contractInterface.getClassLoader(), new Class[]{contractInterface}, handler);
-        handler.register(proxy, contractInterface, new SolcSolidityContractDetails(abi.getAbi(), null, null), address, account);
+        handler.register(proxy, contractInterface, new SolcSolidityContractDetails(abi.getAbi(), null, null), address, cryptoProvider);
         return proxy;
     }
 
@@ -120,10 +142,23 @@ public class EthereumFacade {
      * @return The contract proxy object
      */
     public <T> T createContractProxy(SolidityContractDetails details, EthAddress address, EthAccount account, Class<T> contractInterface) {
-        T proxy = (T) newProxyInstance(contractInterface.getClassLoader(), new Class[]{contractInterface}, handler);
-        handler.register(proxy, contractInterface, details, address, account);
-        return proxy;
+        return createContractProxy(details, address, PropellerCryptoProvider.from(account), contractInterface);
     }
+
+	/**
+	 * Creates a proxy object representing the interface with the smart contract.
+	 * @param details The compiled smart contract
+	 * @param address The address of the smart contract
+	 * @param cryptoProvider The crypto provider to use to send transactions
+	 * @param contractInterface The interface representing the smart contract
+	 * @param <T> the proxy object type
+	 * @return The contract proxy object
+	 */
+	public <T> T createContractProxy(SolidityContractDetails details, EthAddress address, CryptoProvider cryptoProvider, Class<T> contractInterface) {
+		T proxy = (T) newProxyInstance(contractInterface.getClassLoader(), new Class[]{contractInterface}, handler);
+		handler.register(proxy, contractInterface, details, address, cryptoProvider);
+		return proxy;
+	}
 
     /**
      * Publishes the contract
@@ -133,8 +168,19 @@ public class EthereumFacade {
      * @return The future address of the newly created smart contract
      */
     public CompletableFuture<EthAddress> publishContract(SolidityContractDetails contract, EthAccount account, Object... constructorArgs) {
-        return ethereumProxy.publish(contract, account, constructorArgs);
+        return publishContract(contract, PropellerCryptoProvider.from(account), constructorArgs);
     }
+
+	/**
+	 * Publishes the contract
+	 * @param contract The compiled contract to publish
+	 * @param cryptoProvider The provider that will sign transactions
+	 * @param constructorArgs The constructor arguments
+	 * @return The future address of the newly created smart contract
+	 */
+	public CompletableFuture<EthAddress> publishContract(SolidityContractDetails contract, CryptoProvider cryptoProvider, Object... constructorArgs) {
+		return ethereumProxy.publish(contract, cryptoProvider, constructorArgs);
+	}
 
     /**
      * Publishes the contract and sends ether at the same time
@@ -145,8 +191,20 @@ public class EthereumFacade {
      * @return The future address of the newly created smart contract
      */
     public CompletableFuture<EthAddress> publishContractWithValue(SolidityContractDetails contract, EthAccount account, EthValue value, Object... constructorArgs) {
-        return ethereumProxy.publishWithValue(contract, account, value, constructorArgs);
+        return publishContractWithValue(contract, PropellerCryptoProvider.from(account), value, constructorArgs);
     }
+
+	/**
+	 * Publishes the contract and sends ether at the same time
+	 * @param contract The compiled contract to publish
+	 * @param cryptoProvider The provider that will sign transactions
+	 * @param value How much ether to send while publishing the smart contract
+	 * @param constructorArgs The constructor arguments
+	 * @return The future address of the newly created smart contract
+	 */
+	public CompletableFuture<EthAddress> publishContractWithValue(SolidityContractDetails contract, CryptoProvider cryptoProvider, EthValue value, Object... constructorArgs) {
+		return ethereumProxy.publishWithValue(contract, cryptoProvider, value, constructorArgs);
+	}
 
     /**
      * Publishes the smart contract metadata to Swarm
@@ -210,8 +268,19 @@ public class EthereumFacade {
      * @return The future details of the call
      */
     public CompletableFuture<CallDetails> sendEther(EthAccount fromAccount, EthAddress to, EthValue value) {
-        return ethereumProxy.sendTx(value, EthData.empty(), fromAccount, to);
+        return sendEther(PropellerCryptoProvider.from(fromAccount), to, value);
     }
+
+	/**
+	 * Sends ether
+	 * @param fromCryptoProvider The crypto provider that will sign the transaction
+	 * @param to The target address
+	 * @param value The value to send
+	 * @return The future details of the call
+	 */
+	public CompletableFuture<CallDetails> sendEther(CryptoProvider fromCryptoProvider, EthAddress to, EthValue value) {
+		return ethereumProxy.sendTx(value, EthData.empty(), fromCryptoProvider, to);
+	}
 
     /**
      * Sends the transaction
@@ -222,8 +291,20 @@ public class EthereumFacade {
      * @return The future details of the call
      */
     public CompletableFuture<CallDetails> sendTx(EthValue value, EthData data, EthAccount account, EthAddress address) {
-        return ethereumProxy.sendTx(value, data, account, address);
+        return sendTx(value, data, PropellerCryptoProvider.from(account), address);
     }
+
+	/**
+	 * Sends the transaction
+	 * @param value The value to send
+	 * @param data The data to send
+	 * @param cryptoProvider The crypto provider that will sign the transaction
+	 * @param address The target address
+	 * @return The future details of the call
+	 */
+	public CompletableFuture<CallDetails> sendTx(EthValue value, EthData data, CryptoProvider cryptoProvider, EthAddress address) {
+		return ethereumProxy.sendTx(value, data, cryptoProvider, address);
+	}
 
     /**
      * Returns the current Nonce of an address.
@@ -240,13 +321,26 @@ public class EthereumFacade {
      * It takes into account additional gas usage for contract creation
      * @param value The value to send
      * @param data The data to send
-     * @param account The account that sends ether
+     * @param account The account used to simulate a transaction
      * @param address The target address
      * @return The GasUsage
      */
     public GasUsage estimateGas(EthValue value, EthData data, EthAccount account, EthAddress address) {
-        return ethereumProxy.estimateGas(value, data, account, address);
+        return estimateGas(value, data, PropellerCryptoProvider.from(account), address);
     }
+
+	/**
+	 * Returns the GasUsage of the transaction data.
+	 * It takes into account additional gas usage for contract creation
+	 * @param value The value to send
+	 * @param data The data to send
+	 * @param cryptoProvider The crypto provider that signs the transaction
+	 * @param address The target address
+	 * @return The GasUsage
+	 */
+	public GasUsage estimateGas(EthValue value, EthData data, CryptoProvider cryptoProvider, EthAddress address) {
+		return ethereumProxy.estimateGas(value, data, cryptoProvider, address);
+	}
 
     /**
      * Returns the set of transactions that are being sent by propeller and but not added to the chain yet
@@ -282,6 +376,7 @@ public class EthereumFacade {
     /**
      * Compiles the solidity file
      * @param src the source file
+	 * @param evmVersion Ethereum virtual machine version (default to latest)
      * @return The compilation result
      */
     public CompilationResult compile(SoliditySourceFile src, Optional<EvmVersion> evmVersion) {
@@ -475,13 +570,15 @@ public class EthereumFacade {
     /**
      * Returns all the events that happened at a smart contract matching an event signature and indexed parameters
      *
+     * @param fromBlock From which block to search from for the events
+     * @param toBlock Latest block which should be searched from for the events
      * @param eventDefiniton Event definition that should be matched
      * @param address address of the smart contract that emits the events
      * @param optionalTopics Optional indexed event parameters, passed as 64 character hexidecimal string
-     * @return
+	 * @return the list of event data (logs) based on the query parameters
      */
-    public List<EventData> getLogs(SolidityEvent eventDefiniton, EthAddress address, String... optionalTopics) {
-        return ethereumProxy.getLogs(eventDefiniton, address, optionalTopics);
+    public List<EventData> getLogs(Optional<DefaultBlockParameter> fromBlock, Optional<DefaultBlockParameter> toBlock, SolidityEvent eventDefiniton, EthAddress address, String... optionalTopics) {
+        return ethereumProxy.getLogs(fromBlock.orElse(DefaultBlockParameterName.EARLIEST), toBlock.orElse(DefaultBlockParameterName.LATEST), eventDefiniton, address, optionalTopics);
     }
 
     /**
@@ -545,6 +642,16 @@ public class EthereumFacade {
 
     public EthereumFacade addEncoder(SolidityTypeGroup solidityTypeGroup, SolidityTypeEncoder encoder) {
         ethereumProxy.addEncoder(solidityTypeGroup, encoder);
+        return this;
+    }
+
+    public EthereumFacade addListDecoder(final Class<? extends CollectionDecoder> decoder) {
+        ethereumProxy.addListDecoder(decoder);
+        return this;
+    }
+
+    public EthereumFacade addListEncoder(final Class<? extends CollectionEncoder> encoder) {
+        ethereumProxy.addListEncoder(encoder);
         return this;
     }
 

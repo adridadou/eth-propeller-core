@@ -1,8 +1,9 @@
 package org.adridadou.ethereum.propeller.rpc;
 
-import org.adridadou.ethereum.propeller.EthereumConfig;
-
 import java.util.concurrent.TimeUnit;
+
+import org.adridadou.ethereum.propeller.EthereumConfig;
+import org.adridadou.ethereum.propeller.values.GasPrice;
 
 /**
  * Created by davidroon on 25.04.17.
@@ -15,9 +16,9 @@ public final class EthereumRpcConfig extends EthereumConfig {
     private final String userName;
     private final String password;
 
-
-    private EthereumRpcConfig(boolean pollBlocks, long pollingFrequence, String swarmUrl, long blockWait, AuthenticationType authType, String userName, String password) {
-        super(swarmUrl, blockWait);
+    private EthereumRpcConfig(boolean pollBlocks, long pollingFrequence, String swarmUrl, long blockWait, GasPrice gasPrice,
+            AuthenticationType authType, String userName, String password) {
+        super(swarmUrl, blockWait, gasPrice);
         this.pollBlocks = pollBlocks;
         this.pollingFrequence = pollingFrequence;
         this.authType = authType;
@@ -79,7 +80,7 @@ public final class EthereumRpcConfig extends EthereumConfig {
         }
 
         public EthereumRpcConfig build() {
-            return new EthereumRpcConfig(pollBlocks, pollingFrequence, swarmUrl, blockWaitLimit, authType, userName, password);
+            return new EthereumRpcConfig(pollBlocks, pollingFrequence, swarmUrl, blockWaitLimit, gasPrice, authType, userName, password);
         }
     }
 }

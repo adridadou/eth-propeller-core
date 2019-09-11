@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 import org.adridadou.ethereum.propeller.EthereumBackend;
 import org.adridadou.ethereum.propeller.event.BlockInfo;
 import org.adridadou.ethereum.propeller.event.EthereumEventHandler;
+import org.adridadou.ethereum.propeller.service.CryptoProvider;
 import org.adridadou.ethereum.propeller.solidity.SolidityEvent;
 import org.adridadou.ethereum.propeller.values.*;
 import org.apache.tuweni.bytes.Bytes;
@@ -20,6 +21,7 @@ import org.apache.tuweni.units.ethereum.Gas;
 import org.apache.tuweni.units.ethereum.Wei;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.web3j.protocol.core.DefaultBlockParameter;
 import org.web3j.protocol.core.methods.response.EthBlock;
 import org.web3j.protocol.core.methods.response.Log;
 import org.web3j.protocol.core.methods.response.Transaction;
@@ -34,16 +36,18 @@ public class EthereumRpc implements EthereumBackend {
     private final Web3JFacade web3JFacade;
     private final EthereumRpcEventGenerator ethereumRpcEventGenerator;
     private final ChainId chainId;
+    private final GasPrice fixedGasPrice;
 
     public EthereumRpc(Web3JFacade web3JFacade, ChainId chainId, EthereumRpcConfig config) {
         this.web3JFacade = web3JFacade;
         this.ethereumRpcEventGenerator = new EthereumRpcEventGenerator(web3JFacade, config, this);
+        this.fixedGasPrice = config.getGasPrice();
         this.chainId = chainId;
     }
 
     @Override
     public GasPrice getGasPrice() {
-        return web3JFacade.getGasPrice();
+        return Optional.ofNullable(fixedGasPrice).orElse(web3JFacade.getGasPrice());
     }
 
     @Override
@@ -66,26 +70,26 @@ public class EthereumRpc implements EthereumBackend {
     private org.apache.tuweni.eth.Transaction createTransaction(Nonce nonce, GasPrice gasPrice, TransactionRequest request) {
         UInt256 nonceInt = UInt256.valueOf(nonce.getValue());
         Wei gasPriceWei = Wei.valueOf(gasPrice.getPrice().inWei());
-        Gas gasLimitWei = Gas.valueOf(request.getGasLimit().getUsage());
+        Gas gasLimit = Gas.valueOf(request.getGasLimit().getUsage());
         Wei value = Wei.valueOf(request.getValue().inWei());
         Bytes payload = Bytes.of(request.getData().data);
-        SECP256K1.KeyPair keyPair = SECP256K1.KeyPair.fromSecretKey(SECP256K1.SecretKey.fromInteger(request.getAccount().getBigIntPrivateKey()));
-        if (request.getAddress().isEmpty()) {
-            Address address = null;
-            //the signature gets generated when the Transaction is created
-            return new org.apache.tuweni.eth.Transaction(nonceInt, gasPriceWei, gasLimitWei,
-                    address, value, payload, keyPair, chainId.id);
+
+        Address address = null;
+
+        if (!request.getAddress().isEmpty()) {
+			address = Address.fromBytes(Bytes.of(request.getAddress().toData().data));
         }
-        else {
-            Address address = Address.fromBytes(Bytes.of(request.getAddress().toData().data));
-            return new org.apache.tuweni.eth.Transaction(nonceInt, gasPriceWei, gasLimitWei,
-                    address, value, payload, keyPair, chainId.id);
-        }
+
+		Bytes data = org.apache.tuweni.eth.Transaction.signatureData(nonceInt, gasPriceWei, gasLimit, address, value, payload, chainId.id);
+
+		EthSignature signature = request.getCryptoProvider().sign(EthData.of(data.toArray()));
+
+		return new org.apache.tuweni.eth.Transaction(nonceInt, gasPriceWei, gasLimit, address, value, payload, chainId.id, SECP256K1.Signature.create(signature.getRecId(), signature.getR(), signature.getS()));
     }
 
     @Override
-    public GasUsage estimateGas(EthAccount account, EthAddress address, EthValue value, EthData data) {
-        return new GasUsage(web3JFacade.estimateGas(account, address, value, data));
+    public GasUsage estimateGas(CryptoProvider cryptoProvider, EthAddress address, EthValue value, EthData data) {
+        return new GasUsage(web3JFacade.estimateGas(cryptoProvider, address, value, data));
     }
 
     @Override
@@ -114,13 +118,13 @@ public class EthereumRpc implements EthereumBackend {
     }
 
     @Override
-    public EthData constantCall(EthAccount account, EthAddress address, EthValue value, EthData data) {
-        return web3JFacade.constantCall(account, address, data);
+    public EthData constantCall(CryptoProvider cryptoProvider, EthAddress address, EthValue value, EthData data) {
+        return web3JFacade.constantCall(cryptoProvider, address, data);
     }
 
     @Override
-    public List<EventData> logCall(SolidityEvent eventDefinition, EthAddress address, String... optionalTopics) {
-        return web3JFacade.loggingCall(eventDefinition, address, optionalTopics).stream().map(log -> toEventInfo(EthHash.of(log.getTransactionHash()), log)).collect(Collectors.toList());
+    public List<EventData> logCall(DefaultBlockParameter fromBlock, DefaultBlockParameter toBlock, SolidityEvent eventDefinition, EthAddress address, String... optionalTopics) {
+        return web3JFacade.loggingCall(fromBlock, toBlock, eventDefinition, address, optionalTopics).stream().map(log -> toEventInfo(EthHash.of(log.getTransactionHash()), log)).collect(Collectors.toList());
     }
 
     @Override

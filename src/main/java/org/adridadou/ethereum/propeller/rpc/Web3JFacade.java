@@ -10,6 +10,7 @@ import java.util.concurrent.Executors;
 
 import io.reactivex.Flowable;
 import org.adridadou.ethereum.propeller.exception.EthereumApiException;
+import org.adridadou.ethereum.propeller.service.CryptoProvider;
 import org.adridadou.ethereum.propeller.solidity.SolidityEvent;
 import org.adridadou.ethereum.propeller.values.*;
 import org.slf4j.Logger;
@@ -42,10 +43,10 @@ public class Web3JFacade {
         this.web3j = web3j;
     }
 
-    EthData constantCall(final EthAccount account, final EthAddress address, final EthData data) {
+    EthData constantCall(final CryptoProvider cryptoProvider, final EthAddress address, final EthData data) {
         try {
             return EthData.of(handleError(web3j.ethCall(new Transaction(
-                    account.getAddress().normalizedWithLeading0x(),
+                    cryptoProvider.getAddress().normalizedWithLeading0x(),
                     null,
                     null,
                     null,
@@ -58,8 +59,8 @@ public class Web3JFacade {
         }
     }
 
-    List<Log> loggingCall(SolidityEvent eventDefiniton, final EthAddress address, final String... optionalTopics) {
-        EthFilter ethFilter = new EthFilter(DefaultBlockParameterName.EARLIEST, DefaultBlockParameterName.LATEST, address.withLeading0x());
+    List<Log> loggingCall(DefaultBlockParameter fromBlock, DefaultBlockParameter toBlock, SolidityEvent eventDefiniton, final EthAddress address, final String... optionalTopics) {
+        EthFilter ethFilter = new EthFilter(fromBlock, toBlock, address.withLeading0x());
 
         ethFilter.addSingleTopic(eventDefiniton.getDescription().signatureLong().withLeading0x());
         ethFilter.addOptionalTopics(optionalTopics);
@@ -115,9 +116,9 @@ public class Web3JFacade {
         return blockEventHandler.observable;
     }
 
-    BigInteger estimateGas(EthAccount account, EthAddress address, EthValue value, EthData data) {
+    BigInteger estimateGas(CryptoProvider cryptoProvider, EthAddress address, EthValue value, EthData data) {
         try {
-            return Numeric.decodeQuantity(handleError(web3j.ethEstimateGas(new Transaction(account.getAddress().normalizedWithLeading0x(), null, null, null,
+            return Numeric.decodeQuantity(handleError(web3j.ethEstimateGas(new Transaction(cryptoProvider.getAddress().normalizedWithLeading0x(), null, null, null,
                     address.isEmpty() ? null : address.normalizedWithLeading0x(), value.inWei(), data.toString())).send()));
         } catch (IOException e) {
             throw new IOError(e);

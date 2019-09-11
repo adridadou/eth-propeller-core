@@ -3,6 +3,7 @@ package org.adridadou.ethereum.propeller;
 import org.adridadou.ethereum.propeller.converters.future.CompletableFutureConverter;
 import org.adridadou.ethereum.propeller.converters.future.FutureConverter;
 import org.adridadou.ethereum.propeller.exception.EthereumApiException;
+import org.adridadou.ethereum.propeller.service.CryptoProvider;
 import org.adridadou.ethereum.propeller.solidity.SolidityContractDetails;
 import org.adridadou.ethereum.propeller.solidity.SolidityFunction;
 import org.adridadou.ethereum.propeller.values.*;
@@ -26,7 +27,7 @@ import static org.adridadou.ethereum.propeller.values.EthValue.wei;
  */
 class EthereumContractInvocationHandler implements InvocationHandler {
 
-    private final Map<EthAddress, Map<EthAccount, SmartContract>> contracts = new HashMap<>();
+    private final Map<EthAddress, Map<EthAddress, SmartContract>> contracts = new HashMap<>();
     private final EthereumProxy ethereumProxy;
     private final Map<Object, SmartContractInfo> info = new HashMap<>();
     private final List<FutureConverter> futureConverters = new ArrayList<>();
@@ -44,7 +45,7 @@ class EthereumContractInvocationHandler implements InvocationHandler {
         }
 
         SmartContractInfo contractInfo = info.get(proxy);
-        SmartContract contract = contracts.get(contractInfo.getAddress()).get(contractInfo.getAccount());
+        SmartContract contract = contracts.get(contractInfo.getAddress()).get(contractInfo.getCryptoProvider().getAddress());
         Object[] arguments = Optional.ofNullable(args).orElse(new Object[0]);
 
         if (method.getReturnType().equals(Void.TYPE)) {
@@ -89,7 +90,7 @@ class EthereumContractInvocationHandler implements InvocationHandler {
         switch (method.getName()) {
             case "toString":
                 SmartContractInfo contractInfo = info.get(proxy);
-                return "Smart contract proxy \naccount:" + contractInfo.getAccount().getAddress().withLeading0x() + "\ncontract address:" + contractInfo.getAddress().withLeading0x();
+                return "Smart contract proxy \naccount:" + contractInfo.getCryptoProvider().getAddress().withLeading0x() + "\ncontract address:" + contractInfo.getAddress().withLeading0x();
             case "equals":
                 return proxy == args[0];
             case "hashCode":
@@ -109,16 +110,16 @@ class EthereumContractInvocationHandler implements InvocationHandler {
                 .findFirst();
     }
 
-    <T> void register(T proxy, Class<T> contractInterface, SolidityContractDetails contract, EthAddress address, EthAccount account) {
+    <T> void register(T proxy, Class<T> contractInterface, SolidityContractDetails contract, EthAddress address, CryptoProvider cryptoProvider) {
         if (address.isEmpty()) {
             throw new EthereumApiException("the contract address cannot be empty");
         }
-        SmartContract smartContract = ethereumProxy.getSmartContract(contract, address, account);
+        SmartContract smartContract = ethereumProxy.getSmartContract(contract, address, cryptoProvider);
         verifyContract(smartContract, contractInterface);
 
-        info.put(proxy, new SmartContractInfo(address, account));
-        Map<EthAccount, SmartContract> proxies = contracts.getOrDefault(address, new HashMap<>());
-        proxies.put(account, smartContract);
+        info.put(proxy, new SmartContractInfo(address, cryptoProvider));
+        Map<EthAddress, SmartContract> proxies = contracts.getOrDefault(address, new HashMap<>());
+        proxies.put(cryptoProvider.getAddress(), smartContract);
         contracts.put(address, proxies);
     }
 
