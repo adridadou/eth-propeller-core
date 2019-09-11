@@ -261,6 +261,17 @@ public class EthereumFacade {
     }
 
     /**
+     * /**
+     * Returns block for provided blocknumber
+     *
+     * @param blockNumber The block number
+     * @return The block if found
+     */
+    public Optional<BlockInfo> getBlock(long blockNumber) {
+        return ethereumProxy.getBlock(blockNumber);
+    }
+
+    /**
      * Sends ether
      * @param fromAccount The account that sends ether
      * @param to The target address
