@@ -1,6 +1,7 @@
 package org.adridadou.ethereum.propeller;
 
 import org.adridadou.ethereum.propeller.converters.future.FutureConverter;
+import org.adridadou.ethereum.propeller.event.BlockInfo;
 import org.adridadou.ethereum.propeller.event.EthereumEventHandler;
 import org.adridadou.ethereum.propeller.exception.EthereumApiException;
 import org.adridadou.ethereum.propeller.service.CryptoProvider;
