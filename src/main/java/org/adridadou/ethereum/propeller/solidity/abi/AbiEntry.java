@@ -1,6 +1,7 @@
 package org.adridadou.ethereum.propeller.solidity.abi;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.adridadou.ethereum.propeller.exception.EthereumApiException;
 import org.adridadou.ethereum.propeller.solidity.converters.decoders.SolidityTypeDecoder;
@@ -53,7 +54,9 @@ public class AbiEntry {
 
     public static List<AbiEntry> parse(final String json) {
         try {
-            return new ObjectMapper().readValue(json, new TypeReference<List<AbiEntry>>() {});
+            return new ObjectMapper()
+				.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+				.readValue(json, new TypeReference<List<AbiEntry>>() {});
         } catch (IOException e) {
             throw new EthereumApiException("error while deserialising ABI", e);
         }
