@@ -56,7 +56,7 @@ public class EthJEventListener extends EthereumListenerAdapter {
     @Override
     public void onBlock(Block block, List<TransactionReceipt> receipts) {
         EthHash blockHash = EthHash.of(block.getHash());
-        eventHandler.onBlock(new BlockInfo(block.getNumber(), BigInteger.valueOf(block.getTimestamp()), receipts.stream()
+        eventHandler.onBlock(new BlockInfo(block.getNumber(), block.getTimestamp(), receipts.stream()
                 .map(tx -> EthJEventListener.toReceipt(tx, blockHash))
                 .collect(Collectors.toList())));
 

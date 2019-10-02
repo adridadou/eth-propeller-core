@@ -215,7 +215,7 @@ public class EthereumTest implements EthereumBackend {
     }
 
     BlockInfo toBlockInfo(Block block) {
-        return new BlockInfo(block.getNumber(), BigInteger.valueOf(block.getTimestamp()), block.getTransactionsList().stream()
+        return new BlockInfo(block.getNumber(), block.getTimestamp(), block.getTransactionsList().stream()
                 .map(tx -> this.toReceipt(tx, EthHash.of(block.getHash()))).collect(Collectors.toList()));
     }
 
