@@ -253,7 +253,6 @@ public class EthereumFacade {
     }
 
     /**
-    /**
      * Returns the current best block number
      * @return The best block number
      */
@@ -262,7 +261,6 @@ public class EthereumFacade {
     }
 
     /**
-     * /**
      * Returns block for provided blocknumber
      *
      * @param blockNumber The block number
@@ -270,6 +268,16 @@ public class EthereumFacade {
      */
     public Optional<BlockInfo> getBlock(long blockNumber) {
         return ethereumProxy.getBlock(blockNumber);
+    }
+
+    /*
+     * Returns block for provided blockhash
+     *
+     * @param blockHash The block number
+     * @return The block if found
+     */
+    public Optional<BlockInfo> getBlock(EthHash blockHash) {
+        return ethereumProxy.getBlock(blockHash);
     }
 
     /**
