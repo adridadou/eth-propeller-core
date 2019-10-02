@@ -7,12 +7,12 @@ import java.util.List;
 
 public class BlockInfo {
     public final long blockNumber;
-    public final BigInteger timeStamp;
+    public final BigInteger timestamp;
     public final List<TransactionReceipt> receipts;
 
-    public BlockInfo(long blockNumber, BigInteger timeStamp, List<TransactionReceipt> receipts) {
+    public BlockInfo(long blockNumber, BigInteger timestamp, List<TransactionReceipt> receipts) {
         this.blockNumber = blockNumber;
-        this.timeStamp = timeStamp;
+        this.timestamp = timestamp;
         this.receipts = receipts;
     }
 
