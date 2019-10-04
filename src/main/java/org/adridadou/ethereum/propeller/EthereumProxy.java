@@ -346,6 +346,14 @@ class EthereumProxy {
         return ethereum.getBalance(address);
     }
 
+    Optional<BlockInfo> getBlock(long blockNumber) {
+        return this.ethereum.getBlock(blockNumber);
+    }
+
+    Optional<BlockInfo> getBlock(EthHash blockHash) {
+        return this.ethereum.getBlock(blockHash);
+    }
+
     private void increasePendingTransactionCounter(EthAddress address, EthHash hash) {
         Set<EthHash> hashes = pendingTransactions.computeIfAbsent(address, (key) -> Collections.synchronizedSet(new HashSet<>()));
         hashes.add(hash);
