@@ -1,5 +1,6 @@
 package org.adridadou.ethereum.propeller.rpc;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -166,12 +167,12 @@ public class EthereumRpc implements EthereumBackend {
                 List<TransactionReceipt> receiptList = receipts.entrySet().stream()
                         .map(entry -> toReceipt(txObjects.get(entry.getKey()), entry.getValue())).collect(Collectors.toList());
 
-                return new BlockInfo(block.getNumber().longValue(), receiptList);
+                return new BlockInfo(block.getNumber().longValue(), block.getTimestamp().longValue(), receiptList);
             } catch (Throwable ex) {
                 logger.error("error while converting to block info", ex);
-                return new BlockInfo(block.getNumber().longValue(), Collections.emptyList());
+                return new BlockInfo(block.getNumber().longValue(), block.getTimestamp().longValue(), Collections.emptyList());
             }
-        }).orElseGet(() -> new BlockInfo(-1, new ArrayList<>()));
+        }).orElseGet(() -> new BlockInfo(-1, 0, new ArrayList<>()));
     }
 
     private TransactionReceipt toReceipt(Transaction tx, org.web3j.protocol.core.methods.response.TransactionReceipt receipt) {
