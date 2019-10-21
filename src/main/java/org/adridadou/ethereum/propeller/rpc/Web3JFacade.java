@@ -63,7 +63,7 @@ public class Web3JFacade {
         EthFilter ethFilter = new EthFilter(fromBlock, toBlock, address.withLeading0x());
 
         ethFilter.addSingleTopic(eventDefiniton.getDescription().signatureLong().withLeading0x());
-        ethFilter.addOptionalTopics(optionalTopics);
+        if (optionalTopics.length > 0) ethFilter.addOptionalTopics(optionalTopics);
 
         List<Log> list = new ArrayList<>();
         this.web3j.ethLogFlowable(ethFilter).subscribe(list::add).dispose();
