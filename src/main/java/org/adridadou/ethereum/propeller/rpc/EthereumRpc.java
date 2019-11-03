@@ -41,7 +41,7 @@ public class EthereumRpc implements EthereumBackend {
 
     public EthereumRpc(Web3JFacade web3JFacade, ChainId chainId, EthereumRpcConfig config) {
         this.web3JFacade = web3JFacade;
-        this.ethereumRpcEventGenerator = new EthereumRpcEventGenerator(web3JFacade, config, this);
+        this.ethereumRpcEventGenerator = new EthereumRpcEventGenerator(web3JFacade, this);
         this.fixedGasPrice = config.getGasPrice();
         this.chainId = chainId;
     }
@@ -155,7 +155,10 @@ public class EthereumRpc implements EthereumBackend {
         return Optional.ofNullable(ethBlock.getBlock()).map(block -> {
             try {
                 Map<String, EthBlock.TransactionObject> txObjects = block.getTransactions().stream()
-                        .map(tx -> (EthBlock.TransactionObject) tx.get()).collect(Collectors.toMap(EthBlock.TransactionObject::getHash, e -> e));
+                        .map(tx -> {
+				System.out.println(tx.get());
+				return (EthBlock.TransactionObject) tx.get();
+                        }).collect(Collectors.toMap(EthBlock.TransactionObject::getHash, e -> e));
 
                 Map<String, org.web3j.protocol.core.methods.response.TransactionReceipt> receipts = txObjects.values().stream()
                         .map(tx -> Optional.ofNullable(web3JFacade.getReceipt(EthHash.of(tx.getHash()))))

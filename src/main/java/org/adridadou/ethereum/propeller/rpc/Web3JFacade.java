@@ -6,15 +6,13 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.Executors;
 
 import io.reactivex.Flowable;
 import org.adridadou.ethereum.propeller.exception.EthereumApiException;
 import org.adridadou.ethereum.propeller.service.CryptoProvider;
 import org.adridadou.ethereum.propeller.solidity.SolidityEvent;
 import org.adridadou.ethereum.propeller.values.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameter;
 import org.web3j.protocol.core.DefaultBlockParameterName;
@@ -26,18 +24,15 @@ import org.web3j.protocol.core.methods.response.EthBlock;
 import org.web3j.protocol.core.methods.response.EthGetBalance;
 import org.web3j.protocol.core.methods.response.Log;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
+import org.web3j.protocol.websocket.events.NewHeadsNotification;
 import org.web3j.utils.Numeric;
-import io.reactivex.Observable;
 
 /**
  * Created by davidroon on 19.11.16.
  * This code is released under Apache 2 license
  */
 public class Web3JFacade {
-    private static final Logger logger = LoggerFactory.getLogger(Web3JFacade.class);
     private final Web3j web3j;
-    private final Web3jBlockHandler blockEventHandler = new Web3jBlockHandler();
-    private BigInteger lastBlockNumber = BigInteger.ZERO;
 
     public Web3JFacade(final Web3j web3j) {
         this.web3j = web3j;
@@ -82,39 +77,9 @@ public class Web3JFacade {
         return web3j.blockFlowable(true);
     }
 
-    Observable<EthBlock> observeBlocksPolling(long pollingFrequence) {
-        Executors.newCachedThreadPool().submit(() -> {
-            while (true) {
-                try {
-                    EthBlock currentBlock = web3j
-                            .ethGetBlockByNumber(DefaultBlockParameter.valueOf(DefaultBlockParameterName.LATEST.name()), true).send();
-                    BigInteger currentBlockNumber = currentBlock.getBlock().getNumber();
-
-                    if(currentBlockNumber.compareTo(this.lastBlockNumber) > 0) {
-
-                        //Set last block to current block -1 in case last block is zero to prevent all blocks from being retrieved
-                        if (this.lastBlockNumber.equals(BigInteger.ZERO)) {
-                            this.lastBlockNumber = currentBlockNumber.subtract(BigInteger.ONE);
-                        }
-
-                        //In case the block number of the current block is more than 1 higher than the last block, retrieve intermediate blocks
-                        for (BigInteger i = this.lastBlockNumber.add(BigInteger.ONE); i.compareTo(currentBlockNumber) < 0; i = i.add(BigInteger.ONE)) {
-                            EthBlock missedBlock = web3j.ethGetBlockByNumber(DefaultBlockParameter.valueOf(i), true).send();
-                            this.lastBlockNumber = i;
-                            blockEventHandler.newElement(missedBlock);
-                        }
-
-                        this.lastBlockNumber = currentBlockNumber;
-                        blockEventHandler.newElement(currentBlock);
-                    }
-                } catch (Throwable e) {
-                    logger.warn("error while polling blocks", e);
-                }
-                Thread.sleep(pollingFrequence);
-            }
-        });
-        return blockEventHandler.observable;
-    }
+    Flowable<NewHeadsNotification> observeNewHead() {
+	return web3j.newHeadsNotifications();
+	}
 
     BigInteger estimateGas(CryptoProvider cryptoProvider, EthAddress address, EthValue value, EthData data) {
         try {
