@@ -2,6 +2,7 @@ package org.adridadou.ethereum.propeller;
 
 import okhttp3.*;
 import org.adridadou.ethereum.propeller.event.EthereumEventHandler;
+import org.adridadou.ethereum.propeller.rpc.AuthenticationType;
 import org.adridadou.ethereum.propeller.rpc.EthereumRpc;
 import org.adridadou.ethereum.propeller.rpc.EthereumRpcConfig;
 import org.adridadou.ethereum.propeller.rpc.Web3JFacade;
@@ -13,6 +14,7 @@ import org.web3j.protocol.Web3j;
 import org.web3j.protocol.Web3jService;
 import org.web3j.protocol.http.HttpService;
 import org.web3j.protocol.websocket.WebSocketService;
+import org.web3j.utils.Async;
 
 import java.net.ConnectException;
 
@@ -32,22 +34,39 @@ public final class RpcEthereumFacadeProvider {
     private RpcEthereumFacadeProvider() {
     }
 
-    public static EthereumFacade forRemoteNode(final String url, final ChainId chainId) {
+    public static EthereumFacade forRemoteNode(final String url, final ChainId chainId) throws ConnectException {
         return forRemoteNode(url, chainId, EthereumRpcConfig.builder().build());
     }
 
     public static EthereumFacade forRemoteNode(final String url, final ChainId chainId, EthereumRpcConfig config) {
-        return forRemoteNode(createHttpService(url, config), chainId, config);
+		return forRemoteNode(createHttpService(url, config), chainId, config);
     }
 
     private static HttpService createHttpService(final String url, EthereumRpcConfig config) {
-        switch(config.getAuthType()) {
-            case BasicAuth:
-                return createHttpServiceForBasicAuth(url, config);
-            default:
-                return new HttpService(url);
-        }
-    }
+		if (config.getAuthType() == AuthenticationType.BasicAuth) {
+			return createHttpServiceForBasicAuth(url, config);
+		}
+		return new HttpService(url);
+	}
+
+	private static void onError(Throwable t) {
+
+	}
+
+	private static void onClose() {
+
+	}
+
+    public static WebSocketService createWebSocketService(final String url, EthereumRpcConfig config) throws ConnectException {
+	String wsUrl = url;
+	if(url.startsWith("http")) {
+		wsUrl = "ws" + url.substring(4);
+		}
+		WebSocketService webSocketService = new WebSocketService(wsUrl, true);
+		webSocketService.connect(s -> {}, RpcEthereumFacadeProvider::onError, RpcEthereumFacadeProvider::onClose);
+
+		return webSocketService;
+	}
 
     private static HttpService createHttpServiceForBasicAuth(final String url, EthereumRpcConfig config) {
         OkHttpClient.Builder clientBuilder = new OkHttpClient.Builder();
@@ -56,11 +75,12 @@ public final class RpcEthereumFacadeProvider {
             return response.request().newBuilder().header("Authorization", credential).build();
         });
 
-        return new HttpService(url, clientBuilder.build(), false);
+        return new HttpService(url, clientBuilder.build(), true);
     }
 
     private static EthereumFacade forRemoteNode(Web3jService web3jService, final ChainId chainId, EthereumRpcConfig config) {
-        Web3j w3j = Web3j.build(web3jService);
+	System.out.println("polling interval:" + config.getPollingInterval());
+        Web3j w3j = Web3j.build(web3jService, config.getPollingInterval(), Async.defaultExecutorService());
         Web3JFacade web3j = new Web3JFacade(w3j);
         EthereumRpc ethRpc = new EthereumRpc(web3j, chainId, config);
         EthereumEventHandler eventHandler = new EthereumEventHandler();
@@ -69,7 +89,7 @@ public final class RpcEthereumFacadeProvider {
     }
 
     public static InfuraBuilder forInfura(final InfuraKey key) {
-        return new InfuraBuilder(key, EthereumRpcConfig.builder().pollBlocks(true).build());
+        return new InfuraBuilder(key, EthereumRpcConfig.builder().build());
     }
 
     public static InfuraBuilder forInfura(final InfuraKey key, EthereumRpcConfig config) {
@@ -86,32 +106,22 @@ public final class RpcEthereumFacadeProvider {
         }
 
         public EthereumFacade createMain() {
-            return forRemoteNode(createW3JService("mainnet.infura.io"), RpcEthereumFacadeProvider.MAIN_CHAIN_ID, config);
+            return forRemoteNode(createW3JServiceForInfura("mainnet.infura.io"), RpcEthereumFacadeProvider.MAIN_CHAIN_ID, config);
         }
 
         public EthereumFacade createRopsten() {
-            return forRemoteNode(createW3JService("ropsten.infura.io"), RpcEthereumFacadeProvider.ROPSTEN_CHAIN_ID, config);
+            return forRemoteNode(createW3JServiceForInfura("ropsten.infura.io"), RpcEthereumFacadeProvider.ROPSTEN_CHAIN_ID, config);
         }
 
         public EthereumFacade createKovan() {
-            return forRemoteNode(createW3JService("kovan.infura.io"), RpcEthereumFacadeProvider.KOVAN_CHAIN_ID, config);
+            return forRemoteNode(createW3JServiceForInfura("kovan.infura.io"), RpcEthereumFacadeProvider.KOVAN_CHAIN_ID, config);
         }
 
         public EthereumFacade createRinkeby() {
-            return forRemoteNode(createW3JService("rinkeby.infura.io"), RpcEthereumFacadeProvider.RINKEBY_CHAIN_ID, config);
+            return forRemoteNode(createW3JServiceForInfura("rinkeby.infura.io"), RpcEthereumFacadeProvider.RINKEBY_CHAIN_ID, config);
         }
 
-        private Web3jService createW3JService(String url) {
-            if (!config.isPollBlocks()) {
-                try {
-                    WebSocketService webSocketService = new WebSocketService("wss://" + url + "/ws", true);
-                    webSocketService.connect();
-                    return webSocketService;
-                } catch (ConnectException ex) {
-                    logger.error("Unable to connect to Infura websocket", ex);
-                    config = EthereumRpcConfig.builder().pollBlocks(true).build();
-                }
-            }
+        private Web3jService createW3JServiceForInfura(String url) {
             return new HttpService("https://" + url + "/v3/" + key.key);
         }
     }
