@@ -156,7 +156,6 @@ public class EthereumRpc implements EthereumBackend {
             try {
                 Map<String, EthBlock.TransactionObject> txObjects = block.getTransactions().stream()
                         .map(tx -> {
-				System.out.println(tx.get());
 				return (EthBlock.TransactionObject) tx.get();
                         }).collect(Collectors.toMap(EthBlock.TransactionObject::getHash, e -> e));
 
