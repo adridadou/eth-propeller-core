@@ -34,7 +34,7 @@ public final class RpcEthereumFacadeProvider {
     private RpcEthereumFacadeProvider() {
     }
 
-    public static EthereumFacade forRemoteNode(final String url, final ChainId chainId) throws ConnectException {
+    public static EthereumFacade forRemoteNode(final String url, final ChainId chainId) {
         return forRemoteNode(url, chainId, EthereumRpcConfig.builder().build());
     }
 
@@ -79,7 +79,6 @@ public final class RpcEthereumFacadeProvider {
     }
 
     private static EthereumFacade forRemoteNode(Web3jService web3jService, final ChainId chainId, EthereumRpcConfig config) {
-	System.out.println("polling interval:" + config.getPollingInterval());
         Web3j w3j = Web3j.build(web3jService, config.getPollingInterval(), Async.defaultExecutorService());
         Web3JFacade web3j = new Web3JFacade(w3j);
         EthereumRpc ethRpc = new EthereumRpc(web3j, chainId, config);
