@@ -10,15 +10,17 @@ import org.adridadou.ethereum.propeller.values.GasPrice;
  * This code is released under Apache 2 license
  */
 public final class EthereumRpcConfig extends EthereumConfig {
+	private final boolean pollBlocks;
     private final long pollingInterval;
     private final AuthenticationType authType;
     private final String userName;
     private final String password;
 
-    private EthereumRpcConfig(long pollingFrequence, String swarmUrl, long blockWait, GasPrice gasPrice,
+    private EthereumRpcConfig(boolean pollBlocks, long pollingInterval, String swarmUrl, long blockWait, GasPrice gasPrice,
             AuthenticationType authType, String userName, String password) {
         super(swarmUrl, blockWait, gasPrice);
-        this.pollingInterval = pollingFrequence;
+		this.pollBlocks = pollBlocks;
+        this.pollingInterval = pollingInterval;
         this.authType = authType;
         this.userName = userName;
         this.password = password;
@@ -27,6 +29,10 @@ public final class EthereumRpcConfig extends EthereumConfig {
     public static Builder builder() {
         return new Builder();
     }
+
+	public boolean isPollBlocks() {
+		return pollBlocks;
+	}
 
     public long getPollingInterval() {
         return pollingInterval;
@@ -45,10 +51,16 @@ public final class EthereumRpcConfig extends EthereumConfig {
     }
 
     public static class Builder extends EthereumConfig.Builder {
-        private long pollingInterval = 10000;
+		private boolean pollBlocks;
+    	private long pollingInterval = 10000;
         private AuthenticationType authType = AuthenticationType.NoAuth;
         private String password;
         private String userName;
+
+		public Builder pollBlocks(boolean value) {
+			this.pollBlocks = value;
+			return this;
+		}
 
         public Builder pollingInterval(long frequence) {
             this.pollingInterval = frequence;
@@ -68,7 +80,7 @@ public final class EthereumRpcConfig extends EthereumConfig {
         }
 
         public EthereumRpcConfig build() {
-            return new EthereumRpcConfig(pollingInterval, swarmUrl, blockWaitLimit, gasPrice, authType, userName, password);
+            return new EthereumRpcConfig(pollBlocks, pollingInterval, swarmUrl, blockWaitLimit, gasPrice, authType, userName, password);
         }
     }
 }

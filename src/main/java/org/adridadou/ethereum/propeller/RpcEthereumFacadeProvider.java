@@ -34,7 +34,7 @@ public final class RpcEthereumFacadeProvider {
     private RpcEthereumFacadeProvider() {
     }
 
-    public static EthereumFacade forRemoteNode(final String url, final ChainId chainId) throws ConnectException {
+    public static EthereumFacade forRemoteNode(final String url, final ChainId chainId) {
         return forRemoteNode(url, chainId, EthereumRpcConfig.builder().build());
     }
 
