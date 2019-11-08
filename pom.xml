@@ -4,7 +4,7 @@
 
     <groupId>org.adridadou</groupId>
     <artifactId>eth-propeller-core</artifactId>
-    <version>0.55</version>
+    <version>0.56</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -86,7 +86,7 @@
         <dependency>
             <groupId>io.reactivex.rxjava2</groupId>
             <artifactId>rxjava</artifactId>
-            <version>2.2.14</version>
+            <version>2.2.13</version>
         </dependency>
 
         <dependency>
@@ -134,19 +134,19 @@
         <dependency>
             <groupId>org.web3j</groupId>
             <artifactId>core</artifactId>
-            <version>4.5.5</version>
+            <version>4.5.6</version>
         </dependency>
 
         <dependency>
             <groupId>org.web3j</groupId>
             <artifactId>crypto</artifactId>
-            <version>4.5.5</version>
+            <version>4.5.6</version>
         </dependency>
 
         <dependency>
             <groupId>org.web3j</groupId>
             <artifactId>utils</artifactId>
-            <version>4.5.5</version>
+            <version>4.5.6</version>
         </dependency>
 
         <dependency>
