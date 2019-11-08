@@ -13,10 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.Web3jService;
 import org.web3j.protocol.http.HttpService;
-import org.web3j.protocol.websocket.WebSocketService;
 import org.web3j.utils.Async;
-
-import java.net.ConnectException;
 
 
 /**
@@ -47,25 +44,6 @@ public final class RpcEthereumFacadeProvider {
 			return createHttpServiceForBasicAuth(url, config);
 		}
 		return new HttpService(url);
-	}
-
-	private static void onError(Throwable t) {
-
-	}
-
-	private static void onClose() {
-
-	}
-
-    public static WebSocketService createWebSocketService(final String url, EthereumRpcConfig config) throws ConnectException {
-	String wsUrl = url;
-	if(url.startsWith("http")) {
-		wsUrl = "ws" + url.substring(4);
-		}
-		WebSocketService webSocketService = new WebSocketService(wsUrl, true);
-		webSocketService.connect(s -> {}, RpcEthereumFacadeProvider::onError, RpcEthereumFacadeProvider::onClose);
-
-		return webSocketService;
 	}
 
     private static HttpService createHttpServiceForBasicAuth(final String url, EthereumRpcConfig config) {
