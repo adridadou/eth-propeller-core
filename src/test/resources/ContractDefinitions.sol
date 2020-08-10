@@ -1,5 +1,5 @@
-pragma solidity ^0.5.0;
-
+pragma solidity ^0.7.0;
+// SPDX-License-Identifier: MIT
 
 contract owned {
     address payable owner;
@@ -9,7 +9,7 @@ contract owned {
         _;
     }
 
-    constructor() public {
+    constructor() {
         owner = msg.sender;
     }
 

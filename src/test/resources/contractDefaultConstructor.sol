@@ -1,11 +1,11 @@
-pragma solidity ^0.5.0;
-
+pragma solidity ^0.7.0;
+// SPDX-License-Identifier: MIT
 
 contract ContractDefaultConstructor {
 
     string public value;
 
-    constructor () public {
+    constructor () {
         value = "hello world";
     }
 }

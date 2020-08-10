@@ -1,5 +1,5 @@
-pragma solidity ^0.5.0;
-
+pragma solidity ^0.7.0;
+// SPDX-License-Identifier: MIT
 
 contract myContract {
     function strFunc(string memory str)  public pure returns(string memory) {

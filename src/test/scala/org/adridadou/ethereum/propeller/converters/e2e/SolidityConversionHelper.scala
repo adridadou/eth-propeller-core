@@ -31,7 +31,7 @@ object SolidityConversionHelper {
 
 trait SolidityConversionHelper {
 
-  def contractObject[T]()(implicit tag: ClassTag[T]): T = {
+  def contractObject[T]()(implicit tag: ClassTag[T]): T =
     Try(SolidityConversionHelper.facade
       .createContractProxy(
         SolidityConversionHelper.contract,
@@ -43,7 +43,6 @@ trait SolidityConversionHelper {
       case Failure(ex) =>
         throw ex
     }
-  }
 
   def contractObjectWithAddress[T]()(implicit tag: ClassTag[T]): (EthAddress, T) = {
     (SolidityConversionHelper.contractAddress,
