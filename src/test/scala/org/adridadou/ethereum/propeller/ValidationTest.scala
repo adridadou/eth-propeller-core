@@ -3,7 +3,8 @@ package org.adridadou.ethereum.propeller
 import java.io.File
 import java.util.concurrent.CompletableFuture
 
-import org.adridadou.ethereum.propeller.backend.{EthereumTest, TestConfig}
+import org.adridadou.ethereum.propeller.backend.TestConfig
+import org.adridadou.ethereum.propeller.converters.e2e.SolidityConversionHelper
 import org.adridadou.ethereum.propeller.keystore.AccountProvider
 import org.adridadou.ethereum.propeller.values.EthValue.ether
 import org.adridadou.ethereum.propeller.values.{EthAddress, SoliditySource}
@@ -18,32 +19,59 @@ import scala.util.{Failure, Success, Try}
   */
 class ContractValidationTest extends FlatSpec with Matchers with Checkers {
 
-  private val mainAccount = AccountProvider.fromSeed("hello")
-  private val ethereum = CoreEthereumFacadeProvider.create(new EthereumTest(TestConfig.builder.balance(mainAccount, ether(1000)).build), EthereumConfig.builder().build())
-  private val contractSource = SoliditySource.from(new File("src/test/resources/validationContract.sol"))
+  private val mainAccount = SolidityConversionHelper.mainAccount
+  private val ethereum = SolidityConversionHelper.facade
+  private val contractSource =
+    SoliditySource.from(new File("src/test/resources/validationContract.sol"))
 
   "Validation" should "throw an exception if an interface method doesn't match any of the solidity functions" in {
-    val compiledContract = ethereum.compile(contractSource).findContract("validationContract").get
-    val errorMessage = "*** unmatched *** \nsolidity:\n- (uint256) validation(uint256)\njava:\n- validation(String)"
+    val compiledContract =
+      ethereum.compile(contractSource).findContract("validationContract").get
+    val errorMessage =
+      "*** unmatched *** \nsolidity:\n- (uint256) validation(uint256)\njava:\n- validation(String)"
 
-    Try(ethereum.createContractProxy(compiledContract, EthAddress.of("0x38848348887728239023"), mainAccount, classOf[ValidationContractMethodMismatch])) match {
-      case Success(_) => fail("the call should have failed")
+    Try(
+      ethereum.createContractProxy(
+        compiledContract,
+        EthAddress.of("0x38848348887728239023"),
+        mainAccount,
+        classOf[ValidationContractMethodMismatch]
+      )
+    ) match {
+      case Success(_)  => fail("the call should have failed")
       case Failure(ex) => ex.getMessage shouldEqual errorMessage
     }
   }
 
   it should "throw an exception if the return value does not match" in {
-    val compiledContract = ethereum.compile(contractSource).findContract("validationContract").get
-    Try(ethereum.createContractProxy(compiledContract, EthAddress.of("0x38848348887728239023"), mainAccount, classOf[ValidationContractReturnValueMismatch])) match {
+    val compiledContract =
+      ethereum.compile(contractSource).findContract("validationContract").get
+    Try(
+      ethereum.createContractProxy(
+        compiledContract,
+        EthAddress.of("0x38848348887728239023"),
+        mainAccount,
+        classOf[ValidationContractReturnValueMismatch]
+      )
+    ) match {
       case Success(_) => fail("the call should have failed")
-      case Failure(ex) => ex.getMessage shouldEqual "could not find decoder for (uint256) to java.lang.String"
+      case Failure(ex) =>
+        ex.getMessage shouldEqual "could not find decoder for (uint256) to java.lang.String"
     }
   }
 
   it should "ignore solidity return type if the java return type is Void" in {
-    val compiledContract = ethereum.compile(contractSource).findContract("validationContract").get
-    Try(ethereum.createContractProxy(compiledContract, EthAddress.of("0x38848348887728239023"), mainAccount, classOf[ValidationContract])) match {
-      case Success(_) => succeed
+    val compiledContract =
+      ethereum.compile(contractSource).findContract("validationContract").get
+    Try(
+      ethereum.createContractProxy(
+        compiledContract,
+        EthAddress.of("0x38848348887728239023"),
+        mainAccount,
+        classOf[ValidationContract]
+      )
+    ) match {
+      case Success(_)  => succeed
       case Failure(ex) => throw ex
     }
   }
