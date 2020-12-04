@@ -158,9 +158,19 @@ class EthereumProxy {
                 .flatMap(receipt -> {
                     List<EventData> events = receipt.events;
                     return Observable.fromIterable(events.stream().filter(eventDefinition::match)
-                            .map(data -> new EventInfo<>(receipt.hash, eventDefinition.parseEvent(data)))
+                            .map(data -> new EventInfo<>(receipt.hash, parseEventSafely(eventDefinition, data)))
+                            .filter(event -> event != null)
                             .collect(Collectors.toList()));
                 });
+    }
+
+    private <T> T parseEventSafely(SolidityEvent<T> eventDefinition, EventData data) {
+        try {
+          return eventDefinition.parseEvent(data);
+        } catch (Exception e) {
+          logger.warn("failed parsing event for ABI: " + eventDefinition.getDescription());
+          return null;
+        }
     }
 
     private CompletableFuture<EthAddress> publishContract(EthValue ethValue, EthData data, CryptoProvider cryptoProvider) {
@@ -437,7 +447,7 @@ class EthereumProxy {
                 .filter(params -> address.equals(params.receiveAddress))
                 .flatMap(params -> params.events.stream())
                 .filter(eventDefinition::match)
-                .map(data -> new EventInfo<>(data.getTransactionHash(), eventDefinition.parseEvent(data)))
+                .map(data -> new EventInfo<>(data.getTransactionHash(), parseEventSafely(eventDefinition, data)))
                 .collect(Collectors.toList());
     }
 
@@ -451,7 +461,7 @@ class EthereumProxy {
         TransactionReceipt receipt = ethereum.getTransactionInfo(transactionHash).flatMap(TransactionInfo::getReceipt).orElseThrow(() -> new EthereumApiException("no Transaction receipt found!"));
         if (address.equals(receipt.receiveAddress)) {
             return receipt.events.stream().filter(eventDefinition::match)
-                    .map(data -> new EventInfo<>(data.getTransactionHash(), eventDefinition.parseEvent(data)))
+                    .map(data -> new EventInfo<>(data.getTransactionHash(), parseEventSafely(eventDefinition, data)))
                     .collect(Collectors.toList());
         }
 
