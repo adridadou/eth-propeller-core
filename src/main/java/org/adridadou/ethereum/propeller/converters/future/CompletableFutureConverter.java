@@ -17,8 +17,8 @@ public class CompletableFutureConverter implements FutureConverter {
     }
 
     @Override
-    public EthCall convertWithDetails(CallDetails details, CompletableFuture<?> futureResult) {
-        return new EthCall<>(details.getNonce(), details.getGasEstimate(), details.getTxHash(), futureResult);
+    public <T> EthCall<T> convertWithDetails(CallDetails details, CompletableFuture<T> futureResult) {
+        return new EthCall<T>(details.getNonce(), details.getGasEstimate(), details.getTxHash(), futureResult);
     }
 
     @Override

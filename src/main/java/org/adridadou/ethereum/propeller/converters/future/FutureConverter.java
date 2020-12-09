@@ -16,7 +16,7 @@ import java.util.concurrent.CompletableFuture;
 public interface FutureConverter {
     <T> Object convert(CompletableFuture<T> future);
 
-    EthCall convertWithDetails(CallDetails details, CompletableFuture<?> futureResult);
+    <T> EthCall<T> convertWithDetails(CallDetails details, CompletableFuture<T> futureResult);
 
     boolean isFutureType(Class cls);
 
