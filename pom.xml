@@ -4,7 +4,7 @@
 
     <groupId>org.adridadou</groupId>
     <artifactId>eth-propeller-core</artifactId>
-    <version>0.56-SNAPSHOT</version>
+    <version>0.56</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -14,7 +14,8 @@
         <connection>scm:git:https://github.com/{github-user}/{github-repo}.git</connection>
         <developerConnection>scm:git:git@github.com:adridadou/eth-propeller-core.git</developerConnection>
         <url>https://github.com/adridadou/eth-propeller-core</url>
-    </scm>
+      <tag>eth-propeller-core-0.56</tag>
+  </scm>
 
     <distributionManagement>
         <repository>
