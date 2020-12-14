@@ -23,7 +23,7 @@ public final class AccountProvider {
     private static final ECGenParameterSpec SECP256K1_CURVE = new ECGenParameterSpec("secp256k1");
     private static final SecureRandom secureRandom = new SecureRandom();
     private static final int BIT_LENGTH = 256;
-    private static Provider provider;
+    private static final Provider provider;
     static {
         Provider p = Security.getProvider("SC");
         provider = p != null ? p : new BouncyCastleProvider();

@@ -75,7 +75,7 @@ public final class RpcEthereumFacadeProvider {
 
     public static class InfuraBuilder {
         private final InfuraKey key;
-        private EthereumRpcConfig config;
+        private final EthereumRpcConfig config;
 
         public InfuraBuilder(InfuraKey key, EthereumRpcConfig config) {
             this.key = key;
