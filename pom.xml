@@ -4,7 +4,7 @@
 
     <groupId>org.adridadou</groupId>
     <artifactId>eth-propeller-core</artifactId>
-    <version>0.56</version>
+    <version>0.57-SNAPSHOT</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -14,7 +14,8 @@
         <connection>scm:git:https://github.com/{github-user}/{github-repo}.git</connection>
         <developerConnection>scm:git:git@github.com:adridadou/eth-propeller-core.git</developerConnection>
         <url>https://github.com/adridadou/eth-propeller-core</url>
-    </scm>
+      <tag>HEAD</tag>
+  </scm>
 
     <distributionManagement>
         <repository>
@@ -68,13 +69,13 @@
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>2.10.0.pr3</version>
+            <version>2.12.0</version>
         </dependency>
 
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-annotations</artifactId>
-            <version>2.10.0.pr3</version>
+            <version>2.12.0</version>
         </dependency>
 
         <dependency>
@@ -86,13 +87,13 @@
         <dependency>
             <groupId>io.reactivex.rxjava2</groupId>
             <artifactId>rxjava</artifactId>
-            <version>2.2.13</version>
+            <version>2.2.20</version>
         </dependency>
 
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
-            <version>2.6</version>
+            <version>2.7</version>
         </dependency>
 
         <dependency>
@@ -134,25 +135,25 @@
         <dependency>
             <groupId>org.web3j</groupId>
             <artifactId>core</artifactId>
-            <version>4.5.6</version>
+            <version>5.0.0</version>
         </dependency>
 
         <dependency>
             <groupId>org.web3j</groupId>
             <artifactId>crypto</artifactId>
-            <version>4.5.6</version>
+            <version>5.0.0</version>
         </dependency>
 
         <dependency>
             <groupId>org.web3j</groupId>
             <artifactId>utils</artifactId>
-            <version>4.5.6</version>
+            <version>5.0.0</version>
         </dependency>
 
         <dependency>
             <groupId>com.squareup.okhttp3</groupId>
             <artifactId>okhttp</artifactId>
-            <version>4.2.2</version>
+            <version>4.10.0-RC1</version>
         </dependency>
 
         <dependency>
@@ -187,27 +188,9 @@
         </dependency>
 
         <dependency>
-            <groupId>org.logl</groupId>
-            <artifactId>logl-api</artifactId>
-            <version>0.3.1</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.logl</groupId>
-            <artifactId>logl-logl</artifactId>
-            <version>0.3.1</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.logl</groupId>
-            <artifactId>logl-vertx</artifactId>
-            <version>0.3.1</version>
-        </dependency>
-
-        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>4.12</version>
+            <version>4.13</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -236,7 +219,7 @@
         <dependency>
             <groupId>org.scalacheck</groupId>
             <artifactId>scalacheck_2.12</artifactId>
-            <version>1.14.2</version>
+            <version>1.14.3</version>
             <scope>test</scope>
         </dependency>
 
@@ -244,7 +227,7 @@
         <dependency>
             <groupId>org.scala-lang.modules</groupId>
             <artifactId>scala-java8-compat_2.12</artifactId>
-            <version>0.9.0</version>
+            <version>0.9.1</version>
             <scope>test</scope>
         </dependency>
 

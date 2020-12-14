@@ -46,7 +46,7 @@ public class EthereumTest implements EthereumBackend {
     private final LocalExecutionService localExecutionService;
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
-    private Logger logger = LoggerFactory.getLogger(EthereumTest.class);
+    private final Logger logger = LoggerFactory.getLogger(EthereumTest.class);
 
     public EthereumTest(TestConfig testConfig) {
 
@@ -151,7 +151,7 @@ public class EthereumTest implements EthereumBackend {
 
     @Override
     public List<EventData> logCall(DefaultBlockParameter fromBlock, DefaultBlockParameter toBlock, SolidityEvent eventDefinition, EthAddress address, String... optionalTopics) {
-        ArrayList events = new ArrayList();
+        List<EventData> events = new ArrayList<>();
 
         for (long i = 0; i < this.getCurrentBlockNumber(); i++) {
             BlockInfo block = this.getBlock(i).get();

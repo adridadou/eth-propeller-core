@@ -3,8 +3,6 @@ package org.adridadou.ethereum.propeller.converters.future;
 import org.adridadou.ethereum.propeller.SmartContract;
 import org.adridadou.ethereum.propeller.values.CallDetails;
 import org.adridadou.ethereum.propeller.values.EthCall;
-import org.adridadou.ethereum.propeller.values.GasUsage;
-import org.adridadou.ethereum.propeller.values.Nonce;
 
 import java.lang.reflect.Method;
 import java.util.concurrent.CompletableFuture;

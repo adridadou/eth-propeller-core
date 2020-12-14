@@ -69,9 +69,7 @@ public class SolidityCompiler {
     private List<String> prepareCommandOptions(Optional<EvmVersion> evmVersion, SolidityCompilerOptions... options) {
         List<String> commandParts = new ArrayList<>();
         commandParts.add("solc");
-        if (evmVersion.isPresent()) {
-            commandParts.add("--evm-version=" + evmVersion.get().version);
-        }
+        evmVersion.ifPresent(version -> commandParts.add("--evm-version=" + version.version));
         commandParts.add("--optimize");
         commandParts.add("--combined-json");
         commandParts.add(Arrays.stream(options)

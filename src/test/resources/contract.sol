@@ -1,11 +1,13 @@
-pragma solidity ^0.5.0;
+pragma solidity ^0.7.0;
+
+// SPDX-License-Identifier: MIT
 
 contract myContract2 {
     string public i1;
     string public i2;
     address public owner;
 
-    constructor() public {
+    constructor() {
         owner = msg.sender;
     }
 

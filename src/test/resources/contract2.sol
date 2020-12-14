@@ -1,5 +1,5 @@
-pragma solidity ^0.5.0;
-
+pragma solidity ^0.7.0;
+// SPDX-License-Identifier: MIT
 contract myContract2 {
     address owner;
     function getI1() public pure returns (string memory) {return "hello";}
