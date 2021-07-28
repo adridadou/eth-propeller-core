@@ -64,7 +64,7 @@ public class EthereumRpc implements EthereumBackend {
     public EthHash submit(TransactionRequest request, Nonce nonce) {
             org.apache.tuweni.eth.Transaction transaction = createTransaction(nonce, getGasPrice(), request);
             web3JFacade.sendTransaction(EthData.of(transaction.toBytes().toArray()));
-            return EthHash.of(transaction.hash().toBytes().toArray());
+            return EthHash.of(transaction.getHash().toArray());
     }
 
     private org.apache.tuweni.eth.Transaction createTransaction(Nonce nonce, GasPrice gasPrice, TransactionRequest request) {
